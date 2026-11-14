@@ -127,6 +127,9 @@ table{border-collapse:collapse;font-size:15px}td,th{padding:6px 18px 6px 0;text-
 .orb-tele{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);font-size:13px}
 .orb-tele .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-top:8px}
 .orb-tele .cell{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:rgba(7,11,26,.5)}
+.surf-controls{margin-top:12px;padding:12px;border:1px solid var(--acc);border-radius:12px;background:rgba(7,11,26,.75)}
+.photo-strip{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:12px}
+.photo-chip{border:1px solid var(--line);border-radius:8px;padding:4px 8px;background:rgba(169,188,255,.08)}
 </style>
 </head>
 <body>
@@ -189,6 +192,36 @@ table{border-collapse:collapse;font-size:15px}td,th{padding:6px 18px 6px 0;text-
     <svg id="scene" viewBox="0 0 480 320" width="100%" role="img" aria-label="Your spacecraft travelling to its destination" style="border-radius:12px;background:rgba(7,11,26,.5)">
       <g id="eth"><circle r="100" fill="#2b4fb8"/><g fill="#3f8f5a" opacity=".75"><ellipse cx="-35" cy="-40" rx="38" ry="22"/><ellipse cx="40" cy="-5" rx="26" ry="34"/><ellipse cx="-20" cy="50" rx="30" ry="16"/></g><circle r="100" fill="none" stroke="#9cc2ff" stroke-opacity=".6" stroke-width="3"/></g>
       <g id="dst"><circle id="dc" r="100" fill="#8d93a6"/><circle cx="-30" cy="-30" r="45" fill="#fff" opacity=".12"/><g id="cra" fill="#000" opacity=".18"><circle cx="30" cy="25" r="16"/><circle cx="-35" cy="35" r="10"/><circle cx="-10" cy="-40" r="12"/></g><circle id="atm" r="108" fill="none" stroke="#ffb08a" stroke-opacity=".4" stroke-width="6"/></g>
+      <g id="surfView" hidden>
+        <defs>
+          <linearGradient id="moonSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#040712"/><stop offset="1" stop-color="#141b33"/></linearGradient>
+          <linearGradient id="marsSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a1c16"/><stop offset=".6" stop-color="#8c3b27"/><stop offset="1" stop-color="#d97b54"/></linearGradient>
+          <linearGradient id="moonGround" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9aa0b2"/><stop offset=".45" stop-color="#6f7588"/><stop offset="1" stop-color="#454a59"/></linearGradient>
+          <linearGradient id="marsGround" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d46a45"/><stop offset=".45" stop-color="#a84426"/><stop offset="1" stop-color="#6e2412"/></linearGradient>
+        </defs>
+        <rect id="sSky" x="0" y="0" width="480" height="210" fill="url(#moonSky)"/>
+        <g id="sStars"></g>
+        <circle id="sEarth" cx="395" cy="52" r="18" fill="#3f7bff" stroke="#9cc2ff" stroke-width="1.5"/>
+        <path id="sHills" d="M0 210 Q90 175 180 205 T360 190 T480 208 L480 320 L0 320 Z" fill="#6f7588"/>
+        <rect id="sGround" x="0" y="210" width="480" height="110" fill="url(#moonGround)"/>
+        <g id="sCraters">
+          <ellipse cx="110" cy="245" rx="44" ry="12" fill="none" stroke="#2c3140" stroke-width="2.5"/>
+          <ellipse cx="110" cy="247" rx="36" ry="8" fill="#000" opacity=".22"/>
+          <ellipse cx="350" cy="268" rx="52" ry="14" fill="none" stroke="#2c3140" stroke-width="2.5"/>
+          <ellipse cx="350" cy="270" rx="42" ry="9" fill="#000" opacity=".22"/>
+          <ellipse cx="230" cy="295" rx="30" ry="8" fill="none" stroke="#2c3140" stroke-width="2"/>
+        </g>
+        <g id="rover" transform="translate(240 232)">
+          <rect x="-18" y="-8" width="36" height="14" rx="3" fill="#eef2ff" stroke="#8b96c4"/>
+          <rect x="-24" y="-14" width="14" height="8" fill="#3159d1" stroke="#a9bcff"/>
+          <rect x="10" y="-14" width="14" height="8" fill="#3159d1" stroke="#a9bcff"/>
+          <line x1="12" y1="-8" x2="18" y2="-22" stroke="#c5cdea" stroke-width="2"/>
+          <circle cx="18" cy="-23" r="3" fill="#ffcf6b"/>
+          <circle cx="-14" cy="9" r="5" fill="#27305c" stroke="#c5cdea" stroke-width="1.5"/>
+          <circle cx="0" cy="9" r="5" fill="#27305c" stroke="#c5cdea" stroke-width="1.5"/>
+          <circle cx="14" cy="9" r="5" fill="#27305c" stroke="#c5cdea" stroke-width="1.5"/>
+        </g>
+      </g>
       <circle id="orb" fill="none" stroke="#a9bcff" stroke-opacity=".35" stroke-dasharray="3 6"/>
       <path id="tp" fill="none" stroke="#a9bcff" stroke-opacity=".5" stroke-dasharray="4 6" stroke-width="1.5"/>
       <g id="cr" style="opacity:0">
@@ -201,6 +234,19 @@ table{border-collapse:collapse;font-size:15px}td,th{padding:6px 18px 6px 0;text-
       </g>
       <circle id="bst" r="0" fill="#ff9f4a" style="opacity:0"/>
     </svg>
+    <div id="surfControls" class="surf-controls" hidden>
+      <div class="row" style="justify-content:space-between">
+        <b id="surfTitle">Surface exploration</b>
+        <span id="photoCount" class="pill">0 photos</span>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <button class="btn sm pri" id="btnLeft">Move Left</button>
+        <button class="btn sm pri" id="btnRight">Move Right</button>
+        <button class="btn sm" id="btnPhoto">Take Picture</button>
+        <button class="btn sm" id="btnSend">Send Photos to Earth</button>
+      </div>
+      <div id="photoStrip" class="photo-strip"></div>
+    </div>
     <p id="scap" class="acc" style="margin:8px 0 0;min-height:1.5em"></p>
     <ul class="ph" id="ph"></ul>
     <div class="meter"><div class="l"><span>Spacecraft damage</span><span id="dmgv">0%</span></div><div class="bar"><i id="dmgb"></i></div></div>
@@ -247,15 +293,15 @@ const IN=[
 {n:"Sampling arm + drill",m:40,p:45,c:9,data:2,sci:{eo:10,data:10,land:25,sample:65},lv:0,surface:1,why:"Collects surface samples."}];
 const GR=[{n:"Landing legs",m:30,p:0,c:3,tier:1,x:"Soft landing",lv:0,why:"Soft touchdown on Moon or Mars."}];
 
-/* Generous budgets and lower science thresholds */
+/* Ordered: Orbit exploration -> Landing -> Data collection -> Sample collection */
 const MIS=[
 {id:"eo",n:"Earth observation",b:"Track coastlines, crops and storms from orbit.",budget:220,min:25,bonus:55,orbits:["leo","sso","geo"],body:"#2b4fb8",kind:"orbit",stage:"orbit",sk:"eo",dest:"earth",life:5},
 {id:"mexp",n:"Lunar orbit exploration",b:"Survey lunar craters, lighting and environment from orbit.",budget:260,min:25,bonus:60,orbits:["moon"],body:"#8d93a6",kind:"orbit",stage:"orbit",sk:"eo",dest:"moon",trip:"3 days",life:6},
-{id:"mland",n:"Lunar landing",b:"Pass orbit exploration, earn landing bonus points, touch down on the Moon, rove and send photos home.",budget:280,min:30,bonus:65,orbits:["moon"],body:"#8d93a6",kind:"land",stage:"land",sk:"land",dest:"moon",landDv:300,need:1,trip:"3 days",landReqPts:15},
+{id:"mland",n:"Lunar landing",b:"Touch down on the Moon, avoid wrong spots, rove and take pictures.",budget:280,min:30,bonus:65,orbits:["moon"],body:"#8d93a6",kind:"land",stage:"land",sk:"land",dest:"moon",landDv:300,need:1,trip:"3 days",landReqPts:15},
 {id:"mdata",n:"Moon data collection",b:"Orbit the Moon and map its surface and magnetic field.",budget:280,min:30,bonus:65,orbits:["moon"],body:"#8d93a6",kind:"orbit",stage:"data",sk:"data",dest:"moon",trip:"3 days",life:6},
 {id:"msamp",n:"Moon sample collection",b:"Land on the Moon and drill samples of its soil.",budget:290,min:30,bonus:65,orbits:["moon"],body:"#8d93a6",kind:"sample",stage:"sample",sk:"sample",dest:"moon",landDv:300,need:1,trip:"3 days"},
 {id:"rexp",n:"Mars orbit exploration",b:"Scout Martian weather, dust storms and terrain from orbit.",budget:320,min:30,bonus:65,orbits:["mars"],body:"#c1583a",kind:"orbit",stage:"orbit",sk:"eo",dest:"mars",trip:"7 months",life:8},
-{id:"rland",n:"Mars landing",b:"Pass orbit exploration, earn landing bonus points, touch down on Mars, rove and send photos home.",budget:340,min:30,bonus:70,orbits:["mars"],body:"#c1583a",kind:"land",stage:"land",sk:"land",dest:"mars",landDv:300,need:1,trip:"7 months",landReqPts:15},
+{id:"rland",n:"Mars landing",b:"Touch down on Mars, avoid wrong spots, rove and take pictures.",budget:340,min:30,bonus:70,orbits:["mars"],body:"#c1583a",kind:"land",stage:"land",sk:"land",dest:"mars",landDv:300,need:1,trip:"7 months",landReqPts:15},
 {id:"rdata",n:"Mars data collection",b:"Orbit Mars and study its atmosphere and surface.",budget:350,min:35,bonus:70,orbits:["mars"],body:"#c1583a",kind:"orbit",stage:"data",sk:"data",dest:"mars",trip:"7 months",life:8},
 {id:"rsamp",n:"Mars sample collection",b:"Land on Mars and collect rock and soil samples.",budget:360,min:35,bonus:70,orbits:["mars"],body:"#c1583a",kind:"sample",stage:"sample",sk:"sample",dest:"mars",landDv:300,need:1,trip:"7 months"}];
 
@@ -299,7 +345,7 @@ const KEYS=()=>[...RK,"structure","power","battery","prop","comms","adcs","compu
 const LIST={engine:RENG,tank:RTK,decoupler:RDEC,fairing:RFAIR,structure:ST,power:PW,battery:BT,prop:PR,comms:CM,adcs:AD,computer:CP,thermal:TH,gear:GR,inst:IN};
 const KN={power:"Solar panels",battery:"Battery",orbit:"Orbit",engine:"Engines",tank:"Fuel tank",decoupler:"Decoupler",fairing:"Fairing"};
 const Z={n:"None",m:0,p:0,c:0,gen:0,tier:0,rate:0,rad:0,pt:0,dv:0,hard:0,safe:1,dvm:1};
-let mi=0,lv=0,sel,learn=false,openS="setup",panelHover=null,hoverId=null,vk="all",last={},whatifFuel=false,baseSel=null,orbitPassed=false,landingBonusPts=0,completedStages={moon:new Set(),mars:new Set(),earth:new Set()};
+let mi=0,lv=0,sel,learn=false,openS="setup",panelHover=null,hoverId=null,vk="all",last={},whatifFuel=false,baseSel=null,orbitPassed=false,landingBonusPts=0,bonusPointsAwarded=0,completedStages={moon:new Set(),mars:new Set(),earth:new Set()};
 const mm=()=>({...MIS[mi],budget:Math.round(MIS[mi].budget*BM[lv]),min:Math.max(15,Math.round(MIS[mi].min*SM[lv])),bonus:Math.max(30,Math.round(MIS[mi].bonus*SM[lv]))});
 const scratch=()=>({orbit:MIS[mi].orbits[0],engine:null,tank:null,decoupler:null,fairing:null,structure:null,power:null,battery:null,prop:null,comms:null,adcs:null,computer:null,thermal:null,gear:null,inst:new Set()});
 const showcase=()=>{const m=MIS[mi],o=m.orbits[0],sf=m.kind!=="orbit";return{orbit:o,engine:1,tank:1,decoupler:1,fairing:1,structure:1,power:1,battery:0,prop:1,comms:o==="mars"?1:0,adcs:1,computer:0,thermal:0,gear:sf?0:null,inst:new Set(m.kind==="sample"?[1,3]:[1,2])}};
@@ -321,7 +367,7 @@ function rocketCalc(overrideSel){
 function calc(overrideSel){
  const s=overrideSel||sel;
  const m=mm(),o=ORB[s.orbit],L=rocketCalc(s),ins=[...s.inst].map(i=>IN[i]);
- const st=s.structure==null?Z:LIST.structure[s.structure],pw=s.power==null?Z:LIST.power[s.power],bt=s.battery==null?Z:LIST.battery[s.battery],pr=s.prop==null?Z:LIST.prop[s.prop],cm=s.comms==null?Z:LIST.comms[s.comms],ad=s.adcs==null?Z:LIST.adcs[s.adcs],cp=s.computer==null?Z:LIST.computer[s.computer],th=s.thermal==null?Z:LIST.thermal[s.thermal],gr=s.gear==null?Z:LIST.gear[s.gear];
+ const st=s.structure==null?Z:LIST.structure[s.structure],pw=s.power==null?Z:LIST.power[s.power],bt=s.battery==null?Z:LIST.battery[s.battery],pr=s.prop==null?Z:LIST.prop[s.prop],cm=s.comms==null?Z:LIST.comms[s.comms],ad=s.adcs==null?Z:LIST.adcs[s.computer],cp=s.computer==null?Z:LIST.computer[s.computer],th=s.thermal==null?Z:LIST.thermal[s.thermal],gr=s.gear==null?Z:LIST.gear[s.gear];
  const P=[st,pw,bt,pr,cm,ad,cp,th,gr,...ins];
  const c={m,o,L,st,bt,cm,cp,ad,th,gr,ins,mass:sum(P,"m"),use:sum(P,"p"),cost:sum(P,"c")+L.c,cap:Math.round(L.lc*o.cap),gen:Math.round(pw.gen*o.solar),dataGen:sum(ins,"data"),down:cm.rate*o.contact,dv:pr.dv};
  c.ratio=c.dataGen?Math.min(1,c.down/c.dataGen):1;
@@ -644,7 +690,7 @@ function toSubMis(dest){let b={};try{b=JSON.parse(localStorage.getItem("msd-best
  $("#submissions").querySelectorAll("button").forEach(x=>x.onclick=()=>{mi=+x.dataset.i;toDiff()});show("submis")}
 function toDiff(){$("#dt").textContent=MIS[mi].n+": choose your level";
  $("#levels").innerHTML=LV.map((l,i)=>`<div class="card mc lvc"><span class="stars" role="img" aria-label="Difficulty ${i+1} of 3">${"★".repeat(i+1)+"☆".repeat(2-i)}</span><h3>${l.n}</h3><p class="mut">${l.d}</p><button class="btn pri" data-i="${i}">Play ${l.n.toLowerCase()}</button></div>`).join("");
- $("#levels").querySelectorAll("button").forEach(x=>x.onclick=()=>{lv=+x.dataset.i;openS="setup";baseSel=null;orbitPassed=false;landingBonusPts=0;openBuild(true)});show("diff")}
+ $("#levels").querySelectorAll("button").forEach(x=>x.onclick=()=>{lv=+x.dataset.i;openS="setup";baseSel=null;openBuild(true)});show("diff")}
 function setMode(l){learn=l;sel=l?showcase():scratch();baseSel=null;openS=l?"rprop":"setup";renderPanel();$("#hint").textContent=l?"Explore mode: finished build example.":"Build the rocket (R1–R3) and spacecraft (1–8).";update()}
 function openBuild(fresh){const m=mm();$("#bt").textContent=`${m.n} · ${LV[lv].n}`;
  $("#bb").textContent=`${m.b} Budget $${m.budget}M. Score at least ${m.min} science to pass, ${m.bonus} for bonus.`;
@@ -672,6 +718,7 @@ const EV=[
 const DN={moon:"the Moon",mars:"Mars",earth:"Earth"};
 async function countdown(){const e=$("#cd");e.classList.add("on");for(const n of["3","2","1","Liftoff"]){e.innerHTML=`<span${n==="Liftoff"?' style="font-size:.3em"':""}>${n}</span>`;await wait(reduce?400:800)}e.classList.remove("on")}
 
+/* ---------- flight scene ---------- */
 const SCN={idle:false};
 const A=(a,R,c)=>({x:c.x+R*Math.cos(a*Math.PI/180),y:c.y+R*Math.sin(a*Math.PI/180)});
 const ease=p=>p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;
@@ -681,8 +728,13 @@ function tween(ms,fn){return new Promise(res=>{const d=reduce?Math.min(ms,250):m
 function setupScene(m){
  const eo=m.dest==="earth",E=eo?{x:240,y:165,r:70}:{x:60,y:270,r:66},D=eo?E:{x:366,y:138,r:m.dest==="moon"?34:42},OR=eo?E.r+42:D.r+52;
  Object.assign(SCN,{eo,E,D,OR,idle:false});
- $("#eth").setAttribute("transform",`translate(${E.x} ${E.y}) scale(${E.r/100})`);
+ $("#surfView").hidden=true;
+ $("#surfControls").hidden=true;
+ $("#eth").style.display="";
  $("#dst").style.display=eo?"none":"";
+ $("#orb").style.display="";
+ $("#tp").style.display="";
+ $("#eth").setAttribute("transform",`translate(${E.x} ${E.y}) scale(${E.r/100})`);
  $("#dst").setAttribute("transform",`translate(${D.x} ${D.y}) scale(${D.r/100})`);
  $("#dc").setAttribute("fill",m.body);
  $("#cra").style.display=m.dest==="moon"?"":"none";$("#atm").style.display=m.dest==="mars"?"":"none";
@@ -690,6 +742,24 @@ function setupScene(m){
  const tp=$("#tp");
  if(eo)tp.setAttribute("d","");else{const s={x:E.x,y:E.y-E.r-35},e=A(180,OR,D);tp.setAttribute("d",`M${s.x} ${s.y} C${s.x+60} ${s.y-120} ${e.x-120} ${e.y-90} ${e.x} ${e.y}`)}
  ["fl","lg","pc","arm","cr"].forEach(i=>vis(i,0));$("#bst").style.opacity=0;$("#arm").removeAttribute("transform");
+}
+function setupSurfaceScene(dest){
+ $("#eth").style.display="none";
+ $("#dst").style.display="none";
+ $("#orb").style.display="none";
+ $("#tp").style.display="none";
+ vis("cr",0);vis("fl",0);vis("pc",0);
+ $("#surfView").hidden=false;
+ const isMars=dest==="mars";
+ $("#sSky").setAttribute("fill",isMars?"url(#marsSky)":"url(#moonSky)");
+ $("#sGround").setAttribute("fill",isMars?"url(#marsGround)":"url(#moonGround)");
+ $("#sHills").setAttribute("fill",isMars?"#8f341c":"#595f72");
+ $("#sEarth").style.display=isMars?"none":"";
+ $("#sStars").innerHTML=isMars?"":Array.from({length:36},(_,i)=>{
+  const sx=(i*97)%470+5, sy=(i*53)%185+6;
+  return `<circle cx="${sx}" cy="${sy}" r="${i%3===0?1.5:1}" fill="#fff" opacity="${(i%4)*0.2+0.35}"/>`;
+ }).join("");
+ $("#rover").setAttribute("transform","translate(240 232)");
 }
 async function boom(){vis("fl",0);vis("cr",0);const b=$("#bst");b.setAttribute("cx",SCN.x);b.setAttribute("cy",SCN.y);await tween(800,p=>{b.setAttribute("r",4+36*p);b.style.opacity=1-p});b.style.opacity=0}
 async function sLaunch(ok){
@@ -714,13 +784,6 @@ async function sLand(ok,para){
  const {D,OR}=SCN,rs=D.r+24;vis("pc",para);vis("fl",!para);
  await tween(1800,p=>{const q=ease(p),r=OR+(rs-OR)*q;put(D.x,D.y-r,0);if(para){vis("pc",p<.6);vis("fl",p>=.6)}vis("lg",p>.55)});
  vis("fl",0);vis("pc",0);vis("lg",1)
-}
-async function sRoveAndPhoto(){
- const {D}=SCN, baseR=D.r+24;
- const spots=[{dx:0,dy:-baseR,d:0},{dx:12,dy:-baseR+4,d:18},{dx:-10,dy:-baseR+6,d:-16}];
- for(const sp of spots){
-  await tween(500,p=>put(D.x+sp.dx*p,D.y+sp.dy*p,sp.d*p));
- }
 }
 async function sSample(){vis("arm",1);await tween(800,p=>$("#arm").setAttribute("transform",`translate(6 4) scale(${.3+.7*p}) translate(-6 -4)`))}
 
@@ -752,20 +815,22 @@ async function runOrbitExplorationStage(c, step, res, log, sd, bad, good, getDmg
 }
 
 async function runLandingStage(c, m, step, res, log, sd, bad, good, getDmg, setDmg, setFail){
+ const isMars=m.dest==="mars";
  const sites=[
-  {name:"Aristarchus Rim Crater",crater:true,note:"Crater detected — choose another spot."},
-  {name:"Mare Tranquillitatis Plain",crater:false,note:"Smooth plain ready for touchdown."}
+  {name:isMars?"Jezero Crater Rim (Wrong Spot)":"Tycho Crater Rim (Wrong Spot)",wrong:true,note:"Hazard warning: uneven crater rim & steep boulders."},
+  {name:isMars?"Elysium Planitia Safe Zone":"Mare Tranquillitatis Safe Zone",wrong:false,note:"Flat regolith plain cleared for touchdown."}
  ];
  let siteIdx=0;
  while(true){
   const site=sites[siteIdx % sites.length];
-  step("Descent and landing",`Descending to ${site.name} on ${DN[m.dest]}…`);
-  await sLand(true,m.dest==="mars");
-  if(site.crater){
-   const w=`Landed on a crater at ${site.name}. Select a different landing spot to retry.`;
+  step("Descent and landing",`Descending toward ${site.name} on ${DN[m.dest]}… (${site.note})`);
+  await sLand(true,isMars);
+  if(site.wrong){
+   setDmg(getDmg()+8);sd();
+   const w=`Warning: Landed on the wrong spot (${site.name})! Choose a safe landing spot to relocate and retry.`;
    log(w,"y");
    const retrySite=await new Promise(done=>{
-    $("#evbox").innerHTML=`<div class="ev"><h3>Crater detected</h3><p>${w}</p><div class="row"><button class="btn pri" data-idx="1">Retry on Mare Tranquillitatis Plain</button></div></div>`;
+    $("#evbox").innerHTML=`<div class="ev"><h3>Wrong landing spot warning</h3><p>${w}</p><div class="row"><button class="btn pri" data-idx="1">Relocate to ${sites[1].name}</button></div></div>`;
     $("#evbox").querySelectorAll("button").forEach(b=>b.onclick=()=>done(+b.dataset.idx));
    });
    $("#evbox").innerHTML="";
@@ -778,10 +843,49 @@ async function runLandingStage(c, m, step, res, log, sd, bad, good, getDmg, setD
   await res("Descent and landing",true,okMsg,"");
   break;
  }
- step("Surface roving & imaging",`Roving on ${DN[m.dest]}, taking photos, and sending to Earth…`);
- await sRoveAndPhoto();
- const pMsg=`Captured surface photos on ${DN[m.dest]} and transmitted to Earth.`;
- good.push(pMsg);log(pMsg,"g");
+
+ /* Switch to realistic Moon / Mars surface view for roving & taking pictures */
+ setupSurfaceScene(m.dest);
+ step("Surface roving & imaging",`Landed on ${DN[m.dest]}! Move around, take pictures, and send them to Earth.`);
+ $("#surfControls").hidden=false;
+ $("#surfTitle").textContent=`${DN[m.dest]} Surface Explorer`;
+ let roverX=240, photos=[];
+ const updateStrip=()=>{
+  $("#photoCount").textContent=`${photos.length} photos`;
+  $("#photoStrip").innerHTML=photos.map(p=>`<span class="photo-chip">📷 ${p}</span>`).join("");
+ };
+ updateStrip();
+
+ await new Promise(done=>{
+  $("#btnLeft").onclick=()=>{
+   roverX=Math.max(60,roverX-36);
+   $("#rover").setAttribute("transform",`translate(${roverX} 232)`);
+   log(`Moved rover left to sector ${Math.round(roverX/48)} on ${DN[m.dest]}.`);
+  };
+  $("#btnRight").onclick=()=>{
+   roverX=Math.min(420,roverX+36);
+   $("#rover").setAttribute("transform",`translate(${roverX} 232)`);
+   log(`Moved rover right to sector ${Math.round(roverX/48)} on ${DN[m.dest]}.`);
+  };
+  $("#btnPhoto").onclick=()=>{
+   const label=`${DN[m.dest]} Sector ${Math.round(roverX/48)} #${photos.length+1}`;
+   photos.push(label);
+   updateStrip();
+   log(`Took picture: ${label}`,"g");
+  };
+  $("#btnSend").onclick=()=>{
+   if(photos.length===0){
+    const autoLabel=`${DN[m.dest]} Landing Panorama #1`;
+    photos.push(autoLabel);
+    updateStrip();
+   }
+   log(`Transmitted ${photos.length} surface photo(s) back to Earth.`,"g");
+   done();
+  };
+ });
+ $("#surfControls").hidden=true;
+ const pMsg=`Explored ${DN[m.dest]} surface, took ${photos.length} picture(s), and sent them to Earth.`;
+ good.push(pMsg);
  await res("Surface roving & imaging",true,pMsg,"");
 }
 
@@ -853,6 +957,16 @@ async function fly(){
 }
 const okOrLand=land=>!land;
 
+function getNextMissionIndex(currentIdx){
+ const cur=MIS[currentIdx];
+ const sameDest=MIS.filter(m=>m.dest===cur.dest).sort((a,b)=>STAGE_ORDER.indexOf(a.stage)-STAGE_ORDER.indexOf(b.stage));
+ const pos=sameDest.findIndex(m=>m.id===cur.id);
+ if(pos>=0 && pos+1<sameDest.length){
+  return MIS.indexOf(sameDest[pos+1]);
+ }
+ return (currentIdx+1)%MIS.length;
+}
+
 function report(c,fail,dmg,smul,good,bad){
  const sci=fail?0:Math.round(c.sci*smul);
  const pass=!fail && sci>=c.m.min;
@@ -870,16 +984,42 @@ function report(c,fail,dmg,smul,good,bad){
  if(sci>=c.m.min)good.push(`Science ${sci} met minimum ${c.m.min}.`);
  else bad.push(`Science ${sci} is below minimum ${c.m.min}.`);
  if(bonus)good.push(`Bonus objective met (${sci} science).`);
+
  let best={};try{best=JSON.parse(localStorage.getItem("msd-best")||"{}")}catch(e){}
  if(total>(best[c.m.id]||0)){best[c.m.id]=total;try{localStorage.setItem("msd-best",JSON.stringify(best))}catch(e){}}
+
+ const nextIdx=getNextMissionIndex(mi);
+ const nextMission=MIS[nextIdx];
+
  $("#report").innerHTML=`<h2>Mission report: ${c.m.n}</h2>
  <p class="${pass?"g":"r"}" style="font:700 22px 'Space Grotesk'">${pass?"Mission success":fail?"Mission failed":"Mission incomplete"}</p>
- <div class="row" style="gap:32px;margin:12px 0"><div><div class="score">${total}</div><div class="mut">out of 110</div></div>
+ <div class="row" style="gap:32px;margin:12px 0"><div><div class="score" id="repScore">${total}</div><div class="mut">out of 110</div></div>
  <table><tr><th>Science</th><td>${pts.sci} / 40</td></tr><tr><th>Budget use</th><td>${pts.bud} / 20</td></tr><tr><th>Spacecraft health (${dmg}% damage)</th><td>${pts.rel} / 20</td></tr><tr><th>Data returned</th><td>${pts.dat} / 20</td></tr><tr><th>Bonus objective</th><td>${pts.bon} / 10</td></tr></table></div>
  <div class="two"><div class="card"><h3>What worked</h3><ul>${good.map(t=>`<li>${t}</li>`).join("")||"<li>Nothing yet.</li>"}</ul></div>
  <div class="card"><h3>What went wrong</h3><ul>${bad.map(t=>`<li>${t}</li>`).join("")||"<li>No failures.</li>"}</ul></div></div>
- <div class="row"><button class="btn pri" id="ref">Refine this design</button><button class="btn" id="again">Choose another mission</button></div>`;
- show("report");$("#ref").onclick=()=>{sel=last.sel;mi=last.mi;lv=last.lv;learn=false;openBuild(false)};$("#again").onclick=toMis;
+ <div class="row">
+  <button class="btn pri" id="ref">Refine this design</button>
+  <button class="btn" id="again">Choose another mission</button>
+  <button class="btn pri" id="nextMis">Next mission: ${nextMission.n} (+15 pts)</button>
+ </div>`;
+ show("report");
+ $("#ref").onclick=()=>{sel=last.sel;mi=last.mi;lv=last.lv;learn=false;openBuild(false)};
+ $("#again").onclick=toMis;
+ $("#nextMis").onclick=()=>{
+  bonusPointsAwarded += 15;
+  landingBonusPts += 15;
+  const boosted = Math.min(110, total + bonusPointsAwarded);
+  $("#repScore").textContent = boosted;
+  if(boosted>(best[c.m.id]||0)){
+   best[c.m.id]=boosted;
+   try{localStorage.setItem("msd-best",JSON.stringify(best))}catch(e){}
+  }
+  toast(`+${bonusPointsAwarded} points awarded! Advancing to ${nextMission.n}`);
+  mi = nextIdx;
+  openS = "setup";
+  baseSel = null;
+  openBuild(true);
+ };
 }
 
 function show(id){document.querySelectorAll(".screen").forEach(s=>s.hidden=s.id!==id);window.scrollTo(0,0)}
