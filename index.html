@@ -228,6 +228,16 @@ table{border-collapse:collapse;font-size:15px}td,th{padding:6px 18px 6px 0;text-
         <g id="pc" style="opacity:0"><path d="M-14 -22Q0 -44 14 -22Z" fill="#ff9f4a"/><path d="M-14 -22L-3 -8M14 -22L3 -8" stroke="#fff" stroke-width="1"/></g>
         <g id="fl" style="opacity:0"><path d="M-4 8L0 24L4 8Z" fill="#ff9f4a"/></g>
         <g id="lg" style="opacity:0"><path d="M-5 8L-12 17M5 8L12 17" stroke="#c5cdea" stroke-width="2"/></g>
+        <g id="rkStack" style="opacity:1">
+          <g id="rkFairing"><path d="M-6 -14L0 -24L6 -14Z" fill="#cfd8ff" stroke="#a9bcff" stroke-width=".6"/></g>
+          <g id="rkDec"><rect x="-6" y="8" width="12" height="3" fill="#2c3454"/></g>
+          <g id="rkStage1">
+            <rect x="-5.5" y="11" width="11" height="22" rx="2" fill="#eef1fa" stroke="#8b96c4" stroke-width=".6"/>
+            <rect x="-5.5" y="20" width="11" height="3" fill="#d8434f"/>
+            <path d="M-5 33L-8 39L-2 39ZM5 33L2 39L8 39Z" fill="#6b7390"/>
+            <path d="M-3 39L0 52L3 39Z" fill="#ff9f4a"/>
+          </g>
+        </g>
         <rect x="-20" y="-3" width="12" height="6" fill="#3159d1" stroke="#a9bcff" stroke-width=".6"/><rect x="8" y="-3" width="12" height="6" fill="#3159d1" stroke="#a9bcff" stroke-width=".6"/>
         <rect x="-6" y="-8" width="12" height="16" rx="3" fill="#d9b25a" stroke="#fff2c4"/><path d="M-6 -8L0 -17L6 -8Z" fill="#eef2ff"/><circle r="3" fill="#101a3f"/>
         <g id="arm" style="opacity:0"><path d="M6 4L20 14" stroke="#c5cdea" stroke-width="2"/><circle cx="20" cy="14" r="2.5" fill="#ffcf6b"/></g>
@@ -741,14 +751,15 @@ function setupScene(m){
  const o=$("#orb");o.setAttribute("cx",D.x);o.setAttribute("cy",D.y);o.setAttribute("r",OR);
  const tp=$("#tp");
  if(eo)tp.setAttribute("d","");else{const s={x:E.x,y:E.y-E.r-35},e=A(180,OR,D);tp.setAttribute("d",`M${s.x} ${s.y} C${s.x+60} ${s.y-120} ${e.x-120} ${e.y-90} ${e.x} ${e.y}`)}
- ["fl","lg","pc","arm","cr"].forEach(i=>vis(i,0));$("#bst").style.opacity=0;$("#arm").removeAttribute("transform");
+ ["fl","lg","pc","arm","cr","rkStack","rkFairing","rkDec","rkStage1"].forEach(i=>vis(i,0));
+ $("#bst").style.opacity=0;$("#arm").removeAttribute("transform");
 }
 function setupSurfaceScene(dest){
  $("#eth").style.display="none";
  $("#dst").style.display="none";
  $("#orb").style.display="none";
  $("#tp").style.display="none";
- vis("cr",0);vis("fl",0);vis("pc",0);
+ vis("cr",0);vis("fl",0);vis("pc",0);vis("rkStack",0);
  $("#surfView").hidden=false;
  const isMars=dest==="mars";
  $("#sSky").setAttribute("fill",isMars?"url(#marsSky)":"url(#moonSky)");
@@ -761,10 +772,9 @@ function setupSurfaceScene(dest){
  }).join("");
  $("#rover").setAttribute("transform","translate(240 232)");
 }
-async function boom(){vis("fl",0);vis("cr",0);const b=$("#bst");b.setAttribute("cx",SCN.x);b.setAttribute("cy",SCN.y);await tween(800,p=>{b.setAttribute("r",4+36*p);b.style.opacity=1-p});b.style.opacity=0}
 async function sLaunch(ok){
  const {E,OR,eo}=SCN,s={x:E.x,y:E.y-E.r},e=eo?{x:E.x,y:E.y-OR}:{x:E.x,y:s.y-35};
- put(s.x,s.y,0);vis("cr",1);vis("fl",1);
+ put(s.x,s.y,0);vis("cr",1);vis("fl",1);vis("rkStack",1);vis("rkFairing",1);vis("rkDec",1);vis("rkStage1",1);
  await tween(1400,p=>{const q=p*p;put(s.x+(e.x-s.x)*q,s.y+(e.y-s.y)*q,0)});
  if(eo)vis("fl",0)
 }
@@ -781,16 +791,27 @@ async function sInsert(){
 }
 function idle(a){SCN.idle=true;const f=()=>{if(!SCN.idle)return;a+=.5;const q=A(a,SCN.OR,SCN.D);put(q.x,q.y,a+90);requestAnimationFrame(f)};if(!reduce)requestAnimationFrame(f)}
 async function sLand(ok,para){
- const {D,OR}=SCN,rs=D.r+24;vis("pc",para);vis("fl",!para);
+ const {D,OR}=SCN,rs=D.r+24;
+ vis("cr",1);vis("rkStack",1);vis("rkFairing",1);vis("rkDec",1);vis("rkStage1",1);
+ await tween(650,p=>{
+  $("#rkFairing").style.opacity=1-p;
+  $("#rkFairing").setAttribute("transform",`translate(${18*p} ${-10*p}) rotate(${25*p})`);
+ });
+ vis("rkFairing",0);
+ await tween(650,p=>{
+  $("#rkDec").style.opacity=1-p;
+  $("#rkDec").setAttribute("transform",`translate(${-14*p} ${8*p})`);
+ });
+ vis("rkDec",0);
+ await tween(700,p=>{
+  $("#rkStage1").style.opacity=1-p;
+  $("#rkStage1").setAttribute("transform",`translate(0 ${28*p})`);
+ });
+ vis("rkStage1",0);
+ vis("rkStack",0);
+ vis("pc",para);vis("fl",!para);
  await tween(1800,p=>{const q=ease(p),r=OR+(rs-OR)*q;put(D.x,D.y-r,0);if(para){vis("pc",p<.6);vis("fl",p>=.6)}vis("lg",p>.55)});
  vis("fl",0);vis("pc",0);vis("lg",1)
-}
-async function sRoveAndPhoto(){
- const {D}=SCN, baseR=D.r+24;
- const spots=[{dx:0,dy:-baseR,d:0},{dx:12,dy:-baseR+4,d:18},{dx:-10,dy:-baseR+6,d:-16}];
- for(const sp of spots){
-  await tween(500,p=>put(D.x+sp.dx*p,D.y+sp.dy*p,sp.d*p));
- }
 }
 async function sSample(){vis("arm",1);await tween(800,p=>$("#arm").setAttribute("transform",`translate(6 4) scale(${.3+.7*p}) translate(-6 -4)`))}
 
@@ -828,7 +849,7 @@ async function runLandingStage(c, m, step, res, log, sd, bad, good, getDmg, setD
  let siteIdx=0;
  while(true){
   const site=sites[siteIdx % sites.length];
-  step("Descent and landing",`Descending to ${site.name} on ${DN[m.dest]}… (${site.note})`);
+  step("Descent and landing",`Jettisoning rocket stages & descending to ${site.name} on ${DN[m.dest]}… (${site.note})`);
   await sLand(true,isMars);
   if(site.wrong){
    setDmg(getDmg()+8);sd();
@@ -843,7 +864,7 @@ async function runLandingStage(c, m, step, res, log, sd, bad, good, getDmg, setD
    vis("lg",0);
    continue;
   }
-  const okMsg=`Mission successful — Landed safely at ${site.name} on ${DN[m.dest]}!`;
+  const okMsg=`Mission successful — Spacecraft landed safely at ${site.name} on ${DN[m.dest]}!`;
   good.push(okMsg);log(okMsg,"g");
   await res("Descent and landing",true,okMsg,"");
   break;
