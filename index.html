@@ -281,16 +281,16 @@ moon:{n:"Lunar orbit, 100 km",dv:850,contact:.4,solar:1,ecl:2,rad:.5,heat:2,cap:
 mars:{n:"Mars orbit, 400 km",dv:1200,contact:.35,solar:.55,ecl:2,rad:.5,heat:2,cap:.25,link:2,life:8,d:"Mars transit & capture, reduced solar input, and X-band link requirement."}};
 
 const RENG=[{n:"Single engine",c:8,thr:1,x:"Thrust 1 of 4",lv:0,why:"Low cost, limited lift."},{n:"Triple engine",c:22,thr:2,x:"Thrust 2 of 4",lv:0,why:"Balanced medium lift."},{n:"Five-engine cluster",c:45,thr:4,x:"Thrust 4 of 4",lv:1,why:"Heavy lift capacity."}];
-const RTK=[{n:"Small tank",c:6,cap:1,x:"Propellant 1 of 4",lv:0,why:"Light tank."},{n:"Medium tank",c:14,cap:2,x:"Propellant 2 of 4",lv:0,why:"Medium tank."},{n:"Large tank",c:26,cap:4,x:"Propellant 4 of 4",lv:1,why:"Large tank."}];
-const RDEC=[{n:"No decoupler",c:0,mult:.65,r:0,x:"35% less payload",lv:0,why:"Carries dead mass."},{n:"Stage decoupler",c:4,mult:1,r:.06,x:"Standard staging",lv:0,why:"Drops empty stage."},{n:"Two-stage decoupler",c:8,mult:1.25,r:.08,x:"+25% payload",lv:1,why:"High staging efficiency."}];
-const RFAIR=[{n:"No fairing",c:0,r:0,x:"Exposed ascent",lv:0,why:"No ascent shield."},{n:"Standard fairing",c:5,r:.06,x:"Protects spacecraft",lv:0,why:"Protects payload."},{n:"Aerodynamic nose cone",c:8,r:.08,x:"Smoother airflow",lv:1,why:"Best ascent protection."}];
+const RTK=[{n:"Small tank",c:6,cap:1,x:"Propellant 1 of 4",lv:0,why:"Light tank."},{n:"Medium tank",c:14,cap:2,x:"Propellant 2 of 4",lv:0,why:"Medium tank."},{n:"Large tank",c:26,cap:4,x:"Propellant 4 of 4",lv:1,why:"Large tank."}],
+RDEC=[{n:"No decoupler",c:0,mult:.65,r:0,x:"35% less payload",lv:0,why:"Carries dead mass."},{n:"Stage decoupler",c:4,mult:1,r:.06,x:"Standard staging",lv:0,why:"Drops empty stage."},{n:"Two-stage decoupler",c:8,mult:1.25,r:.08,x:"+25% payload",lv:1,why:"High staging efficiency."}],
+RFAIR=[{n:"No fairing",c:0,r:0,x:"Exposed ascent",lv:0,why:"No ascent shield."},{n:"Standard fairing",c:5,r:.06,x:"Protects spacecraft",lv:0,why:"Protects payload."},{n:"Aerodynamic nose cone",c:8,r:.08,x:"Smoother airflow",lv:1,why:"Best ascent protection."}];
 const RK=["engine","tank","decoupler","fairing"];
 
 const ST=[{n:"Light frame",m:80,c:5,hard:0,x:"Shield 0/2",lv:0,why:"No bus radiation shield."},{n:"Standard bus",m:180,c:12,hard:1,x:"Shield 1/2",lv:0,why:"Moderate shield."},{n:"Hardened bus",m:300,c:22,hard:2,x:"Shield 2/2",lv:1,why:"Heavy radiation shield."}];
 const PW=[{n:"Solar 600 W",m:45,c:3,gen:600,x:"600 W at Earth",lv:0,why:"Lean power budget."},{n:"Solar 1500 W",m:100,c:8,gen:1500,x:"1500 W at Earth",lv:0,why:"Standard power."},{n:"Solar 3000 W",m:200,c:18,gen:3000,x:"3000 W at Earth",lv:1,why:"High power for Mars."}];
-const BT=[{n:"No battery",m:0,c:0,tier:0,x:"No eclipse storage",lv:0,why:"Fails in eclipses."},{n:"Li-ion pack",m:30,c:2,tier:1,x:"Short eclipses",lv:0,why:"Covers tier 1 eclipses."},{n:"Large pack",m:70,c:5,tier:2,x:"Long eclipses",lv:0,why:"Covers tier 2 eclipses."}];
-const PR=[{n:"Cold gas",m:15,p:5,c:1,dv:150,x:"150 m/s",lv:0,why:"Tiny delta-v."},{n:"Hydrazine",m:140,p:5,c:6,dv:1000,x:"1,000 m/s",lv:0,why:"Standard chemical propulsion."},{n:"Bipropellant",m:260,p:10,c:12,dv:1800,x:"1,800 m/s",lv:0,why:"High delta-v."}];
-const CM=[{n:"UHF antenna",m:5,p:10,c:1,rate:1,tier:0,x:"1 Mbps, near Earth",lv:0,why:"Short range only."},{n:"S-band radio",m:10,p:20,c:3,rate:10,tier:1,x:"10 Mbps, Moon",lv:0,why:"Reaches Moon."},{n:"X-band radio",m:25,p:50,c:8,rate:60,tier:2,x:"60 Mbps, Mars",lv:0,why:"Reaches Mars."}];
+const BT=[{n:"No battery",m:0,c:0,tier:0,x:"No eclipse storage",lv:0,why:"Fails in eclipses."},{n:"Li-ion pack",m:30,c:2,tier:1,x:"Short eclipses",lv:0,why:"Covers tier 1 eclipses."},{n:"Large pack",m:70,c:5,tier:2,x:"Long eclipses",lv:1,why:"Covers tier 2 eclipses."}];
+const PR=[{n:"Cold gas",m:15,p:5,c:1,dv:150,x:"150 m/s",lv:0,why:"Tiny delta-v."},{n:"Hydrazine",m:140,p:5,c:6,dv:1000,x:"1,000 m/s",lv:0,why:"Standard chemical propulsion."},{n:"Bipropellant",m:260,p:10,c:12,dv:1800,x:"1,800 m/s",lv:1,why:"High delta-v."}];
+const CM=[{n:"UHF antenna",m:5,p:10,c:1,rate:1,tier:0,x:"1 Mbps, near Earth",lv:0,why:"Short range only."},{n:"S-band radio",m:10,p:20,c:3,rate:10,tier:1,x:"10 Mbps, Moon",lv:0,why:"Reaches Moon."},{n:"X-band radio",m:25,p:50,c:8,rate:60,tier:2,x:"60 Mbps, Mars",lv:1,why:"Reaches Mars."}];
 const AD=[{n:"Reaction wheels",m:15,p:20,c:4,pt:.8,x:"Pointing 80%",lv:0,why:"80% pointing."},{n:"Star tracker + wheels",m:25,p:30,c:8,pt:1,x:"Pointing 100%",lv:1,why:"100% pointing."}];
 const CP=[{n:"Standard computer",m:5,p:10,c:1,rad:0,x:"Shield 0/1",lv:0,why:"Vulnerable to radiation."},{n:"Rad-hard computer",m:8,p:20,c:6,rad:1,x:"Shield 1/1",lv:1,why:"Radiation tolerant."}];
 const TH=[{n:"Insulation blankets",m:10,p:0,c:1,tier:1,x:"Thermal tier 1",lv:0,why:"Basic passive thermal."},{n:"Radiators + heaters",m:30,p:35,c:4,tier:2,x:"Thermal tier 2",lv:0,why:"Active thermal control."},{n:"Heat pipes + radiators",m:50,p:55,c:9,tier:3,x:"Thermal tier 3",lv:1,why:"High-load thermal control."}];
@@ -644,7 +644,7 @@ function rebuild(){
  if(s.computer!=null){const g=grp(sc,"cdh","u"+s.computer);mesh(g,box(.05,.4,.4),M(0x1b2540,{emissive:0x3a6fff,emissiveIntensity:.9}),.63,.3,0)}
  if(s.thermal!=null){const g=grp(sc,"thermal","t"+s.thermal);mesh(g,box(1.27,1.27,1.27),M(0xe8c56a,{transparent:true,opacity:.35,depthWrite:false})).userData.low=1}
  [...s.inst].forEach(i=>{const g=grp(sc,"payload","i"+i,IN[i].n);mesh(g,cyl(.12,.12,.3),M(0x5aa0ff),-.3+.25*i,.3,.75,Math.PI/2)});
- if(s.gear!=null){const g=grp(sc,"gear","g"+s.gear);[[1,1],[-1,1],[1,-1],[-1,-1]].forEach(a=>mesh(g,cyl(.03,.03,.7),M(0xc5cdea),a[0]*.8,-.9,a[1]*.8,-a[1]*.35,a[0]*.35))}
+ if(s.gear>0){const g=grp(sc,"gear","g"+s.gear);[[1,1],[-1,1],[1,-1],[-1,-1]].forEach(a=>mesh(g,cyl(.03,.03,.7),M(0xc5cdea),a[0]*.8,-.9,a[1]*.8,-a[1]*.35,a[0]*.35))}
  if(s.fairing>0){const g=grp(root,"fairing","w"+s.fairing),mt=M(0xcfd8ff,{transparent:true,opacity:.14,depthWrite:false,side:THREE.DoubleSide});
   mesh(g,cyl(1.45,1.45,2),mt,0,t+1.35,0)}
  prevSig=newSig;view();
@@ -768,7 +768,6 @@ function setupScene(m){
  if(eo)tp.setAttribute("d","");else{const s={x:E.x,y:E.y-E.r-45},e=A(180,OR,D);tp.setAttribute("d",`M${s.x} ${s.y} C${s.x+80} ${s.y-150} ${e.x-150} ${e.y-110} ${e.x} ${e.y}`)}
  ["fl","lg","pc","arm","cr","rkStack","rkFairing","rkDec","rkStage1"].forEach(i=>vis(i,0));
  $("#bst").style.opacity=0;$("#arm").removeAttribute("transform");
- ["rkFairing","rkDec","rkStage1"].forEach(i=>$("#"+i).removeAttribute("transform"));
 }
 function setupSurfaceScene(dest, showRover){
  $("#eth").style.display="none";
@@ -879,6 +878,7 @@ async function runOrbitExplorationStage(c, step, res, log, sd, bad, good, getDmg
  orbitPassed=true;
  landingBonusPts=Math.max(20, Math.round(20 + c.sci*0.25));
  const okMsg=`Mission successful — Orbit exploration passed! Earned ${landingBonusPts} landing-eligible bonus points.`;
+ good.push(okMsg);log(okMsg,"g");
  await res("Orbit exploration",true,okMsg,"");
  return true;
 }
@@ -926,6 +926,7 @@ async function runLandingStage(c, m, step, res, log, sd, bad, good, getDmg, setD
   /* Only now reveal the spacecraft on the Moon or Mars surface */
   setupSurfaceScene(m.dest, true);
   const okMsg=`Mission successful — Spacecraft landed safely at ${site.name} on ${DN[m.dest]}!`;
+  good.push(okMsg);log(okMsg,"g");
   await res("Descent and landing",true,okMsg,"");
   break;
  }
@@ -972,6 +973,7 @@ async function runDataCollectionStage(c, m, step, res, log, good){
  });
  $("#surfControls").hidden=true;
  const pMsg=`Mission successful — Explored ${DN[m.dest]}, took ${photos.length} picture(s), and sent data back to Earth.`;
+ good.push(pMsg);
  await res("Data collection",true,pMsg,"");
 }
 
@@ -1068,6 +1070,10 @@ async function fly(){
   }
  }
  carriedDmg=dmg;
+ if(!fail && dmg<DMG_CAP[lv]){
+  if(!completedStages[m.dest])completedStages[m.dest]=new Set();
+  completedStages[m.dest].add(m.stage);
+ }
  await wait(400);SCN.idle=false;report(c,fail || dmg>=DMG_CAP[lv],dmg,smul,good,bad);
 }
 const okOrLand=land=>!land;
@@ -1079,13 +1085,12 @@ function getNextMissionIndex(currentIdx){
  if(pos>=0 && pos+1<sameDest.length){
   return MIS.indexOf(sameDest[pos+1]);
  }
- return -1;
+ return (currentIdx+1)%MIS.length;
 }
 
 function report(c,fail,dmg,smul,good,bad){
  const sci=fail?0:Math.round(c.sci*smul);
  const pass=!fail && sci>=c.m.min;
- if(pass){if(!completedStages[c.m.dest])completedStages[c.m.dest]=new Set();completedStages[c.m.dest].add(c.m.stage);}
  const bonus=pass && sci>=c.m.bonus;
  const pts={
   sci:Math.round(Math.min(1,sci/Math.max(1,c.m.bonus))*40),
@@ -1097,46 +1102,31 @@ function report(c,fail,dmg,smul,good,bad){
  const total=pts.sci+pts.bud+pts.rel+pts.dat+pts.bon;
  if(c.ratio>=1)good.push("Radio transmitted 100% of instrument data.");
  else bad.push(`Radio sent ${Math.round(c.ratio*100)}% of data (${c.down.toFixed(1)} / ${c.dataGen.toFixed(1)} Mbps).`);
- const pt=c.ad.pt||.8,potential=Math.round(c.sci*smul);
- const lostPt=Math.round(c.sciRaw*(1-pt)),lostData=Math.round(c.sciRaw*pt*(1-c.ratio)),lostEv=Math.round(c.sci*(1-smul));
- if(fail){
-  bad.push(`Science ${sci} is below minimum ${c.m.min}: the mission failed before science operations finished, so no science counted. Your design would have produced about ${potential}.`);
- } else if(sci>=c.m.min){
-  good.push(`Science ${sci} met minimum ${c.m.min}.`);
- } else {
-  bad.push(`Science ${sci} is below minimum ${c.m.min} (short by ${c.m.min-sci}). Possible reasons:`);
-  if(c.sciRaw<c.m.min)bad.push(`Your instruments offer only ${c.sciRaw} raw science for this mission. Add or swap in instruments with higher science.`);
-  if(lostPt>0)bad.push(`Pointing accuracy of ${Math.round(pt*100)}% cost ${lostPt} science. A star tracker gives 100%.`);
-  if(lostData>0)bad.push(`The radio returned only ${Math.round(c.ratio*100)}% of the data (${c.down.toFixed(1)} of ${c.dataGen.toFixed(1)} Mbps), costing ${lostData} science. Use a faster radio or fewer data-heavy instruments.`);
-  if(lostEv>0)bad.push(`Your choices in random events cost ${lostEv} science. Safe mode and a rad-hard computer protect your data.`);
-  if(!c.ins.length)bad.push("No science instruments were installed.");
- }
+ if(sci>=c.m.min)good.push(`Science ${sci} met minimum ${c.m.min}.`);
+ else bad.push(`Science ${sci} is below minimum ${c.m.min}.`);
  if(bonus)good.push(`Bonus objective met (${sci} science).`);
 
  let best={};try{best=JSON.parse(localStorage.getItem("msd-best")||"{}")}catch(e){}
  if(total>(best[c.m.id]||0)){best[c.m.id]=total;try{localStorage.setItem("msd-best",JSON.stringify(best))}catch(e){}}
 
  const nextIdx=getNextMissionIndex(mi);
- const nextMission=nextIdx>=0?MIS[nextIdx]:null;
- const canNext=pass&&nextMission&&isStageUnlocked(nextMission);
+ const nextMission=MIS[nextIdx];
 
  $("#report").innerHTML=`<h2>Mission report: ${c.m.n}</h2>
  <p class="${pass?"g":"r"}" style="font:700 22px 'Space Grotesk'">${pass?"Mission successful":fail?"Mission failed":"Mission incomplete"}</p>
  <div class="row" style="gap:32px;margin:12px 0"><div><div class="score" id="repScore">${total}</div><div class="mut">out of 110</div></div>
- <table><tr><th>Category</th><th>Result</th><th>Points</th></tr><tr><th>Science</th><td>${sci} science (minimum ${c.m.min}, bonus ${c.m.bonus})</td><td>${pts.sci} / 40</td></tr><tr><th>Budget</th><td>$${c.cost}M of $${c.m.budget}M used</td><td>${pts.bud} / 20</td></tr><tr><th>Spacecraft health</th><td>${dmg}% damage</td><td>${pts.rel} / 20</td></tr><tr><th>Data returned</th><td>${c.down.toFixed(1)} of ${c.dataGen.toFixed(1)} Mbps (${Math.round(c.ratio*100)}%)</td><td>${pts.dat} / 20</td></tr><tr><th>Bonus objective</th><td>${bonus?"Met":"Not met"}</td><td>${pts.bon} / 10</td></tr></table></div>
- <div class="card"><h3>How your science was calculated</h3><p class="mut" style="margin:6px 0 0">${c.sciRaw} raw instrument science × ${Math.round(pt*100)}% pointing × ${Math.round(c.ratio*100)}% data returned × ${Math.round(smul*100)}% after random events ≈ <b>${potential}</b>${fail?" (counted as 0 because the mission failed)":""}. Science points: ${sci} ÷ ${c.m.bonus} bonus target × 40 = ${pts.sci} out of 40.</p></div>
+ <table><tr><th>Science</th><td>${pts.sci} / 40</td></tr><tr><th>Budget use</th><td>${pts.bud} / 20</td></tr><tr><th>Spacecraft health (${dmg}% damage)</th><td>${pts.rel} / 20</td></tr><tr><th>Data returned</th><td>${pts.dat} / 20</td></tr><tr><th>Bonus objective</th><td>${pts.bon} / 10</td></tr></table></div>
  <div class="two"><div class="card"><h3>What worked</h3><ul>${good.map(t=>`<li>${t}</li>`).join("")||"<li>Nothing yet.</li>"}</ul></div>
  <div class="card"><h3>What went wrong</h3><ul>${bad.map(t=>`<li>${t}</li>`).join("")||"<li>No failures.</li>"}</ul></div></div>
- ${!pass&&nextMission?`<p class="r">Next stage locked: pass this mission to unlock ${nextMission.n}.</p>`:""}
  <div class="row">
   <button class="btn pri" id="ref">Refine this design</button>
   <button class="btn" id="again">End mission</button>
-  ${canNext?`<button class="btn pri" id="nextMis">Next mission: ${nextMission.n} (+15 pts)</button>`:""}
+  <button class="btn pri" id="nextMis">Next mission: ${nextMission.n} (+15 pts)</button>
  </div>`;
  show("report");
  $("#ref").onclick=()=>{continuedFromOrbit=false;sel=last.sel;mi=last.mi;lv=last.lv;learn=false;openBuild(false)};
  $("#again").onclick=()=>{continuedFromOrbit=false;toMis()};
- if($("#nextMis"))$("#nextMis").onclick=()=>{
+ $("#nextMis").onclick=()=>{
   bonusPointsAwarded += 15;
   landingBonusPts += 15;
   const boosted = Math.min(110, total + bonusPointsAwarded);
