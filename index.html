@@ -470,9 +470,9 @@ let tt;function toast(t){const e=$("#toast");e.textContent=t;e.classList.add("on
 function toMenu(){show("menu")}
 function missionIcon(m){return`<svg class="ic" viewBox="0 0 88 88" aria-hidden="true"><circle cx="44" cy="44" r="26" fill="${m.body}"/><circle cx="35" cy="35" r="9" fill="#fff" opacity=".18"/>${m.dest==="moon"?`<circle cx="52" cy="50" r="5" fill="#000" opacity=".18"/><circle cx="40" cy="56" r="3" fill="#000" opacity=".18"/>`:""}<ellipse cx="44" cy="44" rx="40" ry="13" fill="none" stroke="#a9bcff" stroke-width="1.5" transform="rotate(-20 44 44)"/><circle cx="78" cy="30" r="3.5" fill="#fff"/></svg>`}
 const DESTS=[
-  {id:"moon",n:"Moon",b:"Explore cislunar space — choose orbiting, lunar landing, or sample collection.",body:"#8d93a6",dest:"moon"},
-  {id:"mars",n:"Mars",b:"Cross to the Red Planet — choose orbiting, Mars landing, or sample collection.",body:"#c1583a",dest:"mars"},
-  {id:"earth",n:"Earth",b:"Track coastlines, crops and storms from Earth orbit.",body:"#2b4fb8",dest:"earth"}
+  {id:"moon",n:"Silver Gateway",b:"Explore cislunar space — choose orbiting, lunar landing, or sample collection.",body:"#8d93a6",dest:"moon"},
+  {id:"mars",n:"Red Frontier",b:"Cross to the Red Planet — choose orbiting, Mars landing, or sample collection.",body:"#c1583a",dest:"mars"},
+  {id:"earth",n:"Blue Horizon",b:"Track coastlines, crops and storms from Earth orbit.",body:"#2b4fb8",dest:"earth"}
 ];
 function toMis(){let b={};try{b=JSON.parse(localStorage.getItem("msd-best")||"{}")}catch(e){}
  $("#missions").innerHTML=DESTS.map(d=>{const list=MIS.filter(m=>m.dest===d.dest);const best=list.map(m=>b[m.id]).filter(Boolean);
