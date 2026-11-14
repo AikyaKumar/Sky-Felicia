@@ -170,7 +170,7 @@ table{border-collapse:collapse;font-size:15px}td,th{padding:6px 18px 6px 0;text-
 <div class="row" style="justify-content:space-between"><button class="btn" data-go="mis">Change mission</button><div class="row"><button class="btn" id="mLearn">Explore a finished build</button><button class="btn" id="mBuild">Build from scratch</button><button class="btn" id="mModify">Modify components</button></div></div>
 <div class="card hud"><div><h2 id="bt" style="font-size:26px"></h2><p id="bb" class="mut" style="margin:4px 0 0;font-size:14px"></p></div><div class="pr"><div class="meter" style="margin:0"><div class="l"><span>Build progress</span><span id="hudn"></span></div><div class="bar"><i id="hudb"></i></div></div></div></div>
 <div class="build"><div class="vcol"><div id="view" class="card"><div id="tip" class="tip" hidden></div><div class="vb"><button class="btn sm" data-v="sc">Spacecraft</button><button class="btn sm" data-v="rk">Rocket</button><button class="btn sm" data-v="all">Whole stack</button></div></div><p class="mut" id="hint" style="font-size:14px;margin-top:10px"></p></div>
-<aside class="side"><div class="card"><div id="gate" class="gate"></div><div id="meters"></div><ul class="chk" id="checks"></ul><div id="whatif" class="whatif"></div><div id="sci" class="whatif"></div><button class="btn pri" id="launch" style="width:100%">Review checklist &amp; launch</button></div><div id="panel" style="margin-top:12px"></div></aside></div>
+<aside class="side"><div class="card"><div id="gate" class="gate"></div><div id="meters"></div><ul class="chk" id="checks"></ul><div id="whatif" class="whatif"></div><button class="btn pri" id="launch" style="width:100%">Review checklist &amp; launch</button></div><div id="panel" style="margin-top:12px"></div></aside></div>
 <div class="card" id="impactCard" style="margin-top:20px"><h3>Side-by-side parameter impact</h3><p class="mut" style="font-size:14px">Compare your current build against your pre-flight baseline whenever you modify a component.</p><div id="impact"></div></div>
 </section>
 
@@ -283,6 +283,7 @@ mars:{n:"Mars orbit, 400 km",dv:1200,contact:.35,solar:.55,ecl:2,rad:.5,heat:2,c
 const RENG=[{n:"Single engine",c:8,thr:1,x:"Thrust 1 of 4",lv:0,why:"Low cost, limited lift."},{n:"Triple engine",c:22,thr:2,x:"Thrust 2 of 4",lv:0,why:"Balanced medium lift."},{n:"Five-engine cluster",c:45,thr:4,x:"Thrust 4 of 4",lv:1,why:"Heavy lift capacity."}];
 const RTK=[{n:"Small tank",c:6,cap:1,x:"Propellant 1 of 4",lv:0,why:"Light tank."},{n:"Medium tank",c:14,cap:2,x:"Propellant 2 of 4",lv:0,why:"Medium tank."},{n:"Large tank",c:26,cap:4,x:"Propellant 4 of 4",lv:1,why:"Large tank."}],
 RDEC=[{n:"No decoupler",c:0,mult:.65,r:0,x:"35% less payload",lv:0,why:"Carries dead mass."},{n:"Stage decoupler",c:4,mult:1,r:.06,x:"Standard staging",lv:0,why:"Drops empty stage."},{n:"Two-stage decoupler",c:8,mult:1.25,r:.08,x:"+25% payload",lv:1,why:"High staging efficiency."}],
+<<<<<<< HEAD
 RFAIR=[{n:"No fairing",c:0,r:0,x:"Exposed ascent",lv:0,why:"No ascent shield."},{n:"Standard fairing",c:5,r:.06,x:"Protects spacecraft",lv:0,why:"Protects payload."},{n:"Aerodynamic nose cone",c:8,r:.08,x:"Smoother airflow",lv:1,why:"Best ascent protection."}];
 const RK=["engine","tank","decoupler","fairing"];
 
@@ -294,6 +295,19 @@ const CM=[{n:"UHF antenna",m:5,p:10,c:1,rate:1,tier:0,x:"1 Mbps, near Earth",lv:
 const AD=[{n:"Reaction wheels",m:15,p:20,c:4,pt:.8,x:"Pointing 80%",lv:0,why:"80% pointing."},{n:"Star tracker + wheels",m:25,p:30,c:8,pt:1,x:"Pointing 100%",lv:1,why:"100% pointing."}];
 const CP=[{n:"Standard computer",m:5,p:10,c:1,rad:0,x:"Shield 0/1",lv:0,why:"Vulnerable to radiation."},{n:"Rad-hard computer",m:8,p:20,c:6,rad:1,x:"Shield 1/1",lv:1,why:"Radiation tolerant."}];
 const TH=[{n:"Insulation blankets",m:10,p:0,c:1,tier:1,x:"Thermal tier 1",lv:0,why:"Basic passive thermal."},{n:"Radiators + heaters",m:30,p:35,c:4,tier:2,x:"Thermal tier 2",lv:0,why:"Active thermal control."},{n:"Heat pipes + radiators",m:50,p:55,c:9,tier:3,x:"Thermal tier 3",lv:1,why:"High-load thermal control."}];
+=======
+RFAIR=[{n:"No fairing",c:0,r:0,x:"Exposed ascent",lv:0,why:"No ascent shield."},{n:"Standard fairing",c:5,r:.06,x:"Protects spacecraft",lv:0,why:"Protects payload."},{n:"Aerodynamic nose cone",c:8,r:.08,x:"Smoother airflow",lv:1,why:"Best ascent protection."}],
+const RK=["engine","tank","decoupler","fairing"];
+
+const ST=[{n:"Light frame",m:80,c:5,hard:0,x:"Shield 0/2",lv:0,why:"No bus radiation shield."},{n:"Standard bus",m:180,c:12,hard:1,x:"Shield 1/2",lv:0,why:"Moderate shield."},{n:"Hardened bus",m:300,c:22,hard:2,x:"Shield 2/2",lv:1,why:"Heavy radiation shield."}];
+const PW=[{n:"Solar 600 W",m:45,c:3,gen:600,x:"600 W at Earth",lv:0,why:"Lean power budget."},{n:"Solar 1500 W",m:100,c:8,gen:1500,x:"1500 W at Earth",lv:0,why:"Standard power."},{n:"Solar 3000 W",m:200,c:18,gen:3000,x:"3000 W at Earth",lv:1,why:"High power for Mars."}],
+const BT=[{n:"No battery",m:0,c:0,tier:0,x:"No eclipse storage",lv:0,why:"Fails in eclipses."},{n:"Li-ion pack",m:30,c:2,tier:1,x:"Short eclipses",lv:0,why:"Covers tier 1 eclipses."},{n:"Large pack",m:70,c:5,tier:2,x:"Long eclipses",lv:1,why:"Covers tier 2 eclipses."}],
+const PR=[{n:"Cold gas",m:15,p:5,c:1,dv:150,x:"150 m/s",lv:0,why:"Tiny delta-v."},{n:"Hydrazine",m:140,p:5,c:6,dv:1000,x:"1,000 m/s",lv:0,why:"Standard chemical propulsion."},{n:"Bipropellant",m:260,p:10,c:12,dv:1800,x:"1,800 m/s",lv:1,why:"High delta-v."}],
+const CM=[{n:"UHF antenna",m:5,p:10,c:1,rate:1,tier:0,x:"1 Mbps, near Earth",lv:0,why:"Short range only."},{n:"S-band radio",m:10,p:20,c:3,rate:10,tier:1,x:"10 Mbps, Moon",lv:0,why:"Reaches Moon."},{n:"X-band radio",m:25,p:50,c:8,rate:60,tier:2,x:"60 Mbps, Mars",lv:1,why:"Reaches Mars."}],
+const AD=[{n:"Reaction wheels",m:15,p:20,c:4,pt:.8,x:"Pointing 80%",lv:0,why:"80% pointing."},{n:"Star tracker + wheels",m:25,p:30,c:8,pt:1,x:"Pointing 100%",lv:1,why:"100% pointing."}],
+const CP=[{n:"Standard computer",m:5,p:10,c:1,rad:0,x:"Shield 0/1",lv:0,why:"Vulnerable to radiation."},{n:"Rad-hard computer",m:8,p:20,c:6,rad:1,x:"Shield 1/1",lv:1,why:"Radiation tolerant."}],
+const TH=[{n:"Insulation blankets",m:10,p:0,c:1,tier:1,x:"Thermal tier 1",lv:0,why:"Basic passive thermal."},{n:"Radiators + heaters",m:30,p:35,c:4,tier:2,x:"Thermal tier 2",lv:0,why:"Active thermal control."},{n:"Heat pipes + radiators",m:50,p:55,c:9,tier:3,x:"Thermal tier 3",lv:1,why:"High-load thermal control."}],
+>>>>>>> 30bc2e12f6f8d579859e79fabc3930736c49435e
 const IN=[
 {n:"Visible camera",m:25,p:40,c:6,data:5,sci:{eo:30,data:30,land:35,sample:15},lv:0,why:"Baseline imager."},
 {n:"Multispectral imager",m:45,p:70,c:14,data:12,sci:{eo:45,data:40,land:30,sample:20},lv:0,why:"Higher science, 12 Mbps."},
@@ -635,7 +649,7 @@ function rebuild(){
  const ad=new THREE.Mesh(cyl(.5,.75,.3),M(0x2c3454));ad.position.y=t+.15;root.add(ad);
  sc=new THREE.Group();sc.position.y=t+1.15;sc.scale.setScalar(.5);root.add(sc);
  if(s.structure!=null){const g=grp(sc,"structure","s"+s.structure);mesh(g,box(1.2,1.2,1.2),M(0xcdbb8a,{roughness:.35}))}
- if(s.power!=null){const g=grp(sc,"eps","p"+s.power),W=[1.4,2.0,2.6][s.power];
+ if(s.power!=null){const g=grp(sc,"eps","p"+s.power),W=[1.4,2.0][s.power];
   [-1,1].forEach(d=>{mesh(g,cyl(.04,.04,.5),M(0xaaaaaa),d*.85,0,0,0,Math.PI/2);mesh(g,box(W,.04,.95),M(0x1f3f9c,{emissive:0x0a1a55,metalness:.7,roughness:.25}),d*(.8+W/2),0,0)})}
  if(s.battery!=null){const g=grp(sc,"battery","b"+s.battery);mesh(g,box(.5,.3,.12),M(0x2fbf9a,{emissive:0x0a3d30}),-.3,-.3,.67)}
  if(s.prop!=null){const g=grp(sc,"prop","r"+s.prop);mesh(g,cyl(.12,.32,.55),M(0x9aa3bf),0,-.85,0)}
@@ -752,7 +766,7 @@ function tween(ms,fn){return new Promise(res=>{const d=reduce?Math.min(ms,250):m
 function setupScene(m){
  const eo=m.dest==="earth",E=eo?{x:320,y:215,r:92}:{x:95,y:345,r:86},D=eo?E:{x:485,y:175,r:m.dest==="moon"?46:56},OR=eo?E.r+54:D.r+68;
  Object.assign(SCN,{eo,E,D,OR,idle:false});
- $("#surfView").style.display="none";
+ $("#surfView").hidden=true;
  $("#rover").style.opacity=0;
  $("#surfControls").hidden=true;
  $("#eth").style.display="";
@@ -775,7 +789,7 @@ function setupSurfaceScene(dest, showRover){
  $("#orb").style.display="none";
  $("#tp").style.display="none";
  vis("cr",0);vis("fl",0);vis("pc",0);vis("rkStack",0);
- $("#surfView").style.display="";
+ $("#surfView").hidden=false;
  $("#rover").style.opacity=showRover?1:0;
  const isMars=dest==="mars";
  $("#sSky").setAttribute("fill",isMars?"url(#marsSky)":"url(#moonSky)");
