@@ -119,6 +119,10 @@ table{border-collapse:collapse;font-size:15px}td,th{padding:6px 18px 6px 0;text-
 .whatif ul{margin:6px 0 0;padding-left:18px;color:var(--mut)}
 .whatif li{margin-bottom:4px}
 .dec{font-size:13px;color:var(--acc);background:rgba(169,188,255,.07);border-left:2px solid var(--acc);padding:6px 10px;border-radius:0 8px 8px 0;margin:0 0 10px}
+.imp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:12px}
+.imp-box{border:1px solid var(--line);border-radius:12px;padding:12px;background:rgba(7,11,26,.55);font-size:13px}
+.imp-box b{display:block;font-family:"Space Grotesk",sans-serif;margin-bottom:4px}
+.delta-pos{color:var(--ok)}.delta-neg{color:var(--bad)}.delta-neu{color:var(--mut)}
 </style>
 </head>
 <body>
@@ -159,8 +163,22 @@ table{border-collapse:collapse;font-size:15px}td,th{padding:6px 18px 6px 0;text-
 <div class="row" style="justify-content:space-between"><button class="btn" data-go="mis">Change mission</button><div class="row"><button class="btn" id="mLearn">Explore a finished build</button><button class="btn" id="mBuild">Build from scratch</button></div></div>
 <div class="card hud"><div><h2 id="bt" style="font-size:26px"></h2><p id="bb" class="mut" style="margin:4px 0 0;font-size:14px"></p></div><div class="pr"><div class="meter" style="margin:0"><div class="l"><span>Build progress</span><span id="hudn"></span></div><div class="bar"><i id="hudb"></i></div></div></div></div>
 <div class="build"><div class="vcol"><div id="view" class="card"><div id="tip" class="tip" hidden></div><div class="vb"><button class="btn sm" data-v="sc">Spacecraft</button><button class="btn sm" data-v="rk">Rocket</button><button class="btn sm" data-v="all">Whole stack</button></div></div><p class="mut" id="hint" style="font-size:14px;margin-top:10px"></p></div>
-<aside class="side"><div class="card"><div id="gate" class="gate"></div><div id="meters"></div><ul class="chk" id="checks"></ul><div id="whatif" class="whatif"></div><button class="btn pri" id="launch" style="width:100%">Launch mission</button></div><div id="panel" style="margin-top:12px"></div></aside></div>
+<aside class="side"><div class="card"><div id="gate" class="gate"></div><div id="meters"></div><ul class="chk" id="checks"></ul><div id="whatif" class="whatif"></div><button class="btn pri" id="launch" style="width:100%">Review checklist &amp; launch</button></div><div id="panel" style="margin-top:12px"></div></aside></div>
+<div class="card" id="impactCard" style="margin-top:20px"><h3>Side-by-side parameter impact</h3><p class="mut" style="font-size:14px">Compare your current build against your pre-flight baseline whenever you modify a part (such as science payload, fuel tank, or thermal control).</p><div id="impact"></div></div>
 </section>
+
+<section id="preflight" class="screen" hidden>
+  <button class="btn" id="pfBack">Back to builder</button>
+  <h2 id="pft" style="margin-top:22px">Pre-flight configuration checklist</h2>
+  <p id="pfb" class="mut"></p>
+  <div id="pfStatus" class="gate"></div>
+  <div class="two">
+    <div class="card"><h3>Approved configuration settings</h3><ul class="chk" id="pfApproved"></ul></div>
+    <div class="card"><h3>Reasons mission cannot launch</h3><ul class="chk" id="pfBlocked"></ul></div>
+  </div>
+  <div class="row" id="pfActions"></div>
+</section>
+
 <section id="sim" class="screen" hidden>
   <h2 id="simt">Mission in progress</h2>
   <div class="sim"><div class="card">
@@ -281,7 +299,7 @@ const KEYS=()=>[...RK,"structure","power","battery","prop","comms","adcs","compu
 const LIST={engine:RENG,tank:RTK,decoupler:RDEC,fuselage:RFUS,fairing:RFAIR,fins:RFIN,flightcomp:RFC,tvc:RTVC,structure:ST,power:PW,battery:BT,prop:PR,comms:CM,adcs:AD,computer:CP,thermal:TH,fault:FD,fluid:FL,gear:GR,inst:IN};
 const KN={power:"Solar panels",battery:"Battery",orbit:"Orbit",engine:"Engines",tank:"Fuel and oxidizer tanks",fuselage:"Fuselage",fairing:"Nose cone and fairing",fins:"Fins",flightcomp:"Flight computer",tvc:"Thrust vectoring"};
 const Z={n:"None",m:0,p:0,c:0,gen:0,tier:0,rate:0,rad:0,pt:0,dv:0,hard:0,safe:0,dvm:1};
-let mi=0,lv=0,sel,learn=false,openS="setup",panelHover=null,hoverId=null,vk="all",last={},whatifFuel=false;
+let mi=0,lv=0,sel,learn=false,openS="setup",panelHover=null,hoverId=null,vk="all",last={},whatifFuel=false,baseSel=null;
 const mm=()=>({...MIS[mi],budget:Math.round(MIS[mi].budget*BM[lv]),min:Math.round(MIS[mi].min*SM[lv]),bonus:Math.round(MIS[mi].bonus*SM[lv])});
 const pk=k=>sel[k]==null?Z:LIST[k][sel[k]];
 const scratch=()=>({orbit:MIS[mi].orbits[0],engine:null,tank:null,decoupler:null,fuselage:null,fairing:null,fins:null,flightcomp:null,tvc:null,structure:null,power:null,battery:null,prop:null,comms:null,adcs:null,computer:null,thermal:null,fault:null,fluid:null,gear:null,inst:new Set()});
@@ -302,6 +320,7 @@ function calc(overrideSel){
  c.sciRaw=ins.reduce((t,i)=>t+i.sci[m.sk],0);
  c.sci=Math.round(c.sciRaw*(ad.pt||.8)*c.ratio);
  c.prot=cp.rad+st.hard;
+ c.thermNeed=Math.min(3,c.o.heat+(c.use>500?1:0));
  return c;
 }
 function stat(k,o){
@@ -319,39 +338,163 @@ function renderPanel(){
  return(S.grp?`<div class="gh">${S.grp}</div>`:"")+`<div class="sys ${openS===S.id?"open":""}" data-id="${S.id}"><button class="sh" aria-expanded="${openS===S.id}"><span>${S.t}</span><em class="${done?"ok":""}">${done?labs.join(", "):"Not installed"}</em></button><div class="sb"><p><b>Where:</b> ${I.w}</p><p><b>Why:</b> ${I.y}</p>${I.dec?`<p class="dec"><b>Decision:</b> ${I.dec}</p>`:""}${learn?"":S.keys.map(k=>(S.keys.length>1?`<h4>${KN[k]}</h4>`:"")+opts(k)).join("")}</div></div>`}).join("")}
 function meter(l,v,max,u,inv){const p=Math.min(100,max?v/max*100:0),cls=inv?(v>=max?"":v>=max*.7?"w":"b"):(v>max?"b":v>max*.9?"w":"");
  return`<div class="meter"><div class="l"><span>${l}</span><span>${Math.round(v).toLocaleString()} / ${Math.round(max).toLocaleString()} ${u}</span></div><div class="bar"><i class="${cls}" style="width:${p}%"></i></div></div>`}
+
+function evaluateBuild(s){
+ const targetSel=s||sel;
+ const c=calc(targetSel);
+ const approved=[], blockers=[], warnings=[];
+ const ks=KEYS(),total=ks.length+1,miss=ks.filter(x=>targetSel[x]==null).length+(targetSel.inst.size?0:1);
+ if(miss){
+  blockers.push(`${miss} of ${total} parts still to install — complete all rocket and spacecraft subsystems.`);
+ } else {
+  approved.push(`All ${total} rocket and spacecraft subsystems installed (${c.L.n} + ${targetSel.inst.size} instrument${targetSel.inst.size>1?"s":""}).`);
+ }
+ const rk=targetSel.engine!=null&&targetSel.tank!=null;
+ if(rk){
+  if(c.mass<=c.cap){
+   approved.push(`Mass within lift capacity: ${c.mass} kg of ${c.cap} kg (${c.cap-c.mass} kg margin).`);
+  } else {
+   blockers.push(`Payload too heavy by ${c.mass-c.cap} kg (${c.mass} kg vs ${c.cap} kg lift) — remove heavy instruments/parts or increase fuel tank and engine thrust.`);
+  }
+  if(c.L.thr>=c.L.cap && c.L.cap>=c.L.thr){
+   approved.push(`Rocket propulsion matched: thrust ${c.L.thr}/4 and tank ${c.L.cap}/4.`);
+  } else if(c.L.thr<c.L.cap){
+   warnings.push("Fuel tank is larger than engine thrust — increase engine thrust to use the extra propellant.");
+  } else {
+   warnings.push("Fuel tank is small for your engines — increase fuel tank size to unlock more lift.");
+  }
+ }
+ if(c.cost<=c.m.budget){
+  approved.push(`Budget approved: $${c.cost}M of $${c.m.budget}M ($${c.m.budget-c.cost}M remaining).`);
+ } else {
+  blockers.push(`Budget exceeded by $${c.cost-c.m.budget}M ($${c.cost}M vs $${c.m.budget}M budget) — choose lower-cost parts or lower difficulty.`);
+ }
+ if(targetSel.power!=null){
+  if(c.use<=c.gen){
+   approved.push(`Power budget approved: ${c.use} W draw vs ${c.gen} W solar generation.`);
+  } else {
+   blockers.push(`Power deficit of ${c.use-c.gen} W (${c.use} W needed vs ${c.gen} W generated) — upgrade solar panels or trim power-hungry payload/thrusters.`);
+  }
+ }
+ if(RK.every(x=>targetSel[x]!=null)){
+  if(c.L.rel>=.9){
+   approved.push(`Rocket reliability approved: ${Math.round(c.L.rel*100)}%.`);
+  } else {
+   warnings.push(`Rocket reliability ${Math.round(c.L.rel*100)}% — add fins, fairing, decoupler, gimbals, or redundant flight computer.`);
+  }
+ }
+ const need=c.o.dv+(c.m.landDv||0);
+ if(targetSel.prop!=null){
+  if(c.dv>=need){
+   approved.push(`Delta-v approved: ${c.dv} m/s available vs ${need} m/s required.`);
+  } else {
+   warnings.push(`Delta-v ${c.dv} m/s is below ${need} m/s required — upgrade thruster or turbopump tanks.`);
+  }
+ }
+ if(targetSel.gear!=null){
+  if(c.gr.tier>=c.m.need){
+   approved.push(`Landing gear approved: ${c.gr.n} meets ${c.m.dest} requirement.`);
+  } else {
+   warnings.push(c.m.dest==="mars"?"Mars needs legs plus a parachute — upgrade landing gear.":"The Moon needs landing legs — upgrade landing gear.");
+  }
+ }
+ if(targetSel.battery!=null){
+  if(c.bt.tier>=c.o.ecl){
+   approved.push(`Battery approved: ${c.bt.n} covers orbit eclipses.`);
+  } else {
+   warnings.push("Battery too small for eclipses — upgrade to a larger battery pack.");
+  }
+ }
+ if(targetSel.comms!=null){
+  if(c.cm.tier>=c.o.link){
+   approved.push(`Communications approved: ${c.cm.n} reaches ${ORB[targetSel.orbit].n.split(",")[0]}.`);
+  } else {
+   warnings.push("Radio too weak for this distance — upgrade comms antenna/dish.");
+  }
+  if(c.ins.length){
+   if(c.ratio>=1){
+    approved.push(`Downlink bandwidth approved: ${c.down.toFixed(1)} Mbps handles ${c.dataGen.toFixed(1)} Mbps instrument data.`);
+   } else {
+    warnings.push(`Radio sends ${c.down.toFixed(1)} of ${c.dataGen.toFixed(1)} Mbps — upgrade radio or trim high-data instruments.`);
+   }
+  }
+ }
+ if(targetSel.thermal!=null){
+  if(c.th.tier>=c.thermNeed){
+   approved.push(`Thermal control approved: tier ${c.th.tier} meets required tier ${c.thermNeed}.`);
+  } else {
+   warnings.push(`Thermal control tier ${c.th.tier} is below required tier ${c.thermNeed} for this orbit and power draw.`);
+  }
+ }
+ return {c, approved, blockers, warnings, launchable: blockers.length===0};
+}
+
+function fmtDelta(val, unit, goodWhenNegative){
+ if(!val)return `<span class="delta-neu">0 ${unit}</span>`;
+ const pos=val>0;
+ const cls=(goodWhenNegative?!pos:pos)?"delta-pos":"delta-neg";
+ return `<span class="${cls}">${pos?"+":""}${typeof unit==="string"&&unit.includes("Mbps")?val.toFixed(1):Math.round(val).toLocaleString()} ${unit}</span>`;
+}
+
+function renderImpact(){
+ const imp=$("#impact");
+ if(!imp)return;
+ if(!baseSel){
+  imp.innerHTML=`<p class="mut" style="font-size:13px">Click <b>Review checklist &amp; launch</b> once to lock a baseline snapshot, then modify any part to see live cross-system effects side by side.</p>`;
+  return;
+ }
+ const curC=calc(sel), baseC=calc(baseSel);
+ const dMass=curC.mass-baseC.mass, dCap=curC.cap-baseC.cap, dCost=curC.cost-baseC.cost, dUse=curC.use-baseC.use, dGen=curC.gen-baseC.gen, dData=curC.dataGen-baseC.dataGen, dDv=curC.dv-baseC.dv, dSci=curC.sci-baseC.sci;
+ const dTherm=curC.thermNeed-baseC.thermNeed;
+ const curEv=evaluateBuild(sel);
+ imp.innerHTML=`<div class="imp-grid">
+  <div class="imp-box"><b>Mass &amp; Lift</b>
+   <div>Mass: ${baseC.mass} → <b>${curC.mass} kg</b> (${fmtDelta(dMass,"kg",1)})</div>
+   <div>Lift cap: ${baseC.cap} → <b>${curC.cap} kg</b> (${fmtDelta(dCap,"kg",0)})</div>
+  </div>
+  <div class="imp-box"><b>Budget</b>
+   <div>Cost: $${baseC.cost}M → <b>$${curC.cost}M</b> (${fmtDelta(dCost,"M",1)})</div>
+   <div>Budget limit: $${curC.m.budget}M (${curC.cost<=curC.m.budget?"Within budget":"Over by $"+(curC.cost-curC.m.budget)+"M"})</div>
+  </div>
+  <div class="imp-box"><b>Power &amp; Thermal</b>
+   <div>Power draw: ${baseC.use} → <b>${curC.use} W</b> (${fmtDelta(dUse,"W",1)})</div>
+   <div>Solar gen: ${baseC.gen} → <b>${curC.gen} W</b> (${fmtDelta(dGen,"W",0)})</div>
+   <div>Thermal tier needed: ${baseC.thermNeed} → <b>${curC.thermNeed}</b> (${fmtDelta(dTherm,"tier",1)})</div>
+  </div>
+  <div class="imp-box"><b>Payload, Comms &amp; Delta-v</b>
+   <div>Instrument data: ${baseC.dataGen.toFixed(1)} → <b>${curC.dataGen.toFixed(1)} Mbps</b> (${fmtDelta(dData,"Mbps",1)})</div>
+   <div>Est. science: ${baseC.sci} → <b>${curC.sci} pts</b> (${fmtDelta(dSci,"pts",0)})</div>
+   <div>Spacecraft Δv: ${baseC.dv} → <b>${curC.dv} m/s</b> (${fmtDelta(dDv,"m/s",0)})</div>
+  </div>
+ </div>
+ <div class="row" style="margin-top:12px;justify-content:space-between">
+  <span class="mut" style="font-size:13px">Checklist status: <b class="${curEv.launchable?"g":"r"}">${curEv.launchable?"All approved — ready for pre-flight check":curEv.blockers.length+" blocker(s) remaining"}</b></span>
+  <button class="btn pri sm" id="recheckBtn">Re-check pre-flight checklist</button>
+ </div>`;
+ const rb=$("#recheckBtn");
+ if(rb)rb.onclick=openPreflight;
+}
+
 function update(){
- const c=calc(),k=[],blockers=[],add=(t,s)=>{k.push(`<li class="${s||""}">${t}</li>`);if(s==="b")blockers.push(t)};
+ const ev=evaluateBuild(sel), c=ev.c, k=[], add=(t,s)=>k.push(`<li class="${s||""}">${t}</li>`);
  const ks=KEYS(),total=ks.length+1,miss=ks.filter(x=>sel[x]==null).length+(sel.inst.size?0:1);
  $("#hudn").textContent=`${total-miss} / ${total} parts`;$("#hudb").style.width=Math.round((total-miss)/total*100)+"%";
  $("#meters").innerHTML=meter("Mass",c.mass,c.cap,"kg")+meter("Cost",c.cost,c.m.budget,"$M")+meter("Power use",c.use,c.gen,"W")+meter("Science (est.)",c.sci,c.m.min,"pts",1);
- if(miss){add(`${miss} of ${total} parts still to install — finish installing all parts before launch.`,"w")}else{add("Every system is installed")}
- const rk=sel.engine!=null&&sel.tank!=null;
- if(rk&&c.mass>c.cap){add(`Too heavy by ${c.mass-c.cap} kg — remove heavy parts or increase the fuel tank and engine thrust.`,"b")}
- if(c.cost>c.m.budget){add(`Budget is too small by $${c.cost-c.m.budget}M — increase budget (pick a lower difficulty) or choose lower-cost parts.`,"b")}
- if(c.use>c.gen){add(`Needs ${c.use} W but panels give ${c.gen} W here — upgrade solar panels or reduce power-hungry parts.`,"b")}
- if(rk&&c.L.thr<c.L.cap){add("Fuel tank is larger than engine thrust — increase engine thrust to use the extra propellant.","w")}
- if(rk&&c.L.cap<c.L.thr){add("Fuel tank is small for your engines — increase the fuel tank size to unlock more lift.","w")}
- if(RK.every(x=>sel[x]!=null)&&c.L.rel<.9){add(`Rocket reliability ${Math.round(c.L.rel*100)}% — add fins, fairing, decoupler, gimbals, or a redundant flight computer.`,"w")}
- const need=c.o.dv+(c.m.landDv||0);if(sel.prop!=null&&c.dv<need){add(`Delta-v ${c.dv} m/s is below the ${need} m/s needed — use a higher-dv thruster or turbopump tanks.`,"w")}
- if(sel.gear!=null&&c.gr.tier<c.m.need){add(c.m.dest==="mars"?"Mars needs legs plus a parachute — upgrade landing gear.":"The Moon needs landing legs — upgrade landing gear.","w")}
- if(sel.battery!=null&&c.bt.tier<c.o.ecl){add("Battery too small for eclipses — upgrade to a larger battery pack.","w")}
- if(sel.comms!=null&&c.cm.tier<c.o.link){add("Radio too weak for this distance — upgrade comms antenna/dish.","w")}
- if(sel.thermal!=null&&c.th.tier<Math.min(3,c.o.heat+(c.use>500?1:0))){add("Thermal control too weak — upgrade thermal tier for this orbit and power draw.","w")}
- if(sel.comms!=null&&c.ins.length&&c.ratio<1){add(`Radio sends ${c.down.toFixed(1)} of ${c.dataGen.toFixed(1)} Mbps — upgrade radio or trim high-data instruments.`,"w")}
+ ev.approved.forEach(t=>add(t,""));
+ ev.blockers.forEach(t=>add(t,"b"));
+ ev.warnings.forEach(t=>add(t,"w"));
  $("#checks").innerHTML=k.join("");
 
- const canLaunch=!learn && miss===0 && blockers.length===0;
  const g=$("#gate");
  if(learn){
   g.className="gate";
-  g.textContent="Explore mode: inspect this finished build, then switch to Build from scratch to launch.";
- } else if(canLaunch){
+  g.textContent="Explore mode: inspect this finished build, then switch to Build from scratch to review and launch.";
+ } else if(ev.launchable){
   g.className="gate ok";
-  g.textContent="Checklist approved — rocket and spacecraft are cleared for launch.";
+  g.textContent="All required checks passed — click Review checklist & launch to confirm and fly.";
  } else {
   g.className="gate no";
-  const reason=blockers[0] || (miss>0?`Install the remaining ${miss} part(s) first.`:"Resolve checklist warnings before launch.");
-  g.textContent="Not ready to launch: " + reason;
+  g.textContent="Not launchable yet: " + ev.blockers[0];
  }
 
  /* Real-time What-if: increase fuel tank */
@@ -374,10 +517,43 @@ function update(){
   wif.innerHTML=learn?"":`<span class="mut">What-if fuel: ${curTank<0?"select a tank to preview upgrades":nextTankIdx===curTank?"at maximum tank size for this level":"higher tank requires a higher difficulty level"}.</span>`;
  }
 
- $("#launch").textContent=learn?"Start building from scratch":"Launch mission";
- $("#launch").disabled=!learn && !canLaunch;
+ $("#launch").textContent=learn?"Start building from scratch":"Review checklist & launch";
+ $("#launch").disabled=false;
  $("#mLearn").classList.toggle("on",learn);$("#mBuild").classList.toggle("on",!learn);
+ renderImpact();
  rebuild();
+}
+
+function openPreflight(){
+ if(learn){setMode(false);return;}
+ baseSel={...sel,inst:new Set(sel.inst)};
+ const ev=evaluateBuild(sel);
+ $("#pft").textContent=`Pre-flight checklist: ${ev.c.m.n}`;
+ $("#pfb").textContent=`Review approved settings and any launch blockers before committing to flight.`;
+ const st=$("#pfStatus");
+ if(ev.launchable){
+  st.className="gate ok";
+  st.textContent="Approved — all rocket and spacecraft configuration checks passed. Ready to launch.";
+ } else {
+  st.className="gate no";
+  st.textContent=`Mission cannot launch (${ev.blockers.length} blocking issue${ev.blockers.length>1?"s":""}). Choose Modify build parameters or End mission.`;
+ }
+ $("#pfApproved").innerHTML=ev.approved.length?ev.approved.map(t=>`<li>${t}</li>`).join(""):"<li>No approved items yet.</li>";
+ const bl=[];
+ ev.blockers.forEach(t=>bl.push(`<li class="b">${t}</li>`));
+ ev.warnings.forEach(t=>bl.push(`<li class="w">Warning: ${t}</li>`));
+ $("#pfBlocked").innerHTML=bl.length?bl.join(""):"<li>None — every configuration check passed.</li>";
+
+ const act=$("#pfActions");
+ if(ev.launchable){
+  act.innerHTML=`<button class="btn pri" id="pfLaunch">Launch mission</button><button class="btn" id="pfModify">Modify build parameters</button><button class="btn" id="pfEnd">End mission</button>`;
+  $("#pfLaunch").onclick=fly;
+ } else {
+  act.innerHTML=`<button class="btn pri" id="pfModify">Modify build parameters</button><button class="btn" id="pfEnd">End mission</button>`;
+ }
+ $("#pfModify").onclick=()=>{show("build");renderImpact()};
+ $("#pfEnd").onclick=toMis;
+ show("preflight");
 }
 
 /* ---------- 3D ---------- */
@@ -489,8 +665,8 @@ function toSubMis(dest){let b={};try{b=JSON.parse(localStorage.getItem("msd-best
  $("#submissions").querySelectorAll("button").forEach(x=>x.onclick=()=>{mi=+x.dataset.i;toDiff()});show("submis")}
 function toDiff(){$("#dt").textContent=MIS[mi].n+": choose your level";
  $("#levels").innerHTML=LV.map((l,i)=>`<div class="card mc lvc"><span class="stars" role="img" aria-label="Difficulty ${i+1} of 3">${"★".repeat(i+1)+"☆".repeat(2-i)}</span><h3>${l.n}</h3><p class="mut">${l.d}</p><button class="btn pri" data-i="${i}">Play ${l.n.toLowerCase()}</button></div>`).join("");
- $("#levels").querySelectorAll("button").forEach(x=>x.onclick=()=>{lv=+x.dataset.i;openS="setup";openBuild(true)});show("diff")}
-function setMode(l){learn=l;sel=l?showcase():scratch();openS=l?"rprop":"setup";renderPanel();$("#hint").textContent=l?"Explore mode: this finished rocket and spacecraft are a worked example. Hover over any part to see where it goes and why it matters.":"Drag to rotate, scroll to zoom, hover over a part to learn about it. Build the rocket first (R1 to R4), then the spacecraft (1 to 10).";update()}
+ $("#levels").querySelectorAll("button").forEach(x=>x.onclick=()=>{lv=+x.dataset.i;openS="setup";baseSel=null;openBuild(true)});show("diff")}
+function setMode(l){learn=l;sel=l?showcase():scratch();baseSel=null;openS=l?"rprop":"setup";renderPanel();$("#hint").textContent=l?"Explore mode: this finished rocket and spacecraft are a worked example. Hover over any part to see where it goes and why it matters.":"Drag to rotate, scroll to zoom, hover over a part to learn about it. Build the rocket first (R1 to R4), then the spacecraft (1 to 10).";update()}
 function openBuild(fresh){const m=mm();$("#bt").textContent=`${m.n} · ${LV[lv].n}`;
  $("#bb").textContent=`${m.b} Budget $${m.budget}M. Score at least ${m.min} science to pass, ${m.bonus} for the bonus.`;
  show("build");if(!R&&typeof THREE!=="undefined"&&!window._i3){window._i3=1;init3d()}
@@ -499,7 +675,8 @@ $("#go").onclick=toMis;
 document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>({menu:toMenu,mis:toMis})[b.dataset.go]());
 document.querySelectorAll("[data-v]").forEach(b=>b.onclick=()=>view(b.dataset.v));
 $("#mLearn").onclick=()=>setMode(true);$("#mBuild").onclick=()=>setMode(false);
-$("#launch").onclick=()=>learn?setMode(false):fly();
+$("#launch").onclick=()=>learn?setMode(false):openPreflight();
+$("#pfBack").onclick=()=>{show("build");renderImpact()};
 $("#panel").addEventListener("click",e=>{const b=e.target.closest(".sh");if(!b)return;const id=b.parentNode.dataset.id;openS=openS===id?"":id;renderPanel()});
 $("#panel").addEventListener("mouseover",e=>{const s=e.target.closest(".sys");panelHover=s?s.dataset.id:null});
 $("#panel").addEventListener("mouseleave",()=>{panelHover=null});
@@ -582,6 +759,8 @@ async function sLand(ok,para){
 async function sSample(){vis("arm",1);await tween(1200,p=>$("#arm").setAttribute("transform",`translate(6 4) scale(${.3+.7*p}) translate(-6 -4)`))}
 
 async function fly(){
+ const evCheck=evaluateBuild(sel);
+ if(!evCheck.launchable){openPreflight();return;}
  const c=calc(),m=c.m,land=m.kind!=="orbit",smp=m.kind==="sample",eo=m.dest==="earth",landDv=m.landDv||0,TR="Transit to "+DN[m.dest];
  last={sel:{...sel,inst:new Set(sel.inst)},mi,lv};
  await countdown();
@@ -618,7 +797,7 @@ async function fly(){
  if(!fail){step("Link to Earth","Pointing the antenna at Earth…");await pause();
   await res("Link to Earth",c.cm.tier>=c.o.link,`Contact with Earth. ${c.cm.n} can reach this far.`,`No link. ${c.cm.n} is too weak for ${c.o.n}; you need a stronger radio.`)}
  if(!fail){step("Science operations","Science operations begin. Stay alert.");await wait(900);
-  const need=Math.min(3,c.o.heat+(c.use>500?1:0));if(c.th.tier<need){const d=18*(need-c.th.tier);dmg+=d;sd();const tt=`Thermal control was too weak, so parts overheated or froze and took ${d}% damage. This orbit and power level need thermal tier ${need}; you had ${c.th.tier}.`;bad.push(tt);log(tt,"y")}else good.push("Thermal control kept the electronics in their safe temperature range.");
+  const need=c.thermNeed;if(c.th.tier<need){const d=18*(need-c.th.tier);dmg+=d;sd();const tt=`Thermal control was too weak, so parts overheated or froze and took ${d}% damage. This orbit and power level need thermal tier ${need}; you had ${c.th.tier}.`;bad.push(tt);log(tt,"y")}else good.push("Thermal control kept the electronics in their safe temperature range.");
   const evs=EV.filter(e=>!e.only||land).sort(()=>Math.random()-.5).slice(0,[1,2,3][lv]);
   for(const e of evs){
    const ch=await new Promise(done=>{
