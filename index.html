@@ -111,6 +111,7 @@ table{border-collapse:collapse;font-size:15px}td,th{padding:6px 18px 6px 0;text-
 @media(prefers-reduced-motion:reduce){.art .a-rk{display:none}}
 #scene{display:block;height:auto}
 .mc .tags{display:flex;gap:8px;flex-wrap:wrap}
+.mc.locked{opacity:.68}
 .gate{border-radius:12px;padding:10px 12px;margin:10px 0;font-size:14px;font-weight:500;border:1px solid var(--line);background:rgba(7,11,26,.65)}
 .gate.ok{border-color:var(--ok);color:var(--ok)}
 .gate.no{border-color:var(--bad);color:var(--bad)}
@@ -254,16 +255,21 @@ const IN=[
 {n:"Sampling arm + drill",m:50,p:60,c:12,data:2,sci:{eo:0,data:0,land:10,sample:55},lv:0,surface:1,why:"Required to drill and store surface samples on sample missions."},
 {n:"Soil analyzer",m:35,p:40,c:9,data:1,sci:{eo:0,data:0,land:15,sample:40},lv:1,surface:1,why:"Analyses surface composition on-site for sample and land missions."}];
 const GR=[{n:"No landing gear",m:0,p:0,c:0,tier:0,x:"Cannot land",lv:0,why:"Only valid for orbital missions."},{n:"Landing legs",m:40,p:0,c:4,tier:1,x:"Soft landing on the airless Moon",lv:0,why:"Enough for airless lunar touchdown."},{n:"Legs + parachute",m:70,p:0,c:9,tier:2,x:"Lands through the thin Martian air",lv:0,why:"Needed to slow down through Mars's thin atmosphere."}];
+
+/* Ordered: Orbit exploration -> Landing -> Data collection -> Sample collection */
 const MIS=[
-{id:"eo",n:"Earth observation",b:"Track coastlines, crops and storms from orbit.",budget:150,min:40,bonus:90,orbits:["leo","sso","geo"],body:"#2b4fb8",kind:"orbit",sk:"eo",dest:"earth",life:5},
-{id:"mland",n:"Lunar landing",b:"Pass orbit exploration, earn landing bonus points, touch down on the Moon, rove and send photos home.",budget:240,min:50,bonus:95,orbits:["moon"],body:"#8d93a6",kind:"land",sk:"land",dest:"moon",landDv:800,need:1,trip:"3 days",landReqPts:25},
-{id:"rland",n:"Mars landing",b:"Pass orbit exploration, earn landing bonus points, touch down on Mars, rove and send photos home.",budget:300,min:55,bonus:100,orbits:["mars"],body:"#c1583a",kind:"land",sk:"land",dest:"mars",landDv:600,need:2,trip:"7 months",landReqPts:25},
-{id:"mdata",n:"Moon data collection",b:"Orbit the Moon and map its surface and magnetic field.",budget:250,min:55,bonus:100,orbits:["moon"],body:"#8d93a6",kind:"orbit",sk:"data",dest:"moon",trip:"3 days",life:6},
-{id:"rdata",n:"Mars data collection",b:"Orbit Mars and study its atmosphere and surface.",budget:320,min:60,bonus:100,orbits:["mars"],body:"#c1583a",kind:"orbit",sk:"data",dest:"mars",trip:"7 months",life:8},
-{id:"msamp",n:"Moon sample collection",b:"Land on the Moon and drill samples of its soil.",budget:260,min:55,bonus:100,orbits:["moon"],body:"#8d93a6",kind:"sample",sk:"sample",dest:"moon",landDv:800,need:1,trip:"3 days"},
-{id:"rsamp",n:"Mars sample collection",b:"Land on Mars and collect rock and soil samples.",budget:320,min:55,bonus:100,orbits:["mars"],body:"#c1583a",kind:"sample",sk:"sample",dest:"mars",landDv:600,need:2,trip:"7 months"},
-{id:"mexp",n:"Lunar orbit exploration",b:"Survey lunar craters, lighting and environment from orbit.",budget:220,min:50,bonus:95,orbits:["moon"],body:"#8d93a6",kind:"orbit",sk:"eo",dest:"moon",trip:"3 days",life:6},
-{id:"rexp",n:"Mars orbit exploration",b:"Scout Martian weather, dust storms and terrain from orbit.",budget:290,min:55,bonus:100,orbits:["mars"],body:"#c1583a",kind:"orbit",sk:"eo",dest:"mars",trip:"7 months",life:8}];
+{id:"eo",n:"Earth observation",b:"Track coastlines, crops and storms from orbit.",budget:150,min:40,bonus:90,orbits:["leo","sso","geo"],body:"#2b4fb8",kind:"orbit",stage:"orbit",sk:"eo",dest:"earth",life:5},
+{id:"mexp",n:"Lunar orbit exploration",b:"Survey lunar craters, lighting and environment from orbit.",budget:220,min:50,bonus:95,orbits:["moon"],body:"#8d93a6",kind:"orbit",stage:"orbit",sk:"eo",dest:"moon",trip:"3 days",life:6},
+{id:"mland",n:"Lunar landing",b:"Pass orbit exploration, earn landing bonus points, touch down on the Moon, rove and send photos home.",budget:240,min:50,bonus:95,orbits:["moon"],body:"#8d93a6",kind:"land",stage:"land",sk:"land",dest:"moon",landDv:800,need:1,trip:"3 days",landReqPts:25},
+{id:"mdata",n:"Moon data collection",b:"Orbit the Moon and map its surface and magnetic field.",budget:250,min:55,bonus:100,orbits:["moon"],body:"#8d93a6",kind:"orbit",stage:"data",sk:"data",dest:"moon",trip:"3 days",life:6},
+{id:"msamp",n:"Moon sample collection",b:"Land on the Moon and drill samples of its soil.",budget:260,min:55,bonus:100,orbits:["moon"],body:"#8d93a6",kind:"sample",stage:"sample",sk:"sample",dest:"moon",landDv:800,need:1,trip:"3 days"},
+{id:"rexp",n:"Mars orbit exploration",b:"Scout Martian weather, dust storms and terrain from orbit.",budget:290,min:55,bonus:100,orbits:["mars"],body:"#c1583a",kind:"orbit",stage:"orbit",sk:"eo",dest:"mars",trip:"7 months",life:8},
+{id:"rland",n:"Mars landing",b:"Pass orbit exploration, earn landing bonus points, touch down on Mars, rove and send photos home.",budget:300,min:55,bonus:100,orbits:["mars"],body:"#c1583a",kind:"land",stage:"land",sk:"land",dest:"mars",landDv:600,need:2,trip:"7 months",landReqPts:25},
+{id:"rdata",n:"Mars data collection",b:"Orbit Mars and study its atmosphere and surface.",budget:320,min:60,bonus:100,orbits:["mars"],body:"#c1583a",kind:"orbit",stage:"data",sk:"data",dest:"mars",trip:"7 months",life:8},
+{id:"rsamp",n:"Mars sample collection",b:"Land on Mars and collect rock and soil samples.",budget:320,min:55,bonus:100,orbits:["mars"],body:"#c1583a",kind:"sample",stage:"sample",sk:"sample",dest:"mars",landDv:600,need:2,trip:"7 months"}];
+
+const STAGE_ORDER=["orbit","land","data","sample"];
+const STAGE_LABEL={orbit:"Orbit exploration",land:"Landing",data:"Data collection",sample:"Sample collection"};
 
 const LV=[{n:"Beginner",d:"Simple parts, a bigger budget, easier science targets and one random event. You start with a finished rocket and spacecraft to explore."},{n:"Intermediate",d:"More parts, the standard budget and two random events. You build the rocket and spacecraft from an empty launch pad."},{n:"Advanced",d:"Every part including advanced ones, a tight budget, higher science targets and three random events."}];
 const BM=[1.5,1.15,1],SM=[.8,1,1.15];
@@ -305,11 +311,20 @@ const KEYS=()=>[...RK,"structure","power","battery","prop","comms","adcs","compu
 const LIST={engine:RENG,tank:RTK,decoupler:RDEC,fuselage:RFUS,fairing:RFAIR,fins:RFIN,flightcomp:RFC,tvc:RTVC,structure:ST,power:PW,battery:BT,prop:PR,comms:CM,adcs:AD,computer:CP,thermal:TH,fault:FD,fluid:FL,gear:GR,inst:IN};
 const KN={power:"Solar panels",battery:"Battery",orbit:"Orbit",engine:"Engines",tank:"Fuel and oxidizer tanks",fuselage:"Fuselage",fairing:"Nose cone and fairing",fins:"Fins",flightcomp:"Flight computer",tvc:"Thrust vectoring"};
 const Z={n:"None",m:0,p:0,c:0,gen:0,tier:0,rate:0,rad:0,pt:0,dv:0,hard:0,safe:0,dvm:1};
-let mi=0,lv=0,sel,learn=false,openS="setup",panelHover=null,hoverId=null,vk="all",last={},whatifFuel=false,baseSel=null,orbitPassed=false,landingBonusPts=0;
+let mi=0,lv=0,sel,learn=false,openS="setup",panelHover=null,hoverId=null,vk="all",last={},whatifFuel=false,baseSel=null,orbitPassed=false,landingBonusPts=0,completedStages={moon:new Set(),mars:new Set(),earth:new Set()};
 const mm=()=>({...MIS[mi],budget:Math.round(MIS[mi].budget*BM[lv]),min:Math.round(MIS[mi].min*SM[lv]),bonus:Math.round(MIS[mi].bonus*SM[lv])});
 const pk=k=>sel[k]==null?Z:LIST[k][sel[k]];
 const scratch=()=>({orbit:MIS[mi].orbits[0],engine:null,tank:null,decoupler:null,fuselage:null,fairing:null,fins:null,flightcomp:null,tvc:null,structure:null,power:null,battery:null,prop:null,comms:null,adcs:null,computer:null,thermal:null,fault:null,fluid:null,gear:null,inst:new Set()});
 const showcase=()=>{const m=MIS[mi],o=m.orbits[0],mars=o==="mars",sf=m.kind!=="orbit";return{orbit:o,engine:1,tank:1,decoupler:1,fuselage:0,fairing:1,fins:1,flightcomp:1,tvc:1,structure:1,power:mars?2:1,battery:ORB[o].ecl>=2?2:1,prop:sf?2:1,comms:mars?3:2,adcs:1,computer:1,thermal:1,fault:1,fluid:1,gear:sf?(mars?2:1):null,inst:new Set(m.kind==="sample"?[3,6,7]:m.kind==="land"?[0,5,3]:[0,3,4])}};
+
+function isStageUnlocked(m){
+ if(m.dest==="earth")return true;
+ const done=completedStages[m.dest]||new Set();
+ const idx=STAGE_ORDER.indexOf(m.stage);
+ if(idx<=0)return true;
+ const prevStage=STAGE_ORDER[idx-1];
+ return done.has(prevStage);
+}
 
 function rocketCalc(overrideSel){
  const s=overrideSel||sel;
@@ -354,6 +369,11 @@ function evaluateBuild(s){
  const targetSel=s||sel;
  const c=calc(targetSel);
  const approved=[], blockers=[], warnings=[];
+ if(!isStageUnlocked(c.m)){
+  const idx=STAGE_ORDER.indexOf(c.m.stage);
+  const prevLabel=STAGE_LABEL[STAGE_ORDER[idx-1]];
+  blockers.push(`[Stage Gate] Complete ${prevLabel} first before launching ${STAGE_LABEL[c.m.stage]}.`);
+ }
  const ks=KEYS(),total=ks.length+1,miss=ks.filter(x=>targetSel[x]==null).length+(targetSel.inst.size?0:1);
  if(miss){
   blockers.push(`${miss} of ${total} parts still to install — complete all rocket and spacecraft subsystems.`);
@@ -679,22 +699,29 @@ let tt;function toast(t){const e=$("#toast");e.textContent=t;e.classList.add("on
 function toMenu(){show("menu")}
 function missionIcon(m){return`<svg class="ic" viewBox="0 0 88 88" aria-hidden="true"><circle cx="44" cy="44" r="26" fill="${m.body}"/><circle cx="35" cy="35" r="9" fill="#fff" opacity=".18"/>${m.dest==="moon"?`<circle cx="52" cy="50" r="5" fill="#000" opacity=".18"/><circle cx="40" cy="56" r="3" fill="#000" opacity=".18"/>`:""}<ellipse cx="44" cy="44" rx="40" ry="13" fill="none" stroke="#a9bcff" stroke-width="1.5" transform="rotate(-20 44 44)"/><circle cx="78" cy="30" r="3.5" fill="#fff"/></svg>`}
 const DESTS=[
-  {id:"moon",n:"Silver Gateway",b:"Explore cislunar space — choose orbit exploration, lunar orbiting, landing, or sample collection.",body:"#8d93a6",dest:"moon"},
-  {id:"mars",n:"Red Frontier",b:"Cross to the Red Planet — choose orbit exploration, Mars orbiting, landing, or sample collection.",body:"#c1583a",dest:"mars"},
+  {id:"moon",n:"Silver Gateway",b:"Explore cislunar space — orbit exploration, landing, data collection, or sample collection.",body:"#8d93a6",dest:"moon"},
+  {id:"mars",n:"Red Frontier",b:"Cross to the Red Planet — orbit exploration, landing, data collection, or sample collection.",body:"#c1583a",dest:"mars"},
   {id:"earth",n:"Blue Horizon",b:"Track coastlines, crops and storms from Earth orbit.",body:"#2b4fb8",dest:"earth"}
 ];
 function toMis(){let b={};try{b=JSON.parse(localStorage.getItem("msd-best")||"{}")}catch(e){}
  $("#missions").innerHTML=DESTS.map(d=>{const list=MIS.filter(m=>m.dest===d.dest);const best=list.map(m=>b[m.id]).filter(Boolean);
-  return`<div class="card mc">${missionIcon(d)}<h3>${d.n}</h3><p class="mut">${d.b}</p><div class="tags"><span class="pill">${list.length===1?"Orbit exploring":list.length+" mission choices"}</span><span class="pill">Best score ${best.length?Math.max(...best):"none yet"}</span></div><button class="btn pri" data-d="${d.dest}">Select ${d.n}</button></div>`}).join("");
+  return`<div class="card mc">${missionIcon(d)}<h3>${d.n}</h3><p class="mut">${d.b}</p><div class="tags"><span class="pill">${list.length===1?"Orbit exploring":list.length+" sequential stages"}</span><span class="pill">Best score ${best.length?Math.max(...best):"none yet"}</span></div><button class="btn pri" data-d="${d.dest}">Select ${d.n}</button></div>`}).join("");
  $("#missions").querySelectorAll("button").forEach(x=>x.onclick=()=>{
   const dest=x.dataset.d,list=MIS.filter(m=>m.dest===dest);
   if(list.length===1){mi=MIS.indexOf(list[0]);toDiff()}else{toSubMis(dest)}
  });show("mis")}
 function toSubMis(dest){let b={};try{b=JSON.parse(localStorage.getItem("msd-best")||"{}")}catch(e){}
- const D=DESTS.find(x=>x.dest===dest),list=MIS.filter(m=>m.dest===dest);
+ const D=DESTS.find(x=>x.dest===dest);
+ const list=MIS.filter(m=>m.dest===dest).sort((a,b)=>STAGE_ORDER.indexOf(a.stage)-STAGE_ORDER.indexOf(b.stage));
  $("#smt").textContent=D.n+" missions";
- $("#smb").textContent="Pick the mission profile you want to build and fly.";
- $("#submissions").innerHTML=list.map(m=>{const i=MIS.indexOf(m);return`<div class="card mc">${missionIcon(m)}<h3>${m.n}</h3><p class="mut">${m.b}</p><div class="tags"><span class="pill">${{orbit:"Orbit and data",land:"Landing",sample:"Sample collection"}[m.kind]}</span><span class="pill">Best score ${b[m.id]||"none yet"}</span></div><button class="btn pri" data-i="${i}">Select mission</button></div>`}).join("");
+ $("#smb").textContent="Complete stages in order: Orbit exploration → Landing → Data collection → Sample collection.";
+ $("#submissions").innerHTML=list.map(m=>{
+  const i=MIS.indexOf(m);
+  const unlocked=isStageUnlocked(m);
+  const idx=STAGE_ORDER.indexOf(m.stage);
+  const prevName=idx>0?STAGE_LABEL[STAGE_ORDER[idx-1]]:"";
+  return`<div class="card mc ${unlocked?"":"locked"}">${missionIcon(m)}<h3>${m.n}</h3><p class="mut">${m.b}</p><div class="tags"><span class="pill">${STAGE_LABEL[m.stage]}</span><span class="pill">Best score ${b[m.id]||"none yet"}</span></div>${unlocked?"":`<p class="r" style="font-size:13px;margin:0">Locked — complete ${prevName} first.</p>`}<button class="btn pri" data-i="${i}" ${unlocked?"":"disabled"}>Select mission</button></div>`;
+ }).join("");
  $("#submissions").querySelectorAll("button").forEach(x=>x.onclick=()=>{mi=+x.dataset.i;toDiff()});show("submis")}
 function toDiff(){$("#dt").textContent=MIS[mi].n+": choose your level";
  $("#levels").innerHTML=LV.map((l,i)=>`<div class="card mc lvc"><span class="stars" role="img" aria-label="Difficulty ${i+1} of 3">${"★".repeat(i+1)+"☆".repeat(2-i)}</span><h3>${l.n}</h3><p class="mut">${l.d}</p><button class="btn pri" data-i="${i}">Play ${l.n.toLowerCase()}</button></div>`).join("");
@@ -873,7 +900,7 @@ async function runLandingStage(c, m, step, res, log, sd, bad, good, getDmg, setD
   {name:"Aristarchus Rim Crater",crater:true,note:"Steep crater rim and jagged boulders detected."},
   {name:"Tycho Central Peak Basin",crater:false,note:"Stable regolith basin suitable for touchdown."}
  ];
- let siteIdx=1; // start on crater to demonstrate crater detection & retry
+ let siteIdx=1;
  while(true){
   const site=sites[siteIdx % sites.length];
   step("Descent and landing",`Descending toward ${site.name} on ${DN[m.dest]}… (${site.note})`);
@@ -981,6 +1008,10 @@ async function fly(){
    log(`${e.t}: ${ch.l}. ${r.txt}`,r.ok?"g":"y");(r.ok?good:bad).push(`${e.t}: ${r.txt}`);await wait(800)}
   if(dmg>=70){fail=true;setPh("Science operations","no");const t="Accumulated damage passed 70%. The spacecraft could no longer operate.";log(t,"r");bad.push(t);SCN.idle=false;await boom()}
   else setPh("Science operations","ok")}
+ if(!fail){
+  if(!completedStages[m.dest])completedStages[m.dest]=new Set();
+  completedStages[m.dest].add(m.stage);
+ }
  await wait(600);SCN.idle=false;report(c,fail,dmg,smul,good,bad);
 }
 
