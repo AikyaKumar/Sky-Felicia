@@ -160,11 +160,11 @@ table{border-collapse:collapse;font-size:15px}td,th{padding:6px 18px 6px 0;text-
 <section id="submis" class="screen" hidden><button class="btn" data-go="mis">Back</button><h2 id="smt" style="margin-top:22px"></h2><p id="smb" class="mut"></p><div id="submissions" class="grid3"></div></section>
 <section id="diff" class="screen" hidden><button class="btn" data-go="mis">Back</button><h2 id="dt" style="margin-top:22px"></h2><p class="mut">Higher levels unlock more advanced parts and tighten the rules.</p><div id="levels" class="grid3"></div></section>
 <section id="build" class="screen" hidden>
-<div class="row" style="justify-content:space-between"><button class="btn" data-go="mis">Change mission</button><div class="row"><button class="btn" id="mLearn">Explore a finished build</button><button class="btn" id="mBuild">Build from scratch</button></div></div>
+<div class="row" style="justify-content:space-between"><button class="btn" data-go="mis">Change mission</button><div class="row"><button class="btn" id="mLearn">Explore a finished build</button><button class="btn" id="mBuild">Build from scratch</button><button class="btn" id="mModify">Modify components</button></div></div>
 <div class="card hud"><div><h2 id="bt" style="font-size:26px"></h2><p id="bb" class="mut" style="margin:4px 0 0;font-size:14px"></p></div><div class="pr"><div class="meter" style="margin:0"><div class="l"><span>Build progress</span><span id="hudn"></span></div><div class="bar"><i id="hudb"></i></div></div></div></div>
 <div class="build"><div class="vcol"><div id="view" class="card"><div id="tip" class="tip" hidden></div><div class="vb"><button class="btn sm" data-v="sc">Spacecraft</button><button class="btn sm" data-v="rk">Rocket</button><button class="btn sm" data-v="all">Whole stack</button></div></div><p class="mut" id="hint" style="font-size:14px;margin-top:10px"></p></div>
 <aside class="side"><div class="card"><div id="gate" class="gate"></div><div id="meters"></div><ul class="chk" id="checks"></ul><div id="whatif" class="whatif"></div><button class="btn pri" id="launch" style="width:100%">Review checklist &amp; launch</button></div><div id="panel" style="margin-top:12px"></div></aside></div>
-<div class="card" id="impactCard" style="margin-top:20px"><h3>Side-by-side parameter impact</h3><p class="mut" style="font-size:14px">Compare your current build against your pre-flight baseline whenever you modify a part (such as science payload, fuel tank, or thermal control).</p><div id="impact"></div></div>
+<div class="card" id="impactCard" style="margin-top:20px"><h3>Side-by-side parameter impact</h3><p class="mut" style="font-size:14px">Compare your current build against your pre-flight baseline whenever you modify a component (such as science payload, fuel tank, or thermal control).</p><div id="impact"></div></div>
 </section>
 
 <section id="preflight" class="screen" hidden>
@@ -440,7 +440,7 @@ function renderImpact(){
  const imp=$("#impact");
  if(!imp)return;
  if(!baseSel){
-  imp.innerHTML=`<p class="mut" style="font-size:13px">Click <b>Review checklist &amp; launch</b> once to lock a baseline snapshot, then modify any part to see live cross-system effects side by side.</p>`;
+  imp.innerHTML=`<p class="mut" style="font-size:13px">Click <b>Review checklist &amp; launch</b> once to lock a baseline snapshot, then click <b>Modify components</b> and change any part to see live cross-system effects side by side.</p>`;
   return;
  }
  const curC=calc(sel), baseC=calc(baseSel);
@@ -488,7 +488,7 @@ function update(){
  const g=$("#gate");
  if(learn){
   g.className="gate";
-  g.textContent="Explore mode: inspect this finished build, then switch to Build from scratch to review and launch.";
+  g.textContent="Explore mode: inspect this finished build, then switch to Build from scratch or Modify components.";
  } else if(ev.launchable){
   g.className="gate ok";
   g.textContent="All required checks passed — click Review checklist & launch to confirm and fly.";
@@ -517,11 +517,24 @@ function update(){
   wif.innerHTML=learn?"":`<span class="mut">What-if fuel: ${curTank<0?"select a tank to preview upgrades":nextTankIdx===curTank?"at maximum tank size for this level":"higher tank requires a higher difficulty level"}.</span>`;
  }
 
- $("#launch").textContent=learn?"Start building from scratch":"Review checklist & launch";
+ $("#launch").textContent="Review checklist & launch";
  $("#launch").disabled=false;
- $("#mLearn").classList.toggle("on",learn);$("#mBuild").classList.toggle("on",!learn);
+ $("#mLearn").classList.toggle("on",learn);
+ $("#mBuild").classList.toggle("on",!learn);
  renderImpact();
  rebuild();
+}
+
+function focusModify(){
+ if(learn){learn=false;sel=scratch();baseSel=null;}
+ const ks=KEYS();
+ const missKey=ks.find(x=>sel[x]==null)||(sel.inst.size?null:"inst");
+ const targetSys=missKey?SYS.find(S=>S.keys.includes(missKey)):"payload";
+ openS=targetSys?targetSys.id:"payload";
+ renderPanel();
+ update();
+ const el=$(`#panel .sys[data-id="${openS}"]`);
+ if(el)el.scrollIntoView({behavior:"smooth",block:"nearest"});
 }
 
 function openPreflight(){
@@ -536,7 +549,7 @@ function openPreflight(){
   st.textContent="Approved — all rocket and spacecraft configuration checks passed. Ready to launch.";
  } else {
   st.className="gate no";
-  st.textContent=`Mission cannot launch (${ev.blockers.length} blocking issue${ev.blockers.length>1?"s":""}). Choose Modify build parameters or End mission.`;
+  st.textContent=`Mission cannot launch (${ev.blockers.length} blocking issue${ev.blockers.length>1?"s":""}). Choose Modify components or End mission.`;
  }
  $("#pfApproved").innerHTML=ev.approved.length?ev.approved.map(t=>`<li>${t}</li>`).join(""):"<li>No approved items yet.</li>";
  const bl=[];
@@ -546,12 +559,12 @@ function openPreflight(){
 
  const act=$("#pfActions");
  if(ev.launchable){
-  act.innerHTML=`<button class="btn pri" id="pfLaunch">Launch mission</button><button class="btn" id="pfModify">Modify build parameters</button><button class="btn" id="pfEnd">End mission</button>`;
+  act.innerHTML=`<button class="btn pri" id="pfLaunch">Launch mission</button><button class="btn" id="pfModify">Modify components</button><button class="btn" id="pfEnd">End mission</button>`;
   $("#pfLaunch").onclick=fly;
  } else {
-  act.innerHTML=`<button class="btn pri" id="pfModify">Modify build parameters</button><button class="btn" id="pfEnd">End mission</button>`;
+  act.innerHTML=`<button class="btn pri" id="pfModify">Modify components</button><button class="btn" id="pfEnd">End mission</button>`;
  }
- $("#pfModify").onclick=()=>{show("build");renderImpact()};
+ $("#pfModify").onclick=()=>{show("build");focusModify()};
  $("#pfEnd").onclick=toMis;
  show("preflight");
 }
@@ -674,7 +687,7 @@ function openBuild(fresh){const m=mm();$("#bt").textContent=`${m.n} · ${LV[lv].
 $("#go").onclick=toMis;
 document.querySelectorAll("[data-go]").forEach(b=>b.onclick=()=>({menu:toMenu,mis:toMis})[b.dataset.go]());
 document.querySelectorAll("[data-v]").forEach(b=>b.onclick=()=>view(b.dataset.v));
-$("#mLearn").onclick=()=>setMode(true);$("#mBuild").onclick=()=>setMode(false);
+$("#mLearn").onclick=()=>setMode(true);$("#mBuild").onclick=()=>setMode(false);$("#mModify").onclick=focusModify;
 $("#launch").onclick=()=>learn?setMode(false):openPreflight();
 $("#pfBack").onclick=()=>{show("build");renderImpact()};
 $("#panel").addEventListener("click",e=>{const b=e.target.closest(".sh");if(!b)return;const id=b.parentNode.dataset.id;openS=openS===id?"":id;renderPanel()});
