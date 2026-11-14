@@ -84,8 +84,6 @@ table{border-collapse:collapse;font-size:15px}td,th{padding:6px 18px 6px 0;text-
 .hud{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between;padding:14px 20px;margin-top:16px}
 .hud .pr{flex:1;min-width:200px;max-width:420px}
 .gh{font:700 12px "Space Grotesk",sans-serif;letter-spacing:.18em;color:var(--acc);margin:20px 0 4px;text-transform:uppercase}
-.mgrp{margin:24px 0 10px}.mgrp h3{font-size:21px;margin:0}.mgrp p{margin:4px 0 0;font-size:14px}
-.mgrp+.grid3{margin-top:12px}
 #toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);opacity:0;z-index:20;background:rgba(7,11,26,.95);border:1px solid var(--ok);color:#fff;padding:10px 22px;border-radius:999px;font:700 15px "Space Grotesk",sans-serif;transition:opacity .25s,transform .25s;pointer-events:none}
 #toast.on{opacity:1;transform:translate(-50%,0)}
 #cd{position:fixed;inset:0;z-index:30;display:none;align-items:center;justify-content:center;background:rgba(7,11,26,.82);font:700 clamp(90px,30vw,240px)/1 "Space Grotesk",sans-serif}
@@ -146,7 +144,7 @@ table{border-collapse:collapse;font-size:15px}td,th{padding:6px 18px 6px 0;text-
 <g transform="translate(86 30)"><path class="sp" d="M0-9L2.5-2.5 9 0 2.5 2.5 0 9-2.5 2.5-9 0-2.5-2.5z" fill="#fff2c4"/></g><g transform="translate(440 68)"><path class="sp" style="animation-delay:-.5s" d="M0-9L2.5-2.5 9 0 2.5 2.5 0 9-2.5 2.5-9 0-2.5-2.5z" fill="#fff2c4"/></g><g transform="translate(404 14)"><path class="sp" style="animation-delay:-.9s" d="M0-7L2-2 7 0 2 2 0 7-2 2-7 0-2-2z" fill="#a9bcff"/></g></g>
 </svg></div></section>
 
-<section id="mis" class="screen" hidden><button class="btn" data-go="menu">Back</button><h2 style="margin-top:22px">Choose your mission</h2><div id="missions"></div></section>
+<section id="mis" class="screen" hidden><button class="btn" data-go="menu">Back</button><h2 style="margin-top:22px">Choose your mission</h2><div id="missions" class="grid3"></div></section>
 <section id="diff" class="screen" hidden><button class="btn" data-go="mis">Back</button><h2 id="dt" style="margin-top:22px"></h2><p class="mut">Higher levels unlock more advanced parts and tighten the rules.</p><div id="levels" class="grid3"></div></section>
 <section id="build" class="screen" hidden>
 <div class="row" style="justify-content:space-between"><button class="btn" data-go="mis">Change mission</button><div class="row"><button class="btn" id="mLearn">Explore a finished build</button><button class="btn" id="mBuild">Build from scratch</button></div></div>
