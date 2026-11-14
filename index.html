@@ -221,6 +221,21 @@ table{border-collapse:collapse;font-size:15px}td,th{padding:6px 18px 6px 0;text-
           <circle cx="0" cy="12" r="6.5" fill="#27305c" stroke="#c5cdea" stroke-width="2"/>
           <circle cx="18" cy="12" r="6.5" fill="#27305c" stroke="#c5cdea" stroke-width="2"/>
         </g>
+        <g id="sLander" transform="translate(320 302)" style="opacity:0">
+          <rect id="sFrame" x="-46" y="-66" width="92" height="92" rx="6" fill="none" stroke="#ffcf6b" stroke-width="1.5" stroke-dasharray="5 5" opacity=".7"/>
+          <rect x="-58" y="-12" width="36" height="12" fill="#3159d1" stroke="#a9bcff"/>
+          <rect x="22" y="-12" width="36" height="12" fill="#3159d1" stroke="#a9bcff"/>
+          <path d="M-40 -12v12M40 -12v12" stroke="#a9bcff" stroke-opacity=".5"/>
+          <rect x="-16" y="-24" width="32" height="38" rx="7" fill="#d9b25a" stroke="#fff2c4" stroke-width="1.5"/>
+          <circle cx="0" cy="-6" r="9" fill="#101a3f" stroke="#a9bcff" stroke-width="2"/><circle cx="0" cy="-6" r="3.5" fill="#5aa0ff"/>
+          <path d="M6 -24V-38" stroke="#c5cdea" stroke-width="2.5"/><path d="M-4 -42Q6 -30 16 -42Z" fill="#eef2ff" stroke="#8b96c4"/>
+          <circle cx="-14" cy="20" r="7" fill="#27305c" stroke="#c5cdea" stroke-width="2"/>
+          <circle cx="0" cy="20" r="7" fill="#27305c" stroke="#c5cdea" stroke-width="2"/>
+          <circle cx="14" cy="20" r="7" fill="#27305c" stroke="#c5cdea" stroke-width="2"/>
+        </g>
+        <line id="sBeam" x1="0" y1="0" x2="0" y2="0" stroke="#6ee79a" stroke-width="2.5" stroke-dasharray="6 8" style="opacity:0"/>
+        <circle id="sPkt" r="5" fill="#6ee79a" style="opacity:0"/>
+        <rect id="sFlash" x="0" y="0" width="640" height="420" fill="#fff" style="opacity:0;pointer-events:none"/>
       </g>
       <circle id="orb" fill="none" stroke="#a9bcff" stroke-opacity=".35" stroke-dasharray="3 6"/>
       <path id="tp" fill="none" stroke="#a9bcff" stroke-opacity=".5" stroke-dasharray="4 6" stroke-width="1.5"/>
@@ -250,10 +265,10 @@ table{border-collapse:collapse;font-size:15px}td,th{padding:6px 18px 6px 0;text-
         <span id="photoCount" class="pill">0 photos</span>
       </div>
       <div class="row" style="margin-top:8px">
-        <button class="btn sm pri" id="btnLeft">Move Left</button>
-        <button class="btn sm pri" id="btnRight">Move Right</button>
+        <button class="btn sm pri" id="btnLeft">Drive Left</button>
+        <button class="btn sm pri" id="btnRight">Drive Right</button>
         <button class="btn sm" id="btnPhoto">Take Picture</button>
-        <button class="btn sm" id="btnSend">Send Photos to Earth</button>
+        <button class="btn sm" id="btnSend">Send pictures to Earth</button>
       </div>
       <div id="photoStrip" class="photo-strip"></div>
     </div>
@@ -358,9 +373,16 @@ const LIST={engine:RENG,tank:RTK,decoupler:RDEC,fairing:RFAIR,structure:ST,power
 const KN={power:"Solar panels",battery:"Battery",orbit:"Orbit",engine:"Engines",tank:"Fuel tank",decoupler:"Decoupler",fairing:"Fairing"};
 const Z={n:"None",m:0,p:0,c:0,gen:0,tier:0,rate:0,rad:0,pt:0,dv:0,hard:0,safe:1,dvm:1};
 let mi=0,lv=0,sel,learn=false,openS="setup",panelHover=null,hoverId=null,vk="all",last={},whatifFuel=false,baseSel=null,orbitPassed=false,landingBonusPts=0,bonusPointsAwarded=0,completedStages={moon:new Set(),mars:new Set(),earth:new Set()},continuedFromOrbit=false,carriedDmg=0;
-const mm=()=>({...MIS[mi],budget:Math.round(MIS[mi].budget*BM[lv]),min:Math.max(15,Math.round(MIS[mi].min*SM[lv])),bonus:Math.max(30,Math.round(MIS[mi].bonus*SM[lv]))});
+/* Beginner Mars: only beginner parts are available (S-band radio, hydrazine thrusters, Li-ion battery).
+   Science targets, link tier, orbit delta-v (700 m/s), landing delta-v (300 m/s) and eclipse tier are scaled to what those parts can deliver. */
+const MARS_BEGINNER_SCI={min:.3,bonus:.22};
+const marsBeginner=()=>lv===0&&MIS[mi].dest==="mars";
+const mm=()=>{const b=MIS[mi],k=marsBeginner();return{...b,budget:Math.round(b.budget*BM[lv]),landDv:k&&b.landDv?Math.round(b.landDv/2):b.landDv,
+ min:k?Math.max(8,Math.round(b.min*SM[lv]*MARS_BEGINNER_SCI.min)):Math.max(15,Math.round(b.min*SM[lv])),
+ bonus:k?Math.max(12,Math.round(b.bonus*SM[lv]*MARS_BEGINNER_SCI.bonus)):Math.max(30,Math.round(b.bonus*SM[lv]))}};
+const orbOf=id=>id==="mars"&&lv===0?{...ORB.mars,link:1,dv:700,ecl:1,d:"Mars transit & capture, reduced solar input. Beginner level: shorter capture burn (700 m/s), shorter eclipses and an S-band link are enough."}:ORB[id];
 const scratch=()=>({orbit:MIS[mi].orbits[0],engine:null,tank:null,decoupler:null,fairing:null,structure:null,power:null,battery:null,prop:null,comms:null,adcs:null,computer:null,thermal:null,gear:null,inst:new Set()});
-const showcase=()=>{const m=MIS[mi],o=m.orbits[0],sf=m.kind==="land"||m.kind==="sample";return{orbit:o,engine:1,tank:1,decoupler:1,fairing:1,structure:1,power:1,battery:1,prop:1,comms:o==="mars"?2:1,adcs:1,computer:1,thermal:1,gear:sf?0:null,inst:new Set(m.kind==="sample"?[1,3]:[0,1])}};
+const showcase=()=>{const m=MIS[mi],o=m.orbits[0],sf=m.kind==="land"||m.kind==="sample";return{orbit:o,engine:1,tank:1,decoupler:1,fairing:1,structure:1,power:1,battery:1,prop:1,comms:o==="mars"&&lv>0?2:1,adcs:1,computer:1,thermal:1,gear:sf?0:null,inst:new Set(m.kind==="sample"?[1,3]:[0,1])}};
 
 function isStageUnlocked(m){
  if(m.dest==="earth")return true;
@@ -378,7 +400,7 @@ function rocketCalc(overrideSel){
 }
 function calc(overrideSel){
  const s=overrideSel||sel;
- const m=mm(),o=ORB[s.orbit],L=rocketCalc(s),ins=[...s.inst].map(i=>IN[i]);
+ const m=mm(),o=orbOf(s.orbit),L=rocketCalc(s),ins=[...s.inst].map(i=>IN[i]);
  const st=s.structure==null?Z:LIST.structure[s.structure],pw=s.power==null?Z:LIST.power[s.power],bt=s.battery==null?Z:LIST.battery[s.battery],pr=s.prop==null?Z:LIST.prop[s.prop],cm=s.comms==null?Z:LIST.comms[s.comms],ad=s.adcs==null?Z:LIST.adcs[s.adcs],cp=s.computer==null?Z:LIST.computer[s.computer],th=s.thermal==null?Z:LIST.thermal[s.thermal],gr=s.gear==null?Z:LIST.gear[s.gear];
  const P=[st,pw,bt,pr,cm,ad,cp,th,gr,...ins];
  const c={m,o,L,st,bt,cm,cp,ad,th,gr,ins,mass:sum(P,"m"),use:sum(P,"p"),cost:sum(P,"c")+L.c,cap:Math.round(L.lc*o.cap),gen:Math.round(pw.gen*o.solar),dataGen:sum(ins,"data"),down:cm.rate*o.contact,dv:pr.dv};
@@ -398,7 +420,7 @@ function stat(k,o){
  const a=[`${o.m} kg`];if(o.p)a.push(`${o.p} W`);a.push(`$${o.c}M`);
  return a.join(" · ")+" · "+(k==="inst"?`${o.data} Mbps · science ${o.sci[MIS[mi].sk]}`:o.x)+(o.why?" — "+o.why:"")}
 function opts(k){
- const list=k==="orbit"?MIS[mi].orbits.map(id=>({id,...ORB[id]})):LIST[k];
+ const list=k==="orbit"?MIS[mi].orbits.map(id=>({id,...orbOf(id)})):LIST[k];
  return`<div class="opts">`+list.map((o,i)=>{if(k!=="orbit"&&(o.lv>lv||(o.surface&&MIS[mi].kind!=="sample")))return"";const v=k==="orbit"?o.id:i,ch=k==="inst"?sel.inst.has(i):sel[k]===v;
   return`<label class="opt"><input type="${k==="inst"?"checkbox":"radio"}" name="${k}" value="${v}" ${ch?"checked":""}><span><b>${o.n}</b><small>${k==="orbit"?o.d+"<br>":""}${stat(k,o)}</small></span></label>`}).join("")+`</div>`}
 function lab(k){if(k==="inst")return sel.inst.size?sel.inst.size+(sel.inst.size>1?" instruments":" instrument"):null;if(k==="orbit")return ORB[sel.orbit].n.split(",")[0];return sel[k]==null?null:LIST[k][sel[k]].n}
@@ -787,6 +809,7 @@ function setupSurfaceScene(dest, showRover){
   return `<circle cx="${sx}" cy="${sy}" r="${i%3===0?1.8:1.1}" fill="#fff" opacity="${(i%4)*0.2+0.35}"/>`;
  }).join("");
  $("#rover").setAttribute("transform","translate(320 302)");
+ $("#sLander").style.opacity=0;$("#sBeam").style.opacity=0;$("#sPkt").style.opacity=0;$("#sFlash").style.opacity=0;
 }
 async function boom(){vis("fl",0);vis("cr",0);const b=$("#bst");b.setAttribute("cx",SCN.x);b.setAttribute("cy",SCN.y);await tween(800,p=>{b.setAttribute("r",6+44*p);b.style.opacity=1-p});b.style.opacity=0}
 async function sLaunch(ok){
@@ -933,46 +956,82 @@ async function runLandingStage(c, m, step, res, log, sd, bad, good, getDmg, setD
 }
 
 async function runDataCollectionStage(c, m, step, res, log, good){
- setupSurfaceScene(m.dest, true);
- step("Data collection",`Exploring ${DN[m.dest]}, taking pictures, and sending data back to Earth…`);
+ const mars=m.dest==="mars",MAXP=6;
+ setupSurfaceScene(m.dest,false);
+ $("#rover").style.opacity=0;
+ const L=$("#sLander"),E=$("#sEarth"),beam=$("#sBeam"),pkt=$("#sPkt"),flash=$("#sFlash");
+ const ex=530,ey=mars?60:68;
+ E.style.display="";E.setAttribute("cx",ex);E.setAttribute("cy",ey);E.setAttribute("r",mars?5:24);
+ let x=320,photos=[],busy=false;
+ const place=()=>L.setAttribute("transform",`translate(${x} 302)`);
+ place();
+ step("Data collection",`Your spacecraft is on the surface of ${DN[m.dest]}. Drive it, take pictures, then send them to Earth.`);
+ log(`Surface operations started on ${DN[m.dest]}. Use the buttons or arrow keys to drive and P to take a picture.`);
+ await tween(900,p=>{L.style.opacity=p});
+ L.style.opacity=1;
  $("#surfControls").hidden=false;
  $("#surfTitle").textContent=`${DN[m.dest]} Data Collection`;
- let roverX=320, photos=[];
- const updateStrip=()=>{
-  $("#photoCount").textContent=`${photos.length} photos`;
-  $("#photoStrip").innerHTML=photos.map(p=>`<span class="photo-chip">📷 ${p}</span>`).join("");
+ const bL=$("#btnLeft"),bR=$("#btnRight"),bP=$("#btnPhoto"),bS=$("#btnSend");
+ const sector=()=>Math.round(x/64);
+ const feat=()=>{
+  if([150,310,470].some(cx=>Math.abs(cx-x)<60))return"Crater";
+  return(x<120||x>540)?(mars?"Dunes":"Hills"):"Open plain";
  };
- updateStrip();
-
+ const ui=()=>{
+  $("#photoCount").textContent=`${photos.length} / ${MAXP} pictures`;
+  $("#photoStrip").innerHTML=photos.length?photos.map((p,i)=>`<span class="photo-chip">📷 #${i+1} ${p.f} · sector ${p.s}</span>`).join(""):`<span class="mut">No pictures yet. Take at least one, then send it to Earth.</span>`;
+  bL.disabled=bR.disabled=busy;
+  bP.disabled=busy||photos.length>=MAXP;
+  bS.disabled=busy||photos.length===0;
+ };
+ const move=d=>{
+  if(busy)return;
+  x=Math.max(80,Math.min(560,x+d*48));place();
+  log(`Drove ${d<0?"left":"right"} to sector ${sector()}.`);
+ };
+ const snap=async()=>{
+  if(busy||photos.length>=MAXP)return;
+  busy=true;ui();
+  const f=feat(),s=sector();
+  await tween(120,p=>{flash.style.opacity=.85*p});
+  await tween(320,p=>{flash.style.opacity=.85*(1-p)});
+  flash.style.opacity=0;
+  photos.push({f,s});
+  log(`Took picture ${photos.length}: ${f}, sector ${s}.`,"g");
+  busy=false;ui();
+ };
+ const send=async()=>{
+  busy=true;ui();
+  const ax=x+6,ay=262;
+  beam.setAttribute("x1",ax);beam.setAttribute("y1",ay);beam.setAttribute("x2",ex);beam.setAttribute("y2",ey);
+  beam.style.opacity=1;pkt.style.opacity=1;
+  log(`Transmitting ${photos.length} picture(s) to Earth with the ${c.cm.n}…`);
+  await tween(2400,p=>{
+   const q=(p*3)%1;
+   beam.setAttribute("stroke-dashoffset",(-p*140).toFixed(1));
+   pkt.setAttribute("cx",ax+(ex-ax)*q);pkt.setAttribute("cy",ay+(ey-ay)*q);
+  });
+  beam.style.opacity=0;pkt.style.opacity=0;
+ };
+ ui();
+ const key=e=>{
+  if($("#sim").hidden||busy)return;
+  if(e.key==="ArrowLeft"){e.preventDefault();move(-1)}
+  else if(e.key==="ArrowRight"){e.preventDefault();move(1)}
+  else if(e.key==="p"||e.key==="P"){snap()}
+ };
+ document.addEventListener("keydown",key);
  await new Promise(done=>{
-  $("#btnLeft").onclick=()=>{
-   roverX=Math.max(80,roverX-48);
-   $("#rover").setAttribute("transform",`translate(${roverX} 302)`);
-   log(`Moved left to sector ${Math.round(roverX/64)} on ${DN[m.dest]}.`);
-  };
-  $("#btnRight").onclick=()=>{
-   roverX=Math.min(560,roverX+48);
-   $("#rover").setAttribute("transform",`translate(${roverX} 302)`);
-   log(`Moved right to sector ${Math.round(roverX/64)} on ${DN[m.dest]}.`);
-  };
-  $("#btnPhoto").onclick=()=>{
-   const label=`${DN[m.dest]} Sector ${Math.round(roverX/64)} #${photos.length+1}`;
-   photos.push(label);
-   updateStrip();
-   log(`Took picture: ${label}`,"g");
-  };
-  $("#btnSend").onclick=()=>{
-   if(photos.length===0){
-    const autoLabel=`${DN[m.dest]} Survey Panorama #1`;
-    photos.push(autoLabel);
-    updateStrip();
-   }
-   log(`Sent ${photos.length} picture(s) back to Earth.`,"g");
-   done();
-  };
+  bL.onclick=()=>move(-1);
+  bR.onclick=()=>move(1);
+  bP.onclick=snap;
+  bS.onclick=async()=>{if(busy||!photos.length)return;await send();done()};
  });
+ document.removeEventListener("keydown",key);
  $("#surfControls").hidden=true;
- const pMsg=`Mission successful — Explored ${DN[m.dest]}, took ${photos.length} picture(s), and sent data back to Earth.`;
+ const n=photos.length,u=new Set(photos.map(p=>p.f)).size;
+ toast(`Earth received ${n} picture${n>1?"s":""}`);
+ const pMsg=`Mission successful — Earth received ${n} picture${n>1?"s":""} of ${u} different target type${u>1?"s":""} from ${DN[m.dest]}.`;
  good.push(pMsg);
  await res("Data collection",true,pMsg,"");
 }
@@ -1109,62 +1168,3 @@ function report(c,fail,dmg,smul,good,bad){
  let best={};try{best=JSON.parse(localStorage.getItem("msd-best")||"{}")}catch(e){}
  if(total>(best[c.m.id]||0)){best[c.m.id]=total;try{localStorage.setItem("msd-best",JSON.stringify(best))}catch(e){}}
 
- const nextIdx=getNextMissionIndex(mi);
- const nextMission=MIS[nextIdx];
-
- $("#report").innerHTML=`<h2>Mission report: ${c.m.n}</h2>
- <p class="${pass?"g":"r"}" style="font:700 22px 'Space Grotesk'">${pass?"Mission successful":fail?"Mission failed":"Mission incomplete"}</p>
- <div class="row" style="gap:32px;margin:12px 0"><div><div class="score" id="repScore">${total}</div><div class="mut">out of 110</div></div>
- <table><tr><th>Science</th><td>${pts.sci} / 40</td></tr><tr><th>Budget use</th><td>${pts.bud} / 20</td></tr><tr><th>Spacecraft health (${dmg}% damage)</th><td>${pts.rel} / 20</td></tr><tr><th>Data returned</th><td>${pts.dat} / 20</td></tr><tr><th>Bonus objective</th><td>${pts.bon} / 10</td></tr></table></div>
- <div class="two"><div class="card"><h3>What worked</h3><ul>${good.map(t=>`<li>${t}</li>`).join("")||"<li>Nothing yet.</li>"}</ul></div>
- <div class="card"><h3>What went wrong</h3><ul>${bad.map(t=>`<li>${t}</li>`).join("")||"<li>No failures.</li>"}</ul></div></div>
- <div class="row">
-  <button class="btn pri" id="ref">Refine this design</button>
-  <button class="btn" id="again">End mission</button>
-  <button class="btn pri" id="nextMis">Next mission: ${nextMission.n} (+15 pts)</button>
- </div>`;
- show("report");
- $("#ref").onclick=()=>{continuedFromOrbit=false;sel=last.sel;mi=last.mi;lv=last.lv;learn=false;openBuild(false)};
- $("#again").onclick=()=>{continuedFromOrbit=false;toMis()};
- $("#nextMis").onclick=()=>{
-  bonusPointsAwarded += 15;
-  landingBonusPts += 15;
-  const boosted = Math.min(110, total + bonusPointsAwarded);
-  $("#repScore").textContent = boosted;
-  if(boosted>(best[c.m.id]||0)){
-   best[c.m.id]=boosted;
-   try{localStorage.setItem("msd-best",JSON.stringify(best))}catch(e){}
-  }
-  toast(`+${bonusPointsAwarded} points awarded! Continuing to ${nextMission.n}`);
-  continuedFromOrbit = (c.m.stage === "orbit" && nextMission.dest === c.m.dest);
-  mi = nextIdx;
-  if(continuedFromOrbit){
-   sel = {...last.sel, inst:new Set(last.sel.inst), gear: (nextMission.kind==="land"||nextMission.kind==="sample")?0:null};
-   fly();
-  } else {
-   openS = "setup";
-   baseSel = null;
-   openBuild(true);
-  }
- };
-}
-
-function show(id){document.querySelectorAll(".screen").forEach(s=>s.hidden=s.id!==id);window.scrollTo(0,0)}
-
-(function(){
-var c=$("#sky"),x=c.getContext("2d"),W,H,dpr=1,t=0,stars=[],shots=[],reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
-function size(){dpr=Math.min(window.devicePixelRatio||1,2);W=c.offsetWidth;H=c.offsetHeight;c.width=Math.round(W*dpr);c.height=Math.round(H*dpr);x.setTransform(dpr,0,0,dpr,0,0);
- stars=[];for(var i=0;i<Math.round(W*H/2400);i++){var z=Math.random();stars.push({x:Math.random()*W,y:Math.random()*H,r:z*1.5+.2,v:z*1.1+.2,p:Math.random()*6})}shots=[]}
-function draw(){x.globalAlpha=1;x.clearRect(0,0,W,H);
- stars.forEach(function(s){if(!reduce){s.x-=s.v;if(s.x<0){s.x=W;s.y=Math.random()*H}}x.globalAlpha=reduce?.7:.3+.7*Math.abs(Math.sin(t/22+s.p));x.fillStyle="#fff";x.beginPath();x.arc(s.x,s.y,s.r,0,7);x.fill()});
- x.globalAlpha=1;
- if(!reduce){if(Math.random()<.02)shots.push({x:Math.random()*W,y:Math.random()*H*.6,l:0});
-  shots=shots.filter(function(s){s.x-=11;s.y+=4;s.l++;x.globalAlpha=1-s.l/40;x.strokeStyle="#fff";x.lineWidth=1.5;x.beginPath();x.moveTo(s.x,s.y);x.lineTo(s.x+60,s.y-22);x.stroke();x.globalAlpha=1;return s.l<40})}}
-function frame(){draw();t++;if(!reduce)requestAnimationFrame(frame)}
-addEventListener("resize",size);size();frame();
-})();
-
-toMenu();
-</script>
-</body>
-</html>
