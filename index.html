@@ -123,6 +123,9 @@ table{border-collapse:collapse;font-size:15px}td,th{padding:6px 18px 6px 0;text-
 .imp-box{border:1px solid var(--line);border-radius:12px;padding:12px;background:rgba(7,11,26,.55);font-size:13px}
 .imp-box b{display:block;font-family:"Space Grotesk",sans-serif;margin-bottom:4px}
 .delta-pos{color:var(--ok)}.delta-neg{color:var(--bad)}.delta-neu{color:var(--mut)}
+.orb-tele{margin-top:12px;padding-top:12px;border-top:1px solid var(--line);font-size:13px}
+.orb-tele .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:8px;margin-top:8px}
+.orb-tele .cell{border:1px solid var(--line);border-radius:10px;padding:8px 10px;background:rgba(7,11,26,.5)}
 </style>
 </head>
 <body>
@@ -133,7 +136,7 @@ table{border-collapse:collapse;font-size:15px}td,th{padding:6px 18px 6px 0;text-
 <p class="acc">NASA Space Challenge 2026</p><h1>Build it. Launch it. Bring it home.</h1>
 <p class="mut" style="max-width:46ch;font-size:19px">Assemble a rocket and spacecraft part by part in 3D, learn what each system does, then fly the mission and handle what space throws at you.</p>
 <div class="row" style="margin-top:26px"><button class="btn pri big" id="go">Start</button></div>
-<div class="stats"><span class="pill">7 missions</span><span class="pill">3 difficulty levels</span><span class="pill">Up to 20 parts to build</span></div></div>
+<div class="stats"><span class="pill">9 missions</span><span class="pill">3 difficulty levels</span><span class="pill">Up to 20 parts to build</span></div></div>
 <svg class="art" viewBox="0 0 520 440" role="img" aria-label="A rocket launches, a satellite unfolds its panels, and an astronaut gives a thumbs up under a mission successful banner">
 <defs><linearGradient id="eg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3f7bff"/><stop offset="1" stop-color="#10286b"/></linearGradient><linearGradient id="pg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3159d1"/><stop offset="1" stop-color="#1a3175"/></linearGradient><linearGradient id="fg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff2c4"/><stop offset=".5" stop-color="#ff9f4a"/><stop offset="1" stop-color="#ff4a5a" stop-opacity="0"/></linearGradient><clipPath id="ecp"><circle cx="260" cy="640" r="330"/></clipPath></defs>
 <circle class="glow" cx="260" cy="640" r="344" fill="none" stroke="#5aa0ff" stroke-width="10"/>
@@ -200,6 +203,7 @@ table{border-collapse:collapse;font-size:15px}td,th{padding:6px 18px 6px 0;text-
     <p id="scap" class="acc" style="margin:8px 0 0;min-height:1.5em"></p>
     <ul class="ph" id="ph"></ul>
     <div class="meter"><div class="l"><span>Spacecraft damage</span><span id="dmgv">0%</span></div><div class="bar"><i id="dmgb"></i></div></div>
+    <div id="orbTele" class="orb-tele" hidden></div>
   </div><div class="card"><div id="log" aria-live="polite"></div><div id="evbox"></div></div></div>
 </section>
 
@@ -213,11 +217,11 @@ table{border-collapse:collapse;font-size:15px}td,th{padding:6px 18px 6px 0;text-
 const $=(s,r=document)=>r.querySelector(s),sum=(a,k)=>a.reduce((t,x)=>t+(x[k]||0),0),wait=ms=>new Promise(r=>setTimeout(r,ms));
 const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
 const ORB={
-leo:{n:"Low Earth orbit, 500 km",dv:50,contact:.15,solar:1,ecl:1,rad:.2,heat:1,cap:1,link:0,d:"Cheap to reach. You see a ground station only about 15% of the time and pass through Earth’s shadow every orbit."},
-sso:{n:"Sun-synchronous orbit, 700 km",dv:100,contact:.15,solar:1,ecl:0,rad:.3,heat:1,cap:.8,link:0,d:"Passes each place at the same local time, so lighting is steady and the Sun is nearly always on your panels."},
-geo:{n:"Geostationary orbit, 35,786 km",dv:1500,contact:1,solar:1,ecl:1,rad:.7,heat:2,cap:.25,link:1,d:"Hovers over one spot with a constant link. Far away, so it needs a stronger radio and tough electronics."},
-moon:{n:"Lunar orbit, 100 km",dv:1000,contact:.35,solar:1,ecl:2,rad:.6,heat:2,cap:.2,link:2,d:"Needs a big burn to be captured. The Moon blocks your link part of each orbit and shadows are long."},
-mars:{n:"Mars orbit, 400 km",dv:1800,contact:.3,solar:.43,ecl:2,rad:.5,heat:2,cap:.12,link:3,d:"Radio signals take 4 to 24 minutes one way, and sunlight is only about 43% as strong as at Earth."}};
+leo:{n:"Low Earth orbit, 500 km",dv:50,contact:.15,solar:1,ecl:1,rad:.2,heat:1,cap:1,link:0,life:5,d:"Cheap to reach. You see a ground station only about 15% of the time and pass through Earth’s shadow every orbit."},
+sso:{n:"Sun-synchronous orbit, 700 km",dv:100,contact:.15,solar:1,ecl:0,rad:.3,heat:1,cap:.8,link:0,life:7,d:"Passes each place at the same local time, so lighting is steady and the Sun is nearly always on your panels."},
+geo:{n:"Geostationary orbit, 35,786 km",dv:1500,contact:1,solar:1,ecl:1,rad:.7,heat:2,cap:.25,link:1,life:12,d:"Hovers over one spot with a constant link. Far away, so it needs a stronger radio and tough electronics."},
+moon:{n:"Lunar orbit, 100 km",dv:1000,contact:.35,solar:1,ecl:2,rad:.6,heat:2,cap:.2,link:2,life:6,d:"Needs a big burn to be captured. The Moon blocks your link part of each orbit and shadows are long."},
+mars:{n:"Mars orbit, 400 km",dv:1800,contact:.3,solar:.43,ecl:2,rad:.5,heat:2,cap:.12,link:3,life:8,d:"Radio signals take 4 to 24 minutes one way, and sunlight is only about 43% as strong as at Earth."}};
 
 /* rocket parts: you build the launch vehicle yourself. Lift to low orbit = 4,500 kg x the weaker of engine thrust and tank size, then modified by staging and fuselage. */
 const RENG=[{n:"Single engine",c:8,thr:1,x:"Thrust 1 of 4: small payloads",lv:0,why:"Lowest cost and mass, but caps lift even if you attach a bigger tank."},{n:"Triple engine",c:25,thr:2,x:"Thrust 2 of 4: medium payloads",lv:0,why:"Balanced thrust for lunar or multi-instrument spacecraft without extreme cost."},{n:"Five-engine cluster",c:55,thr:4,x:"Thrust 4 of 4: heavy payloads",lv:1,why:"Maximum lift capability for heavy Mars landers or dense payloads, at high cost."}];
@@ -251,13 +255,15 @@ const IN=[
 {n:"Soil analyzer",m:35,p:40,c:9,data:1,sci:{eo:0,data:0,land:15,sample:40},lv:1,surface:1,why:"Analyses surface composition on-site for sample and land missions."}];
 const GR=[{n:"No landing gear",m:0,p:0,c:0,tier:0,x:"Cannot land",lv:0,why:"Only valid for orbital missions."},{n:"Landing legs",m:40,p:0,c:4,tier:1,x:"Soft landing on the airless Moon",lv:0,why:"Enough for airless lunar touchdown."},{n:"Legs + parachute",m:70,p:0,c:9,tier:2,x:"Lands through the thin Martian air",lv:0,why:"Needed to slow down through Mars's thin atmosphere."}];
 const MIS=[
-{id:"eo",n:"Earth observation",b:"Track coastlines, crops and storms from orbit.",budget:150,min:40,bonus:90,orbits:["leo","sso","geo"],body:"#2b4fb8",kind:"orbit",sk:"eo",dest:"earth"},
+{id:"eo",n:"Earth observation",b:"Track coastlines, crops and storms from orbit.",budget:150,min:40,bonus:90,orbits:["leo","sso","geo"],body:"#2b4fb8",kind:"orbit",sk:"eo",dest:"earth",life:5},
 {id:"mland",n:"Lunar landing",b:"Fly to the Moon, touch down softly and image the surface.",budget:240,min:50,bonus:95,orbits:["moon"],body:"#8d93a6",kind:"land",sk:"land",dest:"moon",landDv:800,need:1,trip:"3 days"},
 {id:"rland",n:"Mars landing",b:"Cross to Mars and land through its thin atmosphere.",budget:300,min:55,bonus:100,orbits:["mars"],body:"#c1583a",kind:"land",sk:"land",dest:"mars",landDv:600,need:2,trip:"7 months"},
-{id:"mdata",n:"Moon data collection",b:"Orbit the Moon and map its surface and magnetic field.",budget:250,min:55,bonus:100,orbits:["moon"],body:"#8d93a6",kind:"orbit",sk:"data",dest:"moon",trip:"3 days"},
-{id:"rdata",n:"Mars data collection",b:"Orbit Mars and study its atmosphere and surface.",budget:320,min:60,bonus:100,orbits:["mars"],body:"#c1583a",kind:"orbit",sk:"data",dest:"mars",trip:"7 months"},
+{id:"mdata",n:"Moon data collection",b:"Orbit the Moon and map its surface and magnetic field.",budget:250,min:55,bonus:100,orbits:["moon"],body:"#8d93a6",kind:"orbit",sk:"data",dest:"moon",trip:"3 days",life:6},
+{id:"rdata",n:"Mars data collection",b:"Orbit Mars and study its atmosphere and surface.",budget:320,min:60,bonus:100,orbits:["mars"],body:"#c1583a",kind:"orbit",sk:"data",dest:"mars",trip:"7 months",life:8},
 {id:"msamp",n:"Moon sample collection",b:"Land on the Moon and drill samples of its soil.",budget:260,min:55,bonus:100,orbits:["moon"],body:"#8d93a6",kind:"sample",sk:"sample",dest:"moon",landDv:800,need:1,trip:"3 days"},
-{id:"rsamp",n:"Mars sample collection",b:"Land on Mars and collect rock and soil samples.",budget:320,min:55,bonus:100,orbits:["mars"],body:"#c1583a",kind:"sample",sk:"sample",dest:"mars",landDv:600,need:2,trip:"7 months"}];
+{id:"rsamp",n:"Mars sample collection",b:"Land on Mars and collect rock and soil samples.",budget:320,min:55,bonus:100,orbits:["mars"],body:"#c1583a",kind:"sample",sk:"sample",dest:"mars",landDv:600,need:2,trip:"7 months"},
+{id:"mexp",n:"Lunar orbit exploration",b:"Survey lunar craters, lighting and environment from orbit.",budget:220,min:50,bonus:95,orbits:["moon"],body:"#8d93a6",kind:"orbit",sk:"eo",dest:"moon",trip:"3 days",life:6},
+{id:"rexp",n:"Mars orbit exploration",b:"Scout Martian weather, dust storms and terrain from orbit.",budget:290,min:55,bonus:100,orbits:["mars"],body:"#c1583a",kind:"orbit",sk:"eo",dest:"mars",trip:"7 months",life:8}];
 
 const LV=[{n:"Beginner",d:"Simple parts, a bigger budget, easier science targets and one random event. You start with a finished rocket and spacecraft to explore."},{n:"Intermediate",d:"More parts, the standard budget and two random events. You build the rocket and spacecraft from an empty launch pad."},{n:"Advanced",d:"Every part including advanced ones, a tight budget, higher science targets and three random events."}];
 const BM=[1.5,1.15,1],SM=[.8,1,1.15];
@@ -321,10 +327,15 @@ function calc(overrideSel){
  c.sci=Math.round(c.sciRaw*(ad.pt||.8)*c.ratio);
  c.prot=cp.rad+st.hard;
  c.thermNeed=Math.min(3,c.o.heat+(c.use>500?1:0));
+ const baseLife=m.life||o.life||5;
+ const spareDv=Math.max(0,c.dv-c.o.dv);
+ const lifeBonus=(c.bt.tier>=c.o.ecl?1:0)+(c.fd.safe||0)+(spareDv>=200?1:0);
+ c.estLife=Math.max(1,baseLife+lifeBonus-Math.max(0,c.thermNeed-c.th.tier));
+ c.targetLife=baseLife;
  return c;
 }
 function stat(k,o){
- if(k==="orbit")return`${o.dv} m/s needed · contact ${Math.round(o.contact*100)}% of the time`;
+ if(k==="orbit")return`${o.dv} m/s needed · contact ${Math.round(o.contact*100)}% of the time · nominal life ${o.life} yr`;
  if(RK.includes(k))return`$${o.c}M · ${o.x}${o.r?" · +"+Math.round(o.r*100)+"% reliability":""}${o.why?" — "+o.why:""}`;
  const a=[`${o.m} kg`];if(o.p)a.push(`${o.p} W`);a.push(`$${o.c}M`);
  return a.join(" · ")+" · "+(k==="inst"?`${o.data} Mbps data · science ${o.sci[MIS[mi].sk]}`:o.x)+(o.why?" — "+o.why:"")}
@@ -352,43 +363,43 @@ function evaluateBuild(s){
  const rk=targetSel.engine!=null&&targetSel.tank!=null;
  if(rk){
   if(c.mass<=c.cap){
-   approved.push(`Mass within lift capacity: ${c.mass} kg of ${c.cap} kg (${c.cap-c.mass} kg margin).`);
+   approved.push(`[Available Resources] Mass within lift capacity: ${c.mass} kg of ${c.cap} kg (${c.cap-c.mass} kg margin).`);
   } else {
-   blockers.push(`Payload too heavy by ${c.mass-c.cap} kg (${c.mass} kg vs ${c.cap} kg lift) — remove heavy instruments/parts or increase fuel tank and engine thrust.`);
+   blockers.push(`[Available Resources] Payload too heavy by ${c.mass-c.cap} kg (${c.mass} kg vs ${c.cap} kg lift) — remove heavy instruments/parts or increase fuel tank and engine thrust.`);
   }
   if(c.L.thr>=c.L.cap && c.L.cap>=c.L.thr){
-   approved.push(`Rocket propulsion matched: thrust ${c.L.thr}/4 and tank ${c.L.cap}/4.`);
+   approved.push(`[Orbital Constraints] Rocket propulsion matched: thrust ${c.L.thr}/4 and tank ${c.L.cap}/4.`);
   } else if(c.L.thr<c.L.cap){
-   warnings.push("Fuel tank is larger than engine thrust — increase engine thrust to use the extra propellant.");
+   warnings.push("[Orbital Constraints] Fuel tank is larger than engine thrust — increase engine thrust to use the extra propellant.");
   } else {
-   warnings.push("Fuel tank is small for your engines — increase fuel tank size to unlock more lift.");
+   warnings.push("[Orbital Constraints] Fuel tank is small for your engines — increase fuel tank size to unlock more lift.");
   }
  }
  if(c.cost<=c.m.budget){
-  approved.push(`Budget approved: $${c.cost}M of $${c.m.budget}M ($${c.m.budget-c.cost}M remaining).`);
+  approved.push(`[Available Resources] Budget approved: $${c.cost}M of $${c.m.budget}M ($${c.m.budget-c.cost}M remaining).`);
  } else {
-  blockers.push(`Budget exceeded by $${c.cost-c.m.budget}M ($${c.cost}M vs $${c.m.budget}M budget) — choose lower-cost parts or lower difficulty.`);
+  blockers.push(`[Available Resources] Budget exceeded by $${c.cost-c.m.budget}M ($${c.cost}M vs $${c.m.budget}M budget) — choose lower-cost parts or lower difficulty.`);
  }
  if(targetSel.power!=null){
   if(c.use<=c.gen){
-   approved.push(`Power budget approved: ${c.use} W draw vs ${c.gen} W solar generation.`);
+   approved.push(`[Available Resources] Power budget approved: ${c.use} W draw vs ${c.gen} W solar generation.`);
   } else {
-   blockers.push(`Power deficit of ${c.use-c.gen} W (${c.use} W needed vs ${c.gen} W generated) — upgrade solar panels or trim power-hungry payload/thrusters.`);
+   blockers.push(`[Available Resources] Power deficit of ${c.use-c.gen} W (${c.use} W needed vs ${c.gen} W generated) — upgrade solar panels or trim power-hungry payload/thrusters.`);
   }
  }
  if(RK.every(x=>targetSel[x]!=null)){
   if(c.L.rel>=.9){
-   approved.push(`Rocket reliability approved: ${Math.round(c.L.rel*100)}%.`);
+   approved.push(`[Orbital Constraints] Rocket reliability approved: ${Math.round(c.L.rel*100)}%.`);
   } else {
-   warnings.push(`Rocket reliability ${Math.round(c.L.rel*100)}% — add fins, fairing, decoupler, gimbals, or redundant flight computer.`);
+   warnings.push(`[Orbital Constraints] Rocket reliability ${Math.round(c.L.rel*100)}% — add fins, fairing, decoupler, gimbals, or redundant flight computer.`);
   }
  }
  const need=c.o.dv+(c.m.landDv||0);
  if(targetSel.prop!=null){
   if(c.dv>=need){
-   approved.push(`Delta-v approved: ${c.dv} m/s available vs ${need} m/s required.`);
+   approved.push(`[Orbital Constraints] Delta-v approved: ${c.dv} m/s available vs ${need} m/s required.`);
   } else {
-   warnings.push(`Delta-v ${c.dv} m/s is below ${need} m/s required — upgrade thruster or turbopump tanks.`);
+   warnings.push(`[Orbital Constraints] Delta-v ${c.dv} m/s is below ${need} m/s required — upgrade thruster or turbopump tanks.`);
   }
  }
  if(targetSel.gear!=null){
@@ -400,30 +411,30 @@ function evaluateBuild(s){
  }
  if(targetSel.battery!=null){
   if(c.bt.tier>=c.o.ecl){
-   approved.push(`Battery approved: ${c.bt.n} covers orbit eclipses.`);
+   approved.push(`[Mission Lifetime] Battery approved: ${c.bt.n} covers orbit eclipses.`);
   } else {
-   warnings.push("Battery too small for eclipses — upgrade to a larger battery pack.");
+   warnings.push("[Mission Lifetime] Battery too small for eclipses — upgrade to a larger battery pack.");
   }
  }
  if(targetSel.comms!=null){
   if(c.cm.tier>=c.o.link){
-   approved.push(`Communications approved: ${c.cm.n} reaches ${ORB[targetSel.orbit].n.split(",")[0]}.`);
+   approved.push(`[Communications Capacity] Link range approved: ${c.cm.n} reaches ${ORB[targetSel.orbit].n.split(",")[0]}.`);
   } else {
-   warnings.push("Radio too weak for this distance — upgrade comms antenna/dish.");
+   warnings.push("[Communications Capacity] Radio too weak for this distance — upgrade comms antenna/dish.");
   }
   if(c.ins.length){
    if(c.ratio>=1){
-    approved.push(`Downlink bandwidth approved: ${c.down.toFixed(1)} Mbps handles ${c.dataGen.toFixed(1)} Mbps instrument data.`);
+    approved.push(`[Communications Capacity] Downlink bandwidth approved: ${c.down.toFixed(1)} Mbps handles ${c.dataGen.toFixed(1)} Mbps instrument data.`);
    } else {
-    warnings.push(`Radio sends ${c.down.toFixed(1)} of ${c.dataGen.toFixed(1)} Mbps — upgrade radio or trim high-data instruments.`);
+    warnings.push(`[Communications Capacity] Radio sends ${c.down.toFixed(1)} of ${c.dataGen.toFixed(1)} Mbps — upgrade radio or trim high-data instruments.`);
    }
   }
  }
  if(targetSel.thermal!=null){
   if(c.th.tier>=c.thermNeed){
-   approved.push(`Thermal control approved: tier ${c.th.tier} meets required tier ${c.thermNeed}.`);
+   approved.push(`[Mission Lifetime] Thermal control approved: tier ${c.th.tier} meets required tier ${c.thermNeed} (est. life ${c.estLife} yr).`);
   } else {
-   warnings.push(`Thermal control tier ${c.th.tier} is below required tier ${c.thermNeed} for this orbit and power draw.`);
+   warnings.push(`[Mission Lifetime] Thermal control tier ${c.th.tier} is below tier ${c.thermNeed} — expected lifetime drops to ${c.estLife} yr.`);
   }
  }
  return {c, approved, blockers, warnings, launchable: blockers.length===0};
@@ -445,7 +456,7 @@ function renderImpact(){
  }
  const curC=calc(sel), baseC=calc(baseSel);
  const dMass=curC.mass-baseC.mass, dCap=curC.cap-baseC.cap, dCost=curC.cost-baseC.cost, dUse=curC.use-baseC.use, dGen=curC.gen-baseC.gen, dData=curC.dataGen-baseC.dataGen, dDv=curC.dv-baseC.dv, dSci=curC.sci-baseC.sci;
- const dTherm=curC.thermNeed-baseC.thermNeed;
+ const dTherm=curC.thermNeed-baseC.thermNeed, dLife=curC.estLife-baseC.estLife;
  const curEv=evaluateBuild(sel);
  imp.innerHTML=`<div class="imp-grid">
   <div class="imp-box"><b>Mass &amp; Lift</b>
@@ -456,10 +467,11 @@ function renderImpact(){
    <div>Cost: $${baseC.cost}M → <b>$${curC.cost}M</b> (${fmtDelta(dCost,"M",1)})</div>
    <div>Budget limit: $${curC.m.budget}M (${curC.cost<=curC.m.budget?"Within budget":"Over by $"+(curC.cost-curC.m.budget)+"M"})</div>
   </div>
-  <div class="imp-box"><b>Power &amp; Thermal</b>
+  <div class="imp-box"><b>Power, Thermal &amp; Lifetime</b>
    <div>Power draw: ${baseC.use} → <b>${curC.use} W</b> (${fmtDelta(dUse,"W",1)})</div>
    <div>Solar gen: ${baseC.gen} → <b>${curC.gen} W</b> (${fmtDelta(dGen,"W",0)})</div>
    <div>Thermal tier needed: ${baseC.thermNeed} → <b>${curC.thermNeed}</b> (${fmtDelta(dTherm,"tier",1)})</div>
+   <div>Est. mission life: ${baseC.estLife} → <b>${curC.estLife} yr</b> (${fmtDelta(dLife,"yr",0)})</div>
   </div>
   <div class="imp-box"><b>Payload, Comms &amp; Delta-v</b>
    <div>Instrument data: ${baseC.dataGen.toFixed(1)} → <b>${curC.dataGen.toFixed(1)} Mbps</b> (${fmtDelta(dData,"Mbps",1)})</div>
@@ -659,8 +671,8 @@ let tt;function toast(t){const e=$("#toast");e.textContent=t;e.classList.add("on
 function toMenu(){show("menu")}
 function missionIcon(m){return`<svg class="ic" viewBox="0 0 88 88" aria-hidden="true"><circle cx="44" cy="44" r="26" fill="${m.body}"/><circle cx="35" cy="35" r="9" fill="#fff" opacity=".18"/>${m.dest==="moon"?`<circle cx="52" cy="50" r="5" fill="#000" opacity=".18"/><circle cx="40" cy="56" r="3" fill="#000" opacity=".18"/>`:""}<ellipse cx="44" cy="44" rx="40" ry="13" fill="none" stroke="#a9bcff" stroke-width="1.5" transform="rotate(-20 44 44)"/><circle cx="78" cy="30" r="3.5" fill="#fff"/></svg>`}
 const DESTS=[
-  {id:"moon",n:"Silver Gateway",b:"Explore cislunar space — choose orbiting, lunar landing, or sample collection.",body:"#8d93a6",dest:"moon"},
-  {id:"mars",n:"Red Frontier",b:"Cross to the Red Planet — choose orbiting, Mars landing, or sample collection.",body:"#c1583a",dest:"mars"},
+  {id:"moon",n:"Silver Gateway",b:"Explore cislunar space — choose orbit exploration, lunar orbiting, landing, or sample collection.",body:"#8d93a6",dest:"moon"},
+  {id:"mars",n:"Red Frontier",b:"Cross to the Red Planet — choose orbit exploration, Mars orbiting, landing, or sample collection.",body:"#c1583a",dest:"mars"},
   {id:"earth",n:"Blue Horizon",b:"Track coastlines, crops and storms from Earth orbit.",body:"#2b4fb8",dest:"earth"}
 ];
 function toMis(){let b={};try{b=JSON.parse(localStorage.getItem("msd-best")||"{}")}catch(e){}
@@ -702,9 +714,9 @@ const EV=[
 {t:"Solar flare",d:"A solar storm is sweeping over your spacecraft. Radiation can fry electronics.",ch:[
  {l:"Enter safe mode",r:c=>({dmg:2,sci:.9,ok:1,txt:"Safe mode switched off sensitive parts. You lost about 10% of the science but stayed healthy."})},
  {l:"Keep observing",r:c=>{const d=Math.round(45*c.o.rad*(3-c.prot)/3)+4;return{dmg:d,sci:1,ok:d<20,txt:`You kept collecting data and took ${d}% damage. Radiation protection (${c.prot} of 3) decides how bad this is.`}}}]},
-{t:"Micrometeoroid swarm",d:"Tiny fast particles are about to hit the spacecraft.",ch:[
- {l:"Turn the bus toward the swarm",r:c=>c.dv-c.o.dv-(c.m.landDv||0)>=100?{dmg:4,sci:1,ok:1,txt:"You had spare fuel for the maneuver and took only light damage."}:{dmg:16,sci:.9,ok:0,txt:"There was not enough spare delta-v for a clean turn, so damage was higher."}},
- {l:"Hold position",r:c=>{const d=24-8*c.st.hard;return{dmg:d,sci:1,ok:d<12,txt:`The impacts caused ${d}% damage. A hardened bus takes much less.`}}}]},
+{t:"Asteroid / micrometeoroid encounter",d:"A small asteroid fragment or micrometeoroid swarm crosses your orbital path.",ch:[
+ {l:"Burn to adjust orbit",r:c=>c.dv-c.o.dv-(c.m.landDv||0)>=100?{dmg:4,sci:1,ok:1,txt:"You used spare delta-v to dodge the asteroid debris and took only light damage."}:{dmg:16,sci:.9,ok:0,txt:"There was not enough spare delta-v for a clean dodge, so impact damage was higher."}},
+ {l:"Hold position",r:c=>{const d=24-8*c.st.hard;return{dmg:d,sci:1,ok:d<12,txt:`The impact caused ${d}% damage. A hardened bus takes much less.`}}}]},
 {t:"Communications dropout",d:"The transceiver stopped responding. Ground control sees no signal.",ch:[
  {l:"Reboot the transceiver",r:c=>({dmg:0,sci:.93,ok:1,txt:"The reboot restored the link. You lost a day of downlink."})},
  {l:"Wait and watch",r:c=>c.cp.rad?{dmg:0,sci:.95,ok:1,txt:"Your rad-hard computer recovered the radio by itself."}:{dmg:8,sci:.8,ok:0,txt:"The standard computer did not recover and the link stayed down for a week."}}]}];
@@ -771,6 +783,19 @@ async function sLand(ok,para){
 }
 async function sSample(){vis("arm",1);await tween(1200,p=>$("#arm").setAttribute("transform",`translate(6 4) scale(${.3+.7*p}) translate(-6 -4)`))}
 
+function renderOrbTelemetry(c, dmg, lifeRemaining, yearIdx){
+ const el=$("#orbTele");
+ if(!el || c.m.kind!=="orbit"){if(el)el.hidden=true;return;}
+ el.hidden=false;
+ el.innerHTML=`<b>Orbit exploration telemetry (Year ${yearIdx}/${c.targetLife})</b>
+ <div class="grid">
+  <div class="cell"><b>Resources</b><div>Mass ${c.mass}/${c.cap} kg</div><div>Power ${c.use}/${c.gen} W · $${c.cost}/${c.m.budget}M</div></div>
+  <div class="cell"><b>Comms Capacity</b><div>${c.down.toFixed(1)} / ${c.dataGen.toFixed(1)} Mbps (${Math.round(c.ratio*100)}%)</div></div>
+  <div class="cell"><b>Orbital Constraints</b><div>${c.o.n.split(",")[0]}</div><div>Δv ${c.dv}/${c.o.dv} m/s</div></div>
+  <div class="cell"><b>Mission Lifetime</b><div>Est. ${c.estLife} yr · Rem. ${lifeRemaining.toFixed(1)} yr</div><div>Damage ${dmg}%</div></div>
+ </div>`;
+}
+
 async function fly(){
  const evCheck=evaluateBuild(sel);
  if(!evCheck.launchable){openPreflight();return;}
@@ -779,7 +804,8 @@ async function fly(){
  await countdown();
  show("sim");setupScene(m);
  $("#log").innerHTML="";$("#evbox").innerHTML="";$("#scap").textContent="";$("#simt").textContent=m.n+": mission in progress";
- const names=["Launch",...(eo?[]:[TR]),"Orbit insertion",...(land?["Descent and landing"]:[]),...(smp?["Sample collection"]:[]),"Power-up and eclipse","Link to Earth","Science operations"];
+ if($("#orbTele")) $("#orbTele").hidden=true;
+ const names=["Launch",...(eo?[]:[TR]),"Orbit insertion",...(land?["Descent and landing"]:[]),...(smp?["Sample collection"]:[]),"Power-up and eclipse","Link to Earth",...(m.kind==="orbit"?["Orbit exploration"]:[]),"Science operations"];
  $("#ph").innerHTML=names.map(n=>`<li>${n}</li>`).join("");
  let dmg=0,smul=1,good=[],bad=[],fail=false;
  const setPh=(n,s)=>{$("#ph").children[names.indexOf(n)].className=s};
@@ -809,6 +835,44 @@ async function fly(){
   await res("Power-up and eclipse",c.bt.tier>=c.o.ecl,"Power stayed positive through the eclipses.",`The battery drained in shadow. This orbit needs a battery of tier ${c.o.ecl} and you had tier ${c.bt.tier}.`)}
  if(!fail){step("Link to Earth","Pointing the antenna at Earth…");await pause();
   await res("Link to Earth",c.cm.tier>=c.o.link,`Contact with Earth. ${c.cm.n} can reach this far.`,`No link. ${c.cm.n} is too weak for ${c.o.n}; you need a stronger radio.`)}
+ if(!fail&&m.kind==="orbit"){
+  step("Orbit exploration",`Exploring ${c.o.n} across available resources, comms capacity, orbital constraints, and mission lifetime…`);
+  let lifeRem=c.estLife;
+  for(let yr=1;yr<=c.targetLife;yr++){
+   renderOrbTelemetry(c,dmg,lifeRem,yr);
+   await wait(450);
+   if(c.mass>c.cap || c.cost>c.m.budget || c.use>c.gen){
+    dmg+=12;sd();
+    const t=`Year ${yr}: Resource overrun (mass ${c.mass}/${c.cap} kg, power ${c.use}/${c.gen} W, cost $${c.cost}/$${c.m.budget}M) degraded systems (+12% dmg).`;
+    bad.push(t);log(t,"r");
+   } else {
+    log(`Year ${yr}: Resources nominal (mass ${c.mass}/${c.cap} kg, power ${c.use}/${c.gen} W, cost $${c.cost}/$${c.m.budget}M).`,"g");
+   }
+   if(c.ratio<1){
+    const t=`Year ${yr}: Comms capacity bottleneck (${c.down.toFixed(1)}/${c.dataGen.toFixed(1)} Mbps) queued/dropped data.`;
+    bad.push(t);log(t,"y");
+   } else {
+    log(`Year ${yr}: Comms capacity cleared downlink (${c.down.toFixed(1)} Mbps).`,"g");
+   }
+   if(c.dv<c.o.dv){
+    dmg+=10;sd();
+    const t=`Year ${yr}: Orbital constraint violation — insufficient Δv (${c.dv}/${c.o.dv} m/s) caused drift (+10% dmg).`;
+    bad.push(t);log(t,"r");
+   }
+   lifeRem=Math.max(0,lifeRem-1);
+   if(lifeRem<=0 && yr<c.targetLife){
+    dmg+=15;sd();
+    const t=`Year ${yr}: Mission lifetime exceeded (est. ${c.estLife} yr) — aging hardware took +15% damage.`;
+    bad.push(t);log(t,"y");
+   }
+   if(dmg>=70)break;
+  }
+  if(dmg>=70){
+   res("Orbit exploration",false,"Orbit exploration terminated early due to severe spacecraft damage.","Orbit exploration failed: spacecraft damage exceeded 70% during orbital constraint stress.");
+  } else {
+   res("Orbit exploration",true,`Completed ${c.targetLife}-year orbit exploration envelope (est. lifetime ${c.estLife} yr, ${dmg}% damage).`,"");
+  }
+ }
  if(!fail){step("Science operations","Science operations begin. Stay alert.");await wait(900);
   const need=c.thermNeed;if(c.th.tier<need){const d=18*(need-c.th.tier);dmg+=d;sd();const tt=`Thermal control was too weak, so parts overheated or froze and took ${d}% damage. This orbit and power level need thermal tier ${need}; you had ${c.th.tier}.`;bad.push(tt);log(tt,"y")}else good.push("Thermal control kept the electronics in their safe temperature range.");
   const evs=EV.filter(e=>!e.only||land).sort(()=>Math.random()-.5).slice(0,[1,2,3][lv]);
