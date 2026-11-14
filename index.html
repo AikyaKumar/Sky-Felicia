@@ -130,9 +130,6 @@ table{border-collapse:collapse;font-size:15px}td,th{padding:6px 18px 6px 0;text-
 .surf-controls{margin-top:12px;padding:12px;border:1px solid var(--acc);border-radius:12px;background:rgba(7,11,26,.75)}
 .photo-strip{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;font-size:12px}
 .photo-chip{border:1px solid var(--line);border-radius:8px;padding:4px 8px;background:rgba(169,188,255,.08)}
-.congrats-modal{position:fixed;inset:0;z-index:25;display:none;align-items:center;justify-content:center;background:rgba(7,11,26,.82);padding:20px}
-.congrats-modal.on{display:flex}
-.congrats-card{max-width:480px;width:100%;background:var(--card);border:2px solid var(--ok);border-radius:20px;padding:24px;box-shadow:0 16px 48px rgba(0,0,0,.6)}
 </style>
 </head>
 <body>
@@ -249,14 +246,14 @@ table{border-collapse:collapse;font-size:15px}td,th{padding:6px 18px 6px 0;text-
     </svg>
     <div id="surfControls" class="surf-controls" hidden>
       <div class="row" style="justify-content:space-between">
-        <b id="surfTitle">Surface Image &amp; Transmission</b>
+        <b id="surfTitle">Data Collection Explorer</b>
         <span id="photoCount" class="pill">0 photos</span>
       </div>
       <div class="row" style="margin-top:8px">
         <button class="btn sm pri" id="btnLeft">Move Left</button>
         <button class="btn sm pri" id="btnRight">Move Right</button>
-        <button class="btn sm" id="btnPhoto">Capture Image</button>
-        <button class="btn sm" id="btnSend">Send Image to Earth</button>
+        <button class="btn sm" id="btnPhoto">Take Picture</button>
+        <button class="btn sm" id="btnSend">Send Photos to Earth</button>
       </div>
       <div id="photoStrip" class="photo-strip"></div>
     </div>
@@ -271,79 +268,74 @@ table{border-collapse:collapse;font-size:15px}td,th{padding:6px 18px 6px 0;text-
 </main>
 <div id="toast" role="status"></div>
 <div id="cd" aria-live="assertive"></div>
-<div id="congratsModal" class="congrats-modal" role="dialog" aria-modal="true" aria-labelledby="cmTitle">
-  <div class="congrats-card">
-    <h3 id="cmTitle" class="g">Congratulations!</h3>
-    <p id="cmBody" style="margin-top:8px"></p>
-    <div class="row" id="cmActions" style="margin-top:16px"></div>
-  </div>
-</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
 const $=(s,r=document)=>r.querySelector(s),sum=(a,k)=>a.reduce((t,x)=>t+(x[k]||0),0),wait=ms=>new Promise(r=>setTimeout(r,ms));
 const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
 const ORB={
-leo:{n:"Low Earth orbit, 500 km",dv:20,contact:.5,solar:1,ecl:0,rad:.1,heat:1,cap:1.2,link:0,life:5,d:"Easy to reach with steady solar power and frequent ground contact."},
-sso:{n:"Sun-synchronous orbit, 700 km",dv:40,contact:.5,solar:1,ecl:0,rad:.15,heat:1,cap:1.1,link:0,life:7,d:"Steady lighting and clear ground contact."},
-geo:{n:"Geostationary orbit, 35,786 km",dv:400,contact:1,solar:1,ecl:1,rad:.3,heat:1,cap:.6,link:1,life:12,d:"Constant link with moderate distance."},
-moon:{n:"Lunar orbit, 100 km",dv:300,contact:.7,solar:1,ecl:1,rad:.25,heat:1,cap:.6,link:1,life:6,d:"Moderate capture burn and reliable X-band link."},
-mars:{n:"Mars orbit, 400 km",dv:500,contact:.65,solar:.65,ecl:1,rad:.25,heat:1,cap:.45,link:2,life:8,d:"Long-range link with forgiving solar and thermal margins."}};
+leo:{n:"Low Earth orbit, 500 km",dv:50,contact:.2,solar:1,ecl:1,rad:.2,heat:1,cap:1,link:0,life:5,d:"Low Earth orbit with eclipse passes and limited ground contact."},
+sso:{n:"Sun-synchronous orbit, 700 km",dv:100,contact:.25,solar:1,ecl:0,rad:.3,heat:1,cap:.9,link:0,life:7,d:"Steady solar lighting and periodic ground contact."},
+geo:{n:"Geostationary orbit, 35,786 km",dv:900,contact:1,solar:1,ecl:1,rad:.6,heat:2,cap:.4,link:1,life:12,d:"Constant link at high altitude."},
+moon:{n:"Lunar orbit, 100 km",dv:850,contact:.4,solar:1,ecl:2,rad:.5,heat:2,cap:.35,link:1,life:6,d:"Lunar capture burn, long eclipses, and X-band link requirement."},
+mars:{n:"Mars orbit, 400 km",dv:1200,contact:.35,solar:.55,ecl:2,rad:.5,heat:2,cap:.25,link:2,life:8,d:"Mars transit & capture, reduced solar input, and X-band link requirement."}};
 
-/* Reduced rocket components (4 parts: engine, tank, decoupler, fairing) */
-const RENG=[{n:"Single engine",c:8,thr:2,x:"Thrust 2 of 4: light payloads",lv:0,why:"Low cost and solid baseline lift."},{n:"Triple engine",c:18,thr:3,x:"Thrust 3 of 4: medium payloads",lv:0,why:"Strong lift for lunar and Mars missions."},{n:"Five-engine cluster",c:35,thr:4,x:"Thrust 4 of 4: heavy payloads",lv:1,why:"Maximum lift capacity."}];
-const RTK=[{n:"Small tank",c:6,cap:2,x:"Propellant 2 of 4",lv:0,why:"Light and cheap."},{n:"Medium tank",c:12,cap:3,x:"Propellant 3 of 4",lv:0,why:"Balanced propellant capacity."},{n:"Large tank",c:22,cap:4,x:"Propellant 4 of 4",lv:1,why:"Full propellant capacity."}],
-RDEC=[{n:"No decoupler",c:0,mult:.85,r:.05,x:"15% less payload",lv:0,why:"Saves cost with mild lift penalty."},{n:"Stage decoupler",c:3,mult:1.1,r:.1,x:"+10% payload",lv:0,why:"Drops empty stage and boosts reliability."},{n:"Two-stage decoupler",c:6,mult:1.3,r:.12,x:"+30% payload",lv:1,why:"High staging efficiency."}],
-RFAIR=[{n:"No fairing",c:0,r:.05,x:"Exposed ascent",lv:0,why:"Free option."},{n:"Standard fairing",c:4,r:.1,x:"Protects spacecraft",lv:0,why:"Protects payload and raises reliability."},{n:"Aerodynamic nose cone",c:6,r:.12,x:"Smoother airflow",lv:1,why:"Best ascent protection."}];
+const RENG=[{n:"Single engine",c:8,thr:1,x:"Thrust 1 of 4",lv:0,why:"Low cost, limited lift."},{n:"Triple engine",c:22,thr:2,x:"Thrust 2 of 4",lv:0,why:"Balanced medium lift."},{n:"Five-engine cluster",c:45,thr:4,x:"Thrust 4 of 4",lv:1,why:"Heavy lift capacity."}];
+const RTK=[{n:"Small tank",c:6,cap:1,x:"Propellant 1 of 4",lv:0,why:"Light tank."},{n:"Medium tank",c:14,cap:2,x:"Propellant 2 of 4",lv:0,why:"Medium tank."},{n:"Large tank",c:26,cap:4,x:"Propellant 4 of 4",lv:1,why:"Large tank."}],
+RDEC=[{n:"No decoupler",c:0,mult:.65,r:0,x:"35% less payload",lv:0,why:"Carries dead mass."},{n:"Stage decoupler",c:4,mult:1,r:.06,x:"Standard staging",lv:0,why:"Drops empty stage."},{n:"Two-stage decoupler",c:8,mult:1.25,r:.08,x:"+25% payload",lv:1,why:"High staging efficiency."}],
+RFAIR=[{n:"No fairing",c:0,r:0,x:"Exposed ascent",lv:0,why:"No ascent shield."},{n:"Standard fairing",c:5,r:.06,x:"Protects spacecraft",lv:0,why:"Protects payload."},{n:"Aerodynamic nose cone",c:8,r:.08,x:"Smoother airflow",lv:1,why:"Best ascent protection."}],
 const RK=["engine","tank","decoupler","fairing"];
 
-/* Reduced spacecraft components (8 systems + instruments, gear only for land/sample) */
-const ST=[{n:"Light frame",m:70,c:5,hard:1,x:"Shield 1/2",lv:0,why:"Light frame with baseline shielding."},{n:"Standard bus",m:140,c:10,hard:2,x:"Shield 2/2",lv:0,why:"Strong radiation protection."}];
-const PW=[{n:"Solar 1000 W",m:50,c:4,gen:1000,x:"1000 W at Earth",lv:0,why:"Plenty of power for standard payloads."},{n:"Solar 2500 W",m:110,c:9,gen:2500,x:"2500 W at Earth",lv:0,why:"High headroom for Mars and heavy instruments."}];
-const BT=[{n:"Li-ion pack",m:20,c:2,tier:1,x:"Covers eclipses",lv:0,why:"Reliable eclipse backup."},{n:"Large pack",m:45,c:4,tier:2,x:"Extended backup",lv:1,why:"Extra reserve."}];
-const PR=[{n:"Hydrazine",m:110,p:5,c:5,dv:900,x:"900 m/s",lv:0,why:"Covers orbit insertion and descent."},{n:"Bipropellant",m:180,p:10,c:9,dv:1600,x:"1,600 m/s",lv:0,why:"Generous delta-v margin."}];
-const CM=[{n:"S-band radio",m:10,p:15,c:3,rate:20,tier:1,x:"20 Mbps, reaches Moon",lv:0,why:"Strong link for Earth and Moon."},{n:"X-band radio",m:20,p:30,c:6,rate:80,tier:2,x:"80 Mbps, reaches Mars",lv:0,why:"High bandwidth for Mars."}];
-const AD=[{n:"Reaction wheels",m:15,p:15,c:3,pt:.95,x:"Pointing 95%",lv:0,why:"High pointing accuracy."},{n:"Star tracker + wheels",m:25,p:20,c:5,pt:1,x:"Pointing 100%",lv:0,why:"Full 100% pointing accuracy."}];
-const CP=[{n:"Rad-hard computer",m:8,p:15,c:4,rad:1,x:"Rad-tolerant",lv:0,why:"Resists radiation and recovers links."}];
-const TH=[{n:"Radiators + heaters",m:25,p:20,c:3,tier:2,x:"Active thermal control",lv:0,why:"Keeps electronics safe across all orbits."}];
+const ST=[{n:"Light frame",m:80,c:5,hard:0,x:"Shield 0/2",lv:0,why:"No bus radiation shield."},{n:"Standard bus",m:180,c:12,hard:1,x:"Shield 1/2",lv:0,why:"Moderate shield."},{n:"Hardened bus",m:300,c:22,hard:2,x:"Shield 2/2",lv:1,why:"Heavy radiation shield."}];
+const PW=[{n:"Solar 600 W",m:45,c:3,gen:600,x:"600 W at Earth",lv:0,why:"Lean power budget."},{n:"Solar 1500 W",m:100,c:8,gen:1500,x:"1500 W at Earth",lv:0,why:"Standard power."},{n:"Solar 3000 W",m:200,c:18,gen:3000,x:"3000 W at Earth",lv:1,why:"High power for Mars."}],
+const BT=[{n:"No battery",m:0,c:0,tier:0,x:"No eclipse storage",lv:0,why:"Fails in eclipses."},{n:"Li-ion pack",m:30,c:2,tier:1,x:"Short eclipses",lv:0,why:"Covers tier 1 eclipses."},{n:"Large pack",m:70,c:5,tier:2,x:"Long eclipses",lv:1,why:"Covers tier 2 eclipses."}],
+const PR=[{n:"Cold gas",m:15,p:5,c:1,dv:150,x:"150 m/s",lv:0,why:"Tiny delta-v."},{n:"Hydrazine",m:140,p:5,c:6,dv:1000,x:"1,000 m/s",lv:0,why:"Standard chemical propulsion."},{n:"Bipropellant",m:260,p:10,c:12,dv:1800,x:"1,800 m/s",lv:1,why:"High delta-v."}],
+const CM=[{n:"UHF antenna",m:5,p:10,c:1,rate:1,tier:0,x:"1 Mbps, near Earth",lv:0,why:"Short range only."},{n:"S-band radio",m:10,p:20,c:3,rate:10,tier:1,x:"10 Mbps, Moon",lv:0,why:"Reaches Moon."},{n:"X-band radio",m:25,p:50,c:8,rate:60,tier:2,x:"60 Mbps, Mars",lv:1,why:"Reaches Mars."}],
+const AD=[{n:"Reaction wheels",m:15,p:20,c:4,pt:.8,x:"Pointing 80%",lv:0,why:"80% pointing."},{n:"Star tracker + wheels",m:25,p:30,c:8,pt:1,x:"Pointing 100%",lv:1,why:"100% pointing."}],
+const CP=[{n:"Standard computer",m:5,p:10,c:1,rad:0,x:"Shield 0/1",lv:0,why:"Vulnerable to radiation."},{n:"Rad-hard computer",m:8,p:20,c:6,rad:1,x:"Shield 1/1",lv:1,why:"Radiation tolerant."}],
+const TH=[{n:"Insulation blankets",m:10,p:0,c:1,tier:1,x:"Thermal tier 1",lv:0,why:"Basic passive thermal."},{n:"Radiators + heaters",m:30,p:35,c:4,tier:2,x:"Thermal tier 2",lv:0,why:"Active thermal control."},{n:"Heat pipes + radiators",m:50,p:55,c:9,tier:3,x:"Thermal tier 3",lv:1,why:"High-load thermal control."}],
 const IN=[
-{n:"Visible camera",m:20,p:30,c:5,data:4,sci:{eo:35,data:35,land:40,sample:20},lv:0,why:"Fast, reliable imaging."},
-{n:"Multispectral imager",m:35,p:50,c:9,data:8,sci:{eo:50,data:45,land:35,sample:25},lv:0,why:"High science points with low data load."},
-{n:"Spectrometer",m:25,p:35,c:7,data:2,sci:{eo:40,data:55,land:40,sample:45},lv:0,why:"Great science-to-data ratio."},
-{n:"Sampling arm + drill",m:40,p:45,c:9,data:2,sci:{eo:10,data:10,land:25,sample:65},lv:0,surface:1,why:"Collects surface samples."}];
-const GR=[{n:"Landing legs",m:30,p:0,c:3,tier:1,x:"Soft landing",lv:0,why:"Soft touchdown on Moon or Mars."}];
+{n:"Visible camera",m:25,p:40,c:6,data:5,sci:{eo:30,data:30,land:35,sample:15},lv:0,why:"Baseline imager."},
+{n:"Multispectral imager",m:45,p:70,c:14,data:12,sci:{eo:45,data:40,land:30,sample:20},lv:0,why:"Higher science, 12 Mbps."},
+{n:"Spectrometer",m:30,p:50,c:10,data:2,sci:{eo:35,data:50,land:35,sample:40},lv:1,why:"Low data load."},
+{n:"Sampling arm + drill",m:50,p:60,c:12,data:3,sci:{eo:10,data:10,land:20,sample:60},lv:0,surface:1,why:"Surface sampling."}],
+const GR=[{n:"Landing legs",m:40,p:0,c:4,tier:1,x:"Soft landing",lv:0,why:"Required for landing."}];
 
-/* Ordered: Orbit exploration -> Landing -> Data collection -> Sample collection */
 const MIS=[
-{id:"eo",n:"Earth observation",b:"Track coastlines, crops and storms from orbit.",budget:220,min:25,bonus:55,orbits:["leo","sso","geo"],body:"#2b4fb8",kind:"orbit",stage:"orbit",sk:"eo",dest:"earth",life:5},
-{id:"mexp",n:"Lunar orbit exploration",b:"Survey lunar craters, lighting and environment from orbit.",budget:260,min:25,bonus:60,orbits:["moon"],body:"#8d93a6",kind:"orbit",stage:"orbit",sk:"eo",dest:"moon",trip:"3 days",life:6},
-{id:"mland",n:"Lunar landing",b:"Touch down safely on the Moon and complete landing mission.",budget:280,min:30,bonus:65,orbits:["moon"],body:"#8d93a6",kind:"land",stage:"land",sk:"land",dest:"moon",landDv:300,need:1,trip:"3 days",landReqPts:15},
-{id:"mdata",n:"Moon data collection",b:"Capture surface images on the Moon and send them back to Earth.",budget:280,min:30,bonus:65,orbits:["moon"],body:"#8d93a6",kind:"data",stage:"data",sk:"data",dest:"moon",trip:"3 days",life:6},
-{id:"msamp",n:"Moon sample collection",b:"Land on the Moon and drill samples of its soil.",budget:290,min:30,bonus:65,orbits:["moon"],body:"#8d93a6",kind:"sample",stage:"sample",sk:"sample",dest:"moon",landDv:300,need:1,trip:"3 days"},
-{id:"rexp",n:"Mars orbit exploration",b:"Scout Martian weather, dust storms and terrain from orbit.",budget:320,min:30,bonus:65,orbits:["mars"],body:"#c1583a",kind:"orbit",stage:"orbit",sk:"eo",dest:"mars",trip:"7 months",life:8},
-{id:"rland",n:"Mars landing",b:"Touch down safely on Mars and complete landing mission.",budget:340,min:30,bonus:70,orbits:["mars"],body:"#c1583a",kind:"land",stage:"land",sk:"land",dest:"mars",landDv:300,need:1,trip:"7 months",landReqPts:15},
-{id:"rdata",n:"Mars data collection",b:"Capture surface images on Mars and send them back to Earth.",budget:350,min:35,bonus:70,orbits:["mars"],body:"#c1583a",kind:"data",stage:"data",sk:"data",dest:"mars",trip:"7 months",life:8},
-{id:"rsamp",n:"Mars sample collection",b:"Land on Mars and collect rock and soil samples.",budget:360,min:35,bonus:70,orbits:["mars"],body:"#c1583a",kind:"sample",stage:"sample",sk:"sample",dest:"mars",landDv:300,need:1,trip:"7 months"}];
+{id:"eo",n:"Earth observation",b:"Track coastlines, crops and storms from orbit.",budget:160,min:35,bonus:75,orbits:["leo","sso","geo"],body:"#2b4fb8",kind:"orbit",stage:"orbit",sk:"eo",dest:"earth",life:5},
+{id:"mexp",n:"Lunar orbit exploration",b:"Survey lunar craters, lighting and environment from orbit.",budget:220,min:40,bonus:80,orbits:["moon"],body:"#8d93a6",kind:"orbit",stage:"orbit",sk:"eo",dest:"moon",trip:"3 days",life:6},
+{id:"mland",n:"Lunar landing",b:"Touch down safely on the Moon and complete landing mission.",budget:240,min:45,bonus:85,orbits:["moon"],body:"#8d93a6",kind:"land",stage:"land",sk:"land",dest:"moon",landDv:600,need:1,trip:"3 days",landReqPts:20},
+{id:"mdata",n:"Moon data collection",b:"Explore the Moon, take pictures, and send data back to Earth.",budget:250,min:45,bonus:85,orbits:["moon"],body:"#8d93a6",kind:"data",stage:"data",sk:"data",dest:"moon",trip:"3 days",life:6},
+{id:"msamp",n:"Moon sample collection",b:"Land on the Moon and drill samples of its soil.",budget:260,min:45,bonus:85,orbits:["moon"],body:"#8d93a6",kind:"sample",stage:"sample",sk:"sample",dest:"moon",landDv:600,need:1,trip:"3 days"},
+{id:"rexp",n:"Mars orbit exploration",b:"Scout Martian weather, dust storms and terrain from orbit.",budget:280,min:45,bonus:85,orbits:["mars"],body:"#c1583a",kind:"orbit",stage:"orbit",sk:"eo",dest:"mars",trip:"7 months",life:8},
+{id:"rland",n:"Mars landing",b:"Touch down safely on Mars and complete landing mission.",budget:300,min:50,bonus:90,orbits:["mars"],body:"#c1583a",kind:"land",stage:"land",sk:"land",dest:"mars",landDv:600,need:1,trip:"7 months",landReqPts:20},
+{id:"rdata",n:"Mars data collection",b:"Explore Mars, take pictures, and send data back to Earth.",budget:310,min:50,bonus:90,orbits:["mars"],body:"#c1583a",kind:"data",stage:"data",sk:"data",dest:"mars",trip:"7 months",life:8},
+{id:"rsamp",n:"Mars sample collection",b:"Land on Mars and collect rock and soil samples.",budget:320,min:50,bonus:90,orbits:["mars"],body:"#c1583a",kind:"sample",stage:"sample",sk:"sample",dest:"mars",landDv:600,need:1,trip:"7 months"}];
 
 const STAGE_ORDER=["orbit","land","data","sample"];
 const STAGE_LABEL={orbit:"Orbit exploration",land:"Landing",data:"Data collection",sample:"Sample collection"};
 
-const LV=[{n:"Beginner",d:"Generous budget, low science targets, and finished build to explore."},{n:"Intermediate",d:"Standard budget and parts from scratch."},{n:"Advanced",d:"Tighter budget and higher science targets."}];
-const BM=[1.8,1.4,1.15],SM=[.55,.75,.9];
+const LV=[
+ {n:"Beginner",d:"Fewer and easier failure alerts (1 random event, lenient damage cap)."},
+ {n:"Intermediate",d:"Moderate failure alerts (2 random events, standard damage cap)."},
+ {n:"Advanced",d:"More failures and alerts (3 random events, strict damage cap, advanced parts)."}
+];
+const BM=[1.5,1.2,1.0],SM=[.8,1.0,1.2],DMG_CAP=[85,75,65];
+
 const INFO={
-structure:{t:"Structure (bus)",w:"Central box in the spacecraft.",y:"Holds systems together and shields electronics.",dec:"Light frame or standard bus both protect well."},
-eps:{t:"Solar panels",w:"Wings on both sides of the bus.",y:"Generates electrical power.",dec:"1000 W or 2500 W covers all systems easily."},
-battery:{t:"Battery",w:"Inside the bus.",y:"Stores power during eclipses.",dec:"Li-ion pack handles orbit shadows."},
-prop:{t:"Propulsion",w:"Bottom of the spacecraft.",y:"Provides delta-v for orbit and descent.",dec:"Hydrazine or bipropellant meets mission delta-v."},
-comms:{t:"Communication",w:"Top of the spacecraft.",y:"Sends science data back to Earth.",dec:"S-band for Moon, X-band for Mars."},
-gnc:{t:"Guidance & control",w:"Outer face and bus.",y:"Points instruments accurately.",dec:"Reaction wheels or star tracker keep pointing high."},
-cdh:{t:"Command & data computer",w:"Inside the bus.",y:"Coordinates spacecraft operations.",dec:"Rad-hard computer prevents upsets."},
-thermal:{t:"Thermal control",w:"Radiators around the bus.",y:"Keeps temperatures safe.",dec:"Active thermal control keeps damage near zero."},
-payload:{t:"Science payload",w:"Target-facing deck.",y:"Collects mission science.",dec:"Pick 1–2 instruments matching your goal."},
+structure:{t:"Structure (bus)",w:"Central box in the spacecraft.",y:"Holds systems together and shields electronics.",dec:"Higher shielding cuts flare and impact damage."},
+eps:{t:"Solar panels",w:"Wings on both sides of the bus.",y:"Generates electrical power.",dec:"Match solar generation to instrument & radio load."},
+battery:{t:"Battery",w:"Inside the bus.",y:"Stores power during eclipses.",dec:"Required when orbit has eclipse passes."},
+prop:{t:"Propulsion",w:"Bottom of the spacecraft.",y:"Provides delta-v for orbit and descent.",dec:"Must meet orbit insertion and landing delta-v."},
+comms:{t:"Communication",w:"Top of the spacecraft.",y:"Sends science data back to Earth.",dec:"Must match orbit link tier and data rate."},
+gnc:{t:"Guidance & control",w:"Outer face and bus.",y:"Points instruments accurately.",dec:"Star tracker gives 100% pointing."},
+cdh:{t:"Command & data computer",w:"Inside the bus.",y:"Coordinates spacecraft operations.",dec:"Rad-hard computer resists radiation."},
+thermal:{t:"Thermal control",w:"Radiators around the bus.",y:"Keeps temperatures safe.",dec:"Must meet orbit thermal tier."},
+payload:{t:"Science payload",w:"Target-facing deck.",y:"Collects mission science.",dec:"Balance science score with mass, power, and data."},
 fuel:{t:"Fuel & oxidizer tank",w:"Lower rocket stage.",y:"Stores propellant for lift.",dec:"Match tank size with engine thrust."},
 engine:{t:"Engines",w:"Base of the rocket.",y:"Provides liftoff thrust.",dec:"Match engine thrust with tank size."},
-decoupler:{t:"Decoupler",w:"Between stages.",y:"Drops empty stage for extra lift.",dec:"Stage decoupler boosts lift capacity."},
-fairing:{t:"Fairing",w:"Top of rocket around spacecraft.",y:"Protects spacecraft during launch.",dec:"Standard fairing protects payload."},
+decoupler:{t:"Decoupler",w:"Between stages.",y:"Drops empty stage for extra lift.",dec:"Improves lift and reliability."},
+fairing:{t:"Fairing",w:"Top of rocket around spacecraft.",y:"Protects spacecraft during launch.",dec:"Improves ascent reliability."},
 gear:{t:"Landing gear",w:"Underside of lander.",y:"Absorbs touchdown impact.",dec:"Required for landing and sample missions."}};
 const SETUP={w:"Orbit selection.",y:"Sets destination, link range, and delta-v.",dec:"Pick the orbit for your mission."};
 const SYS=[
@@ -365,10 +357,10 @@ const KEYS=()=>[...RK,"structure","power","battery","prop","comms","adcs","compu
 const LIST={engine:RENG,tank:RTK,decoupler:RDEC,fairing:RFAIR,structure:ST,power:PW,battery:BT,prop:PR,comms:CM,adcs:AD,computer:CP,thermal:TH,gear:GR,inst:IN};
 const KN={power:"Solar panels",battery:"Battery",orbit:"Orbit",engine:"Engines",tank:"Fuel tank",decoupler:"Decoupler",fairing:"Fairing"};
 const Z={n:"None",m:0,p:0,c:0,gen:0,tier:0,rate:0,rad:0,pt:0,dv:0,hard:0,safe:1,dvm:1};
-let mi=0,lv=0,sel,learn=false,openS="setup",panelHover=null,hoverId=null,vk="all",last={},whatifFuel=false,baseSel=null,orbitPassed=false,landingBonusPts=0,bonusPointsAwarded=0,completedStages={moon:new Set(),mars:new Set(),earth:new Set()},continuedFromOrbit=false,continuedFromLand=false,carriedDmg=0;
+let mi=0,lv=0,sel,learn=false,openS="setup",panelHover=null,hoverId=null,vk="all",last={},whatifFuel=false,baseSel=null,orbitPassed=false,landingBonusPts=0,bonusPointsAwarded=0,completedStages={moon:new Set(),mars:new Set(),earth:new Set()},continuedFromOrbit=false,carriedDmg=0;
 const mm=()=>({...MIS[mi],budget:Math.round(MIS[mi].budget*BM[lv]),min:Math.max(15,Math.round(MIS[mi].min*SM[lv])),bonus:Math.max(30,Math.round(MIS[mi].bonus*SM[lv]))});
 const scratch=()=>({orbit:MIS[mi].orbits[0],engine:null,tank:null,decoupler:null,fairing:null,structure:null,power:null,battery:null,prop:null,comms:null,adcs:null,computer:null,thermal:null,gear:null,inst:new Set()});
-const showcase=()=>{const m=MIS[mi],o=m.orbits[0],sf=m.kind==="land"||m.kind==="sample";return{orbit:o,engine:1,tank:1,decoupler:1,fairing:1,structure:1,power:1,battery:0,prop:1,comms:o==="mars"?1:0,adcs:1,computer:0,thermal:0,gear:sf?0:null,inst:new Set(m.kind==="sample"?[1,3]:[1,2])}};
+const showcase=()=>{const m=MIS[mi],o=m.orbits[0],sf=m.kind==="land"||m.kind==="sample";return{orbit:o,engine:1,tank:1,decoupler:1,fairing:1,structure:1,power:1,battery:1,prop:1,comms:o==="mars"?2:1,adcs:1,computer:1,thermal:1,gear:sf?0:null,inst:new Set(m.kind==="sample"?[1,3]:[0,1])}};
 
 function isStageUnlocked(m){
  if(m.dest==="earth")return true;
@@ -382,7 +374,7 @@ function rocketCalc(overrideSel){
  const s=overrideSel||sel;
  const g=k=>s[k]==null?null:LIST[k][s[k]],e=g("engine"),t=g("tank"),d=g("decoupler"),f=g("fairing"),P=RK.map(g).filter(Boolean);
  const thr=e?e.thr:0,cap=t?t.cap:0;
- return{n:"Your rocket",thr,cap,c:sum(P,"c"),rel:Math.min(.99,.85+sum(P,"r")),lc:Math.round(6500*Math.min(thr,cap)*(d?d.mult:.85))}
+ return{n:"Your rocket",thr,cap,c:sum(P,"c"),rel:Math.min(.99,.78+sum(P,"r")),lc:Math.round(5500*Math.min(thr,cap)*(d?d.mult:.65))}
 }
 function calc(overrideSel){
  const s=overrideSel||sel;
@@ -390,13 +382,13 @@ function calc(overrideSel){
  const st=s.structure==null?Z:LIST.structure[s.structure],pw=s.power==null?Z:LIST.power[s.power],bt=s.battery==null?Z:LIST.battery[s.battery],pr=s.prop==null?Z:LIST.prop[s.prop],cm=s.comms==null?Z:LIST.comms[s.comms],ad=s.adcs==null?Z:LIST.adcs[s.adcs],cp=s.computer==null?Z:LIST.computer[s.computer],th=s.thermal==null?Z:LIST.thermal[s.thermal],gr=s.gear==null?Z:LIST.gear[s.gear];
  const P=[st,pw,bt,pr,cm,ad,cp,th,gr,...ins];
  const c={m,o,L,st,bt,cm,cp,ad,th,gr,ins,mass:sum(P,"m"),use:sum(P,"p"),cost:sum(P,"c")+L.c,cap:Math.round(L.lc*o.cap),gen:Math.round(pw.gen*o.solar),dataGen:sum(ins,"data"),down:cm.rate*o.contact,dv:pr.dv};
- c.ratio=c.dataGen?Math.min(1,c.down/c.dataGen):1;
+ c.ratio=c.dataGen?Math.min(1,c.down/c.dataGen):0;
  c.sciRaw=ins.reduce((t,i)=>t+i.sci[m.sk],0);
- c.sci=Math.round(c.sciRaw*(ad.pt||.95)*c.ratio);
+ c.sci=Math.round(c.sciRaw*(ad.pt||.8)*c.ratio);
  c.prot=cp.rad+st.hard;
- c.thermNeed=1;
+ c.thermNeed=Math.min(3,c.o.heat+(c.use>400?1:0));
  const baseLife=m.life||o.life||5;
- c.estLife=baseLife+2;
+ c.estLife=Math.max(1,baseLife+(c.bt.tier>=c.o.ecl?1:0)-Math.max(0,c.thermNeed-c.th.tier));
  c.targetLife=baseLife;
  return c;
 }
@@ -474,7 +466,7 @@ function evaluateBuild(s){
   }
  }
  if(c.m.kind==="land"){
-  const req=c.m.landReqPts||15;
+  const req=c.m.landReqPts||20;
   if(orbitPassed && landingBonusPts>=req){
    approved.push(`Landing gate OK (${landingBonusPts} pts).`);
   } else {
@@ -710,7 +702,7 @@ function toSubMis(dest){let b={};try{b=JSON.parse(localStorage.getItem("msd-best
  $("#submissions").querySelectorAll("button").forEach(x=>x.onclick=()=>{mi=+x.dataset.i;toDiff()});show("submis")}
 function toDiff(){$("#dt").textContent=MIS[mi].n+": choose your level";
  $("#levels").innerHTML=LV.map((l,i)=>`<div class="card mc lvc"><span class="stars" role="img" aria-label="Difficulty ${i+1} of 3">${"★".repeat(i+1)+"☆".repeat(2-i)}</span><h3>${l.n}</h3><p class="mut">${l.d}</p><button class="btn pri" data-i="${i}">Play ${l.n.toLowerCase()}</button></div>`).join("");
- $("#levels").querySelectorAll("button").forEach(x=>x.onclick=()=>{lv=+x.dataset.i;openS="setup";baseSel=null;orbitPassed=false;landingBonusPts=0;continuedFromOrbit=false;continuedFromLand=false;carriedDmg=0;openBuild(true)});show("diff")}
+ $("#levels").querySelectorAll("button").forEach(x=>x.onclick=()=>{lv=+x.dataset.i;openS="setup";baseSel=null;orbitPassed=false;landingBonusPts=0;continuedFromOrbit=false;carriedDmg=0;openBuild(true)});show("diff")}
 function setMode(l){learn=l;sel=l?showcase():scratch();baseSel=null;openS=l?"rprop":"setup";renderPanel();$("#hint").textContent=l?"Explore mode: finished build example.":"Build the rocket (R1–R3) and spacecraft (1–8).";update()}
 function openBuild(fresh){const m=mm();$("#bt").textContent=`${m.n} · ${LV[lv].n}`;
  $("#bb").textContent=`${m.b} Budget $${m.budget}M. Score at least ${m.min} science to pass, ${m.bonus} for bonus.`;
@@ -732,28 +724,17 @@ $("#panel").addEventListener("change",e=>{const el=e.target,k=el.name;
 
 const EV=[
 {t:"Solar flare",d:"Solar storm sweeping past spacecraft.",ch:[
- {l:"Enter safe mode",r:c=>({dmg:2,sci:.95,ok:1,txt:"Safe mode protected electronics."})},
- {l:"Keep observing",r:c=>({dmg:5,sci:1,ok:1,txt:"Shielding absorbed most of the storm."})}]}];
+ {l:"Enter safe mode",r:c=>({dmg:2,sci:.9,ok:1,txt:"Safe mode protected electronics (-10% science)."})},
+ {l:"Keep observing",r:c=>({dmg:Math.round(28*c.o.rad*(3-c.prot)/3)+6,sci:1,ok:c.prot>=2,txt:"Radiation hit exposed electronics."})}]},
+{t:"Asteroid / micrometeoroid swarm",d:"Debris field crossing orbital path.",ch:[
+ {l:"Dodge burn",r:c=>c.dv>=c.o.dv+150?{dmg:4,sci:1,ok:1,txt:"Dodged with spare delta-v."}:{dmg:18,sci:.9,ok:0,txt:"Insufficient spare delta-v for clean dodge."}},
+ {l:"Hold attitude",r:c=>({dmg:22-7*c.st.hard,sci:1,ok:c.st.hard>=1,txt:"Impact damage scaled by bus shielding."})}]},
+{t:"Communications dropout",d:"Transceiver lost lock with Earth.",ch:[
+ {l:"Reboot radio",r:c=>({dmg:0,sci:.92,ok:1,txt:"Reboot restored link."})},
+ {l:"Auto-recover",r:c=>c.cp.rad?{dmg:0,sci:.96,ok:1,txt:"Rad-hard computer recovered link."}:{dmg:12,sci:.8,ok:0,txt:"Standard computer failed auto-recovery."}}]}];
 
 const DN={moon:"the Moon",mars:"Mars",earth:"Earth"};
 async function countdown(){const e=$("#cd");e.classList.add("on");for(const n of["3","2","1","Liftoff"]){e.innerHTML=`<span${n==="Liftoff"?' style="font-size:.3em"':""}>${n}</span>`;await wait(reduce?400:800)}e.classList.remove("on")}
-
-function showCongratsModal(title, body, actions){
- const m=$("#congratsModal");
- $("#cmTitle").textContent=title;
- $("#cmBody").textContent=body;
- const box=$("#cmActions");
- box.innerHTML=actions.map((a,idx)=>`<button class="btn ${a.pri?"pri":""}" data-idx="${idx}">${a.label}</button>`).join("");
- m.classList.add("on");
- return new Promise(resolve=>{
-  box.querySelectorAll("button").forEach(btn=>{
-   btn.onclick=()=>{
-    m.classList.remove("on");
-    resolve(actions[+btn.dataset.idx]);
-   };
-  });
- });
-}
 
 /* ---------- flight scene ---------- */
 const SCN={idle:false};
@@ -801,11 +782,12 @@ function setupSurfaceScene(dest, showRover){
  }).join("");
  $("#rover").setAttribute("transform","translate(320 302)");
 }
+async function boom(){vis("fl",0);vis("cr",0);const b=$("#bst");b.setAttribute("cx",SCN.x);b.setAttribute("cy",SCN.y);await tween(800,p=>{b.setAttribute("r",6+44*p);b.style.opacity=1-p});b.style.opacity=0}
 async function sLaunch(ok){
- const {E,OR,eo}=SCN,s={x:E.x,y:E.y-E.r},e=eo?{x:E.x,y:E.y-OR}:{x:E.x,y:s.y-45};
+ const {E,OR,eo}=SCN,s={x:E.x,y:E.y-E.r},e=eo?{x:E.x,y:E.y-OR}:{x:E.x,y:s.y-45},k=ok?1:.5;
  put(s.x,s.y,0);vis("cr",1);vis("fl",1);vis("rkStack",1);vis("rkFairing",1);vis("rkDec",1);vis("rkStage1",1);
- await tween(1400,p=>{const q=p*p;put(s.x+(e.x-s.x)*q,s.y+(e.y-s.y)*q,0)});
- if(eo)vis("fl",0)
+ await tween(1400,p=>{const q=p*p*k;put(s.x+(e.x-s.x)*q,s.y+(e.y-s.y)*q,0)});
+ if(!ok)await boom();else if(eo)vis("fl",0)
 }
 async function sCruise(){
  const tp=$("#tp"),L=tp.getTotalLength();vis("fl",1);
@@ -818,9 +800,13 @@ async function sInsert(){
  vis("fl",0);
  await tween(1800,p=>{const a=a0+(630-a0)*ease(p),q=A(a,OR,D);put(q.x,q.y,a+90)})
 }
+async function sMiss(){
+ vis("fl",0);const x0=SCN.x,y0=SCN.y,r=SCN.deg*Math.PI/180,dx=Math.sin(r),dy=-Math.cos(r);
+ await tween(1400,p=>{put(x0+dx*180*p,y0+dy*180*p,SCN.deg);$("#cr").style.opacity=1-p});
+}
 function idle(a){SCN.idle=true;const f=()=>{if(!SCN.idle)return;a+=.5;const q=A(a,SCN.OR,SCN.D);put(q.x,q.y,a+90);requestAnimationFrame(f)};if(!reduce)requestAnimationFrame(f)}
 async function sLand(ok,para){
- const {D,OR}=SCN,rs=D.r+30;
+ const {D,OR}=SCN,rs=D.r+30,k=ok?1:.82;
  vis("cr",1);vis("rkStack",1);vis("rkFairing",1);vis("rkDec",1);vis("rkStage1",1);
  await tween(650,p=>{
   $("#rkFairing").style.opacity=1-p;
@@ -839,7 +825,8 @@ async function sLand(ok,para){
  vis("rkStage1",0);
  vis("rkStack",0);
  vis("pc",para);vis("fl",!para);
- await tween(1800,p=>{const q=ease(p),r=OR+(rs-OR)*q;put(D.x,D.y-r,0);if(para){vis("pc",p<.6);vis("fl",p>=.6)}vis("lg",p>.55)});
+ await tween(1800,p=>{const q=ease(p)*k,r=OR+(rs-OR)*q;put(D.x,D.y-r,0);if(para){vis("pc",p<.6);vis("fl",p>=.6)}vis("lg",p>.55)});
+ if(!ok){await boom();return}
  vis("fl",0);vis("pc",0);vis("lg",1);
  vis("cr",0);
 }
@@ -858,47 +845,44 @@ function renderOrbTelemetry(c, dmg, lifeRemaining, yearIdx){
  </div>`;
 }
 
-async function runOrbitExplorationStage(c, m, step, res, log, sd, bad, good, getDmg, setDmg, setFail){
+async function runOrbitExplorationStage(c, step, res, log, sd, bad, good, getDmg, setDmg, setFail){
  step("Orbit exploration",`Exploring ${c.o.n}…`);
  renderOrbTelemetry(c,getDmg(),c.estLife,1);
  await wait(400);
+ if(c.dv < c.o.dv){
+  setDmg(getDmg()+15);sd();
+  const w=`Orbital constraint alert: Δv ${c.dv} m/s < ${c.o.dv} m/s (+15% dmg).`;
+  bad.push(w);log(w,"r");
+ }
+ if(c.bt.tier < c.o.ecl){
+  setDmg(getDmg()+15);sd();
+  const w=`Eclipse alert: Battery tier ${c.bt.tier} < required ${c.o.ecl} (+15% dmg).`;
+  bad.push(w);log(w,"r");
+ }
+ if(c.th.tier < c.thermNeed){
+  setDmg(getDmg()+14);sd();
+  const w=`Thermal alert: Tier ${c.th.tier} < required ${c.thermNeed} (+14% dmg).`;
+  bad.push(w);log(w,"y");
+ }
+ if(getDmg() >= DMG_CAP[lv]){
+  setFail(true);
+  await res("Orbit exploration",false,"",`Orbit exploration failed: damage reached ${getDmg()}% (limit ${DMG_CAP[lv]}% for ${LV[lv].n}).`);
+  return false;
+ }
  orbitPassed=true;
- landingBonusPts=Math.max(25, Math.round(25 + c.sci*0.25));
+ landingBonusPts=Math.max(20, Math.round(20 + c.sci*0.25));
  const okMsg=`Mission successful — Orbit exploration passed! Earned ${landingBonusPts} landing-eligible bonus points.`;
  good.push(okMsg);log(okMsg,"g");
  await res("Orbit exploration",true,okMsg,"");
-
- const nextIdx=getNextMissionIndex(mi);
- const nextMis=MIS[nextIdx];
- const choice=await showCongratsModal(
-  "Congratulations! Orbit exploration complete",
-  `You completed Orbit exploration on ${DN[m.dest]} and earned ${landingBonusPts} landing bonus points. Choose your next step:`,
-  [
-   {label:"Redesign", action:"redesign"},
-   {label:"End mission", action:"end"},
-   {label:`Next mission: ${nextMis.n}`, action:"next", pri:true}
-  ]
- );
- if(choice.action==="redesign"){
-  continuedFromOrbit=false;continuedFromLand=false;
-  openBuild(false);
-  return "STOP";
- }
- if(choice.action==="end"){
-  continuedFromOrbit=false;continuedFromLand=false;
-  toMis();
-  return "STOP";
- }
- continuedFromOrbit = (nextMis.dest === m.dest);
- carriedDmg = getDmg();
- mi = nextIdx;
- sel = {...last.sel, inst:new Set(last.sel.inst), gear: (nextMis.kind==="land"||nextMis.kind==="sample")?0:null};
- fly();
- return "STOP";
+ return true;
 }
 
 async function runLandingStage(c, m, step, res, log, sd, bad, good, getDmg, setDmg, setFail){
  const isMars=m.dest==="mars";
+ const landDv=m.landDv||600;
+ const left=c.dv-c.o.dv;
+ const okDv=left>=landDv;
+ const okGear=c.gr.tier>=m.need;
  const sites=[
   {name:isMars?"Jezero Crater Rim (Wrong Spot)":"Tycho Crater Rim (Wrong Spot)",wrong:true,note:"Hazard warning: uneven crater rim & steep boulders."},
   {name:isMars?"Elysium Planitia Safe Zone":"Mare Tranquillitatis Safe Zone",wrong:false,note:"Flat regolith plain cleared for touchdown."}
@@ -907,11 +891,23 @@ async function runLandingStage(c, m, step, res, log, sd, bad, good, getDmg, setD
  while(true){
   const site=sites[siteIdx % sites.length];
   step("Descent and landing",`Jettisoning rocket stages & descending to ${site.name} on ${DN[m.dest]}… (${site.note})`);
+  if(!okDv || !okGear){
+   await sLand(false,isMars);
+   setFail(true);
+   const reason=!okGear?"Landing gear missing/insufficient for touchdown.":`Insufficient descent Δv (${left} m/s left vs ${landDv} m/s needed).`;
+   await res("Descent and landing",false,"",`Landing failed: ${reason}`);
+   return;
+  }
   await sLand(true,isMars);
   if(site.wrong){
-   setDmg(getDmg()+8);sd();
+   setDmg(getDmg()+10);sd();
    const w=`Warning: Landed on the wrong spot (${site.name})! Choose a safe landing spot to relocate and retry.`;
    log(w,"y");
+   if(getDmg() >= DMG_CAP[lv]){
+    setFail(true);
+    await res("Descent and landing",false,"",`Landing failed: damage exceeded ${DMG_CAP[lv]}% limit.`);
+    return;
+   }
    const retrySite=await new Promise(done=>{
     $("#evbox").innerHTML=`<div class="ev"><h3>Wrong landing spot warning</h3><p>${w}</p><div class="row"><button class="btn pri" data-idx="1">Relocate to ${sites[1].name}</button></div></div>`;
     $("#evbox").querySelectorAll("button").forEach(b=>b.onclick=()=>done(+b.dataset.idx));
@@ -921,48 +917,20 @@ async function runLandingStage(c, m, step, res, log, sd, bad, good, getDmg, setD
    vis("lg",0);
    continue;
   }
-  /* Only now show the spacecraft landed on the Moon or Mars surface */
+  /* Only now reveal the spacecraft on the Moon or Mars surface */
   setupSurfaceScene(m.dest, true);
-  const okMsg=`Mission successful — Spacecraft landed safely on ${DN[m.dest]} at ${site.name}!`;
+  const okMsg=`Mission successful — Spacecraft landed safely at ${site.name} on ${DN[m.dest]}!`;
   good.push(okMsg);log(okMsg,"g");
   await res("Descent and landing",true,okMsg,"");
   break;
  }
-
- const nextIdx=getNextMissionIndex(mi);
- const nextMis=MIS[nextIdx];
- const choice=await showCongratsModal(
-  "Congratulations! Spacecraft landed safely",
-  `Your spacecraft touched down safely on ${DN[m.dest]}. Choose your next step:`,
-  [
-   {label:"Redesign", action:"redesign"},
-   {label:"End mission", action:"end"},
-   {label:`Continue mission (${nextMis.n})`, action:"continue", pri:true}
-  ]
- );
- if(choice.action==="redesign"){
-  continuedFromOrbit=false;continuedFromLand=false;
-  openBuild(false);
-  return "STOP";
- }
- if(choice.action==="end"){
-  continuedFromOrbit=false;continuedFromLand=false;
-  toMis();
-  return "STOP";
- }
- continuedFromLand = true;
- carriedDmg = getDmg();
- mi = nextIdx;
- sel = {...last.sel, inst:new Set(last.sel.inst)};
- fly();
- return "STOP";
 }
 
 async function runDataCollectionStage(c, m, step, res, log, good){
  setupSurfaceScene(m.dest, true);
- step("Data collection",`Starting from landed spacecraft on ${DN[m.dest]} — capturing images and sending them back to Earth…`);
+ step("Data collection",`Exploring ${DN[m.dest]}, taking pictures, and sending data back to Earth…`);
  $("#surfControls").hidden=false;
- $("#surfTitle").textContent=`${DN[m.dest]} Landed Spacecraft — Image Capture & Downlink`;
+ $("#surfTitle").textContent=`${DN[m.dest]} Data Collection`;
  let roverX=320, photos=[];
  const updateStrip=()=>{
   $("#photoCount").textContent=`${photos.length} photos`;
@@ -982,23 +950,23 @@ async function runDataCollectionStage(c, m, step, res, log, good){
    log(`Moved right to sector ${Math.round(roverX/64)} on ${DN[m.dest]}.`);
   };
   $("#btnPhoto").onclick=()=>{
-   const label=`${DN[m.dest]} Surface Image #${photos.length+1}`;
+   const label=`${DN[m.dest]} Sector ${Math.round(roverX/64)} #${photos.length+1}`;
    photos.push(label);
    updateStrip();
-   log(`Captured image: ${label}`,"g");
+   log(`Took picture: ${label}`,"g");
   };
   $("#btnSend").onclick=()=>{
    if(photos.length===0){
-    const autoLabel=`${DN[m.dest]} Surface Image #1`;
+    const autoLabel=`${DN[m.dest]} Survey Panorama #1`;
     photos.push(autoLabel);
     updateStrip();
    }
-   log(`Sent ${photos.length} image(s) back to Earth.`,"g");
+   log(`Sent ${photos.length} picture(s) back to Earth.`,"g");
    done();
   };
  });
  $("#surfControls").hidden=true;
- const pMsg=`Mission successful — Captured ${photos.length} image(s) on ${DN[m.dest]} and sent them back to Earth.`;
+ const pMsg=`Mission successful — Explored ${DN[m.dest]}, took ${photos.length} picture(s), and sent data back to Earth.`;
  good.push(pMsg);
  await res("Data collection",true,pMsg,"");
 }
@@ -1008,18 +976,17 @@ async function fly(){
  if(!evCheck.launchable){openPreflight();return;}
  const c=calc(),m=c.m,land=m.kind==="land"||m.kind==="sample",dataCol=m.kind==="data",smp=m.kind==="sample",eo=m.dest==="earth",TR="Transit to "+DN[m.dest];
  last={sel:{...sel,inst:new Set(sel.inst)},mi,lv};
- if(!continuedFromOrbit && !continuedFromLand){
+ if(!continuedFromOrbit){
   await countdown();
  }
  show("sim");setupScene(m);
  $("#log").innerHTML="";$("#evbox").innerHTML="";$("#scap").textContent="";$("#simt").textContent=m.n+": mission in progress";
  if($("#orbTele")) $("#orbTele").hidden=true;
  const needOrbitFirst = m.kind==="land";
- const skipFlightToOrbit = continuedFromOrbit || continuedFromLand;
  const names=[
-  ...(skipFlightToOrbit?[]:["Launch",...(eo?[]:[TR]),"Orbit insertion"]),
+  ...(continuedFromOrbit?[]:["Launch",...(eo?[]:[TR]),"Orbit insertion"]),
   ...(needOrbitFirst || m.kind==="orbit" ? ["Orbit exploration"] : []),
-  ...(land && !continuedFromLand ? ["Descent and landing"] : []),
+  ...(land ? ["Descent and landing"] : []),
   ...(dataCol ? ["Data collection"] : []),
   ...(smp ? ["Sample collection"] : []),
   "Power-up and eclipse",
@@ -1027,7 +994,7 @@ async function fly(){
   "Science operations"
  ];
  $("#ph").innerHTML=names.map(n=>`<li>${n}</li>`).join("");
- let dmg=(continuedFromOrbit||continuedFromLand)?carriedDmg:0,smul=1,good=[],bad=[],fail=false;
+ let dmg=continuedFromOrbit?carriedDmg:0,smul=1,good=[],bad=[],fail=false;
  const setPh=(n,s)=>{const idx=names.indexOf(n);if(idx>=0)$("#ph").children[idx].className=s};
  const log=(t,k)=>{const p=document.createElement("p");p.className=k||"";p.textContent=t;$("#log").appendChild(p);$("#log").scrollTop=1e5};
  const sd=()=>{$("#dmgv").textContent=Math.min(100,dmg)+"%";const b=$("#dmgb");b.style.width=Math.min(100,dmg)+"%";b.className=dmg>60?"b":dmg>30?"w":""};sd();
@@ -1035,56 +1002,73 @@ async function fly(){
  const res=async(n,ok,g,b)=>{setPh(n,ok?"ok":"no");if(ok){if(g){good.push(g);log(g,"g")}}else{if(b){bad.push(b);log(b,"r")}fail=true}await wait(400)};
  const pause=()=>wait(600);
 
- if(!skipFlightToOrbit){
+ if(!continuedFromOrbit){
+  const lok=Math.random()<c.L.rel;
   step("Launch",`${c.L.n} lifting off…`);
-  await sLaunch(true);
-  await res("Launch",true,`${c.L.n} lifted off cleanly (${Math.round(c.L.rel*100)}% reliable).`,"");
+  await sLaunch(lok);
+  await res("Launch",lok,`${c.L.n} lifted off cleanly (${Math.round(c.L.rel*100)}% reliable).`,`Launch failed (${Math.round(c.L.rel*100)}% reliability). Upgrade decoupler/fairing.`);
   if(!fail&&!eo){step(TR,`Cruising to ${DN[m.dest]}…`);await sCruise();await res(TR,true,`Cruise to ${DN[m.dest]} complete.`,"")}
-  if(!fail){step("Orbit insertion",`Entering ${c.o.n}…`);await sInsert();
-   await res("Orbit insertion",true,`Orbit reached (${c.dv} m/s).`,"");
-   if(okOrLand(land||dataCol))idle(630)}
- } else if(continuedFromLand){
-  setupSurfaceScene(m.dest, true);
-  log(`Continuing from landed spacecraft on ${DN[m.dest]}…`,"g");
+  if(!fail){step("Orbit insertion",`Entering ${c.o.n}…`);
+   const okIns=c.dv>=c.o.dv;
+   if(okIns)await sInsert();else await sMiss();
+   await res("Orbit insertion",okIns,`Orbit reached (${c.dv} m/s).`,`Orbit insertion failed: ${c.dv} m/s < ${c.o.dv} m/s needed.`);
+   if(okIns && okOrLand(land||dataCol))idle(630)}
  } else {
   log(`Continuing directly in ${c.o.n} from completed Orbit exploration…`,"g");
   if(okOrLand(land||dataCol))idle(630);
  }
 
  if(!fail && (needOrbitFirst || m.kind==="orbit")){
-  const stRes=await runOrbitExplorationStage(c,m,step,res,log,sd,bad,good,()=>dmg,v=>{dmg=v;},v=>{fail=v;});
-  if(stRes==="STOP")return;
+  await runOrbitExplorationStage(c,step,res,log,sd,bad,good,()=>dmg,v=>{dmg=v;},v=>{fail=v;});
  }
- if(!fail && land && !continuedFromLand){
-  const stRes=await runLandingStage(c,m,step,res,log,sd,bad,good,()=>dmg,v=>{dmg=v;},v=>{fail=v;});
-  if(stRes==="STOP")return;
+ if(!fail && land){
+  await runLandingStage(c,m,step,res,log,sd,bad,good,()=>dmg,v=>{dmg=v;},v=>{fail=v;});
  }
  if(!fail && dataCol){
   await runDataCollectionStage(c,m,step,res,log,good);
  }
  if(!fail&&smp){step("Sample collection","Collecting surface sample…");
-  await sSample();setPh("Sample collection","ok");
-  const t="Mission successful — Surface sample collected and stored.";good.push(t);log(t,"g");await wait(400)}
+  if(sel.inst.has(3)){
+   await sSample();setPh("Sample collection","ok");
+   const t="Mission successful — Surface sample collected and stored.";good.push(t);log(t,"g");await wait(400);
+  } else {
+   await res("Sample collection",false,"","Sample collection failed: Sampling arm + drill not installed.");
+  }
+ }
  if(!fail){step("Power-up and eclipse","Checking power & eclipse…");await pause();
-  await res("Power-up and eclipse","Power nominal.","");}
+  const okPw=c.use<=c.gen && c.bt.tier>=c.o.ecl;
+  if(!okPw){dmg+=12;sd();}
+  await res("Power-up and eclipse",okPw,"Power & eclipse nominal.",`Power/eclipse alert: ${c.use}/${c.gen} W, battery tier ${c.bt.tier}/${c.o.ecl}.`);
+ }
  if(!fail){step("Link to Earth","Establishing Earth link…");await pause();
-  await res("Link to Earth",`Contact with Earth (${c.cm.n}).`,"");}
+  const okCm=c.cm.tier>=c.o.link;
+  await res("Link to Earth",okCm,`Contact with Earth (${c.cm.n}).`,`No Earth link: ${c.cm.n} tier ${c.cm.tier} < required ${c.o.link}.`);
+ }
  if(!fail){step("Science operations","Running science operations…");await wait(500);
-  const e=EV[0];
-  const ch=await new Promise(done=>{
-   $("#evbox").innerHTML=`<div class="ev"><h3>${e.t}</h3><p>${e.d}</p><div class="row">${e.ch.map((x,i)=>`<button class="btn" data-i="${i}">${x.l}</button>`).join("")}</div></div>`;
-   $("#evbox").querySelectorAll("button").forEach(b=>b.onclick=()=>done(e.ch[+b.dataset.i]));
-  });
-  $("#evbox").innerHTML="";const r=ch.r(c);dmg+=r.dmg;smul*=r.sci;sd();
-  log(`${e.t}: ${r.txt}`,"g");good.push(`${e.t}: ${r.txt}`);
-  setPh("Science operations","ok");
+  const evCount=[1,2,3][lv];
+  const evs=EV.slice(0,evCount);
+  for(const e of evs){
+   const ch=await new Promise(done=>{
+    $("#evbox").innerHTML=`<div class="ev"><h3>${e.t}</h3><p>${e.d}</p><div class="row">${e.ch.map((x,i)=>`<button class="btn" data-i="${i}">${x.l}</button>`).join("")}</div></div>`;
+    $("#evbox").querySelectorAll("button").forEach(b=>b.onclick=()=>done(e.ch[+b.dataset.i]));
+   });
+   $("#evbox").innerHTML="";const r=ch.r(c);dmg+=r.dmg;smul*=r.sci;sd();
+   log(`${e.t}: ${r.txt}`,r.ok?"g":"y");(r.ok?good:bad).push(`${e.t}: ${r.txt}`);
+  }
+  if(dmg>=DMG_CAP[lv]){
+   fail=true;setPh("Science operations","no");
+   const t=`Damage ${dmg}% exceeded ${LV[lv].n} limit (${DMG_CAP[lv]}%).`;
+   log(t,"r");bad.push(t);
+  } else {
+   setPh("Science operations","ok");
+  }
  }
  carriedDmg=dmg;
- if(!fail && dmg<85){
+ if(!fail && dmg<DMG_CAP[lv]){
   if(!completedStages[m.dest])completedStages[m.dest]=new Set();
   completedStages[m.dest].add(m.stage);
  }
- await wait(400);SCN.idle=false;report(c,fail || dmg>=85,dmg,smul,good,bad);
+ await wait(400);SCN.idle=false;report(c,fail || dmg>=DMG_CAP[lv],dmg,smul,good,bad);
 }
 const okOrLand=land=>!land;
 
@@ -1134,8 +1118,8 @@ function report(c,fail,dmg,smul,good,bad){
   <button class="btn pri" id="nextMis">Next mission: ${nextMission.n} (+15 pts)</button>
  </div>`;
  show("report");
- $("#ref").onclick=()=>{continuedFromOrbit=false;continuedFromLand=false;sel=last.sel;mi=last.mi;lv=last.lv;learn=false;openBuild(false)};
- $("#again").onclick=()=>{continuedFromOrbit=false;continuedFromLand=false;toMis()};
+ $("#ref").onclick=()=>{continuedFromOrbit=false;sel=last.sel;mi=last.mi;lv=last.lv;learn=false;openBuild(false)};
+ $("#again").onclick=()=>{continuedFromOrbit=false;toMis()};
  $("#nextMis").onclick=()=>{
   bonusPointsAwarded += 15;
   landingBonusPts += 15;
@@ -1147,10 +1131,15 @@ function report(c,fail,dmg,smul,good,bad){
   }
   toast(`+${bonusPointsAwarded} points awarded! Continuing to ${nextMission.n}`);
   continuedFromOrbit = (c.m.stage === "orbit" && nextMission.dest === c.m.dest);
-  continuedFromLand = (c.m.stage === "land" && nextMission.dest === c.m.dest);
   mi = nextIdx;
-  sel = {...last.sel, inst:new Set(last.sel.inst), gear: (nextMission.kind==="land"||nextMission.kind==="sample")?0:null};
-  fly();
+  if(continuedFromOrbit){
+   sel = {...last.sel, inst:new Set(last.sel.inst), gear: (nextMission.kind==="land"||nextMission.kind==="sample")?0:null};
+   fly();
+  } else {
+   openS = "setup";
+   baseSel = null;
+   openBuild(true);
+  }
  };
 }
 
