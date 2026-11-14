@@ -137,7 +137,7 @@ table{border-collapse:collapse;font-size:15px}td,th{padding:6px 18px 6px 0;text-
 <p class="acc">NASA Space Challenge 2026</p><h1>Build it. Launch it. Bring it home.</h1>
 <p class="mut" style="max-width:46ch;font-size:19px">Assemble a rocket and spacecraft part by part in 3D, learn what each system does, then fly the mission and handle what space throws at you.</p>
 <div class="row" style="margin-top:26px"><button class="btn pri big" id="go">Start</button></div>
-<div class="stats"><span class="pill">9 missions</span><span class="pill">3 difficulty levels</span><span class="pill">Up to 20 parts to build</span></div></div>
+<div class="stats"><span class="pill">9 missions</span><span class="pill">3 difficulty levels</span><span class="pill">13 parts to build</span></div></div>
 <svg class="art" viewBox="0 0 520 440" role="img" aria-label="A rocket launches, a satellite unfolds its panels, and an astronaut gives a thumbs up under a mission successful banner">
 <defs><linearGradient id="eg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3f7bff"/><stop offset="1" stop-color="#10286b"/></linearGradient><linearGradient id="pg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3159d1"/><stop offset="1" stop-color="#1a3175"/></linearGradient><linearGradient id="fg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff2c4"/><stop offset=".5" stop-color="#ff9f4a"/><stop offset="1" stop-color="#ff4a5a" stop-opacity="0"/></linearGradient><clipPath id="ecp"><circle cx="260" cy="640" r="330"/></clipPath></defs>
 <circle class="glow" cx="260" cy="640" r="344" fill="none" stroke="#5aa0ff" stroke-width="10"/>
@@ -168,7 +168,7 @@ table{border-collapse:collapse;font-size:15px}td,th{padding:6px 18px 6px 0;text-
 <div class="card hud"><div><h2 id="bt" style="font-size:26px"></h2><p id="bb" class="mut" style="margin:4px 0 0;font-size:14px"></p></div><div class="pr"><div class="meter" style="margin:0"><div class="l"><span>Build progress</span><span id="hudn"></span></div><div class="bar"><i id="hudb"></i></div></div></div></div>
 <div class="build"><div class="vcol"><div id="view" class="card"><div id="tip" class="tip" hidden></div><div class="vb"><button class="btn sm" data-v="sc">Spacecraft</button><button class="btn sm" data-v="rk">Rocket</button><button class="btn sm" data-v="all">Whole stack</button></div></div><p class="mut" id="hint" style="font-size:14px;margin-top:10px"></p></div>
 <aside class="side"><div class="card"><div id="gate" class="gate"></div><div id="meters"></div><ul class="chk" id="checks"></ul><div id="whatif" class="whatif"></div><button class="btn pri" id="launch" style="width:100%">Review checklist &amp; launch</button></div><div id="panel" style="margin-top:12px"></div></aside></div>
-<div class="card" id="impactCard" style="margin-top:20px"><h3>Side-by-side parameter impact</h3><p class="mut" style="font-size:14px">Compare your current build against your pre-flight baseline whenever you modify a component (such as science payload, fuel tank, or thermal control).</p><div id="impact"></div></div>
+<div class="card" id="impactCard" style="margin-top:20px"><h3>Side-by-side parameter impact</h3><p class="mut" style="font-size:14px">Compare your current build against your pre-flight baseline whenever you modify a component.</p><div id="impact"></div></div>
 </section>
 
 <section id="preflight" class="screen" hidden>
@@ -218,142 +218,127 @@ table{border-collapse:collapse;font-size:15px}td,th{padding:6px 18px 6px 0;text-
 const $=(s,r=document)=>r.querySelector(s),sum=(a,k)=>a.reduce((t,x)=>t+(x[k]||0),0),wait=ms=>new Promise(r=>setTimeout(r,ms));
 const reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
 const ORB={
-leo:{n:"Low Earth orbit, 500 km",dv:50,contact:.15,solar:1,ecl:1,rad:.2,heat:1,cap:1,link:0,life:5,d:"Cheap to reach. You see a ground station only about 15% of the time and pass through Earth’s shadow every orbit."},
-sso:{n:"Sun-synchronous orbit, 700 km",dv:100,contact:.15,solar:1,ecl:0,rad:.3,heat:1,cap:.8,link:0,life:7,d:"Passes each place at the same local time, so lighting is steady and the Sun is nearly always on your panels."},
-geo:{n:"Geostationary orbit, 35,786 km",dv:1500,contact:1,solar:1,ecl:1,rad:.7,heat:2,cap:.25,link:1,life:12,d:"Hovers over one spot with a constant link. Far away, so it needs a stronger radio and tough electronics."},
-moon:{n:"Lunar orbit, 100 km",dv:1000,contact:.35,solar:1,ecl:2,rad:.6,heat:2,cap:.2,link:2,life:6,d:"Needs a big burn to be captured. The Moon blocks your link part of each orbit and shadows are long."},
-mars:{n:"Mars orbit, 400 km",dv:1800,contact:.3,solar:.43,ecl:2,rad:.5,heat:2,cap:.12,link:3,d:"Radio signals take 4 to 24 minutes one way, and sunlight is only about 43% as strong as at Earth."}};
+leo:{n:"Low Earth orbit, 500 km",dv:20,contact:.5,solar:1,ecl:0,rad:.1,heat:1,cap:1.2,link:0,life:5,d:"Easy to reach with steady solar power and frequent ground contact."},
+sso:{n:"Sun-synchronous orbit, 700 km",dv:40,contact:.5,solar:1,ecl:0,rad:.15,heat:1,cap:1.1,link:0,life:7,d:"Steady lighting and clear ground contact."},
+geo:{n:"Geostationary orbit, 35,786 km",dv:400,contact:1,solar:1,ecl:1,rad:.3,heat:1,cap:.6,link:1,life:12,d:"Constant link with moderate distance."},
+moon:{n:"Lunar orbit, 100 km",dv:300,contact:.7,solar:1,ecl:1,rad:.25,heat:1,cap:.6,link:1,life:6,d:"Moderate capture burn and reliable X-band link."},
+mars:{n:"Mars orbit, 400 km",dv:500,contact:.65,solar:.65,ecl:1,rad:.25,heat:1,cap:.45,link:2,life:8,d:"Long-range link with forgiving solar and thermal margins."}};
 
-/* rocket parts: you build the launch vehicle yourself. Lift to low orbit = 4,500 kg x the weaker of engine thrust and tank size, then modified by staging and fuselage. */
-const RENG=[{n:"Single engine",c:8,thr:1,x:"Thrust 1 of 4: small payloads",lv:0,why:"Lowest cost and mass, but caps lift even if you attach a bigger tank."},{n:"Triple engine",c:25,thr:2,x:"Thrust 2 of 4: medium payloads",lv:0,why:"Balanced thrust for lunar or multi-instrument spacecraft without extreme cost."},{n:"Five-engine cluster",c:55,thr:4,x:"Thrust 4 of 4: heavy payloads",lv:1,why:"Maximum lift capability for heavy Mars landers or dense payloads, at high cost."}];
-const RTK=[{n:"Small tank",c:6,cap:1,x:"Propellant 1 of 4",lv:0,why:"Light and inexpensive, but restricts lift and leaves little margin for heavy buses."},{n:"Medium tank",c:16,cap:2,x:"Propellant 2 of 4",lv:0,why:"Solid sweet spot for medium lift; pairs well with triple or multi-stage setups."},{n:"Large tank",c:30,cap:4,x:"Propellant 4 of 4",lv:1,why:"Unlocks maximum propellant capacity, though it raises rocket cost and adds weight."}];
-const RDEC=[{n:"No decoupler",c:0,mult:.6,r:0,x:"Carries the empty tank, 40% less payload",lv:0,why:"Saves upfront cost and parts, but dead weight slashes payload lift by 40%."},{n:"Stage decoupler",c:4,mult:1,r:.05,x:"Drops the empty stage",lv:0,why:"Baseline staging efficiency plus +5% launch reliability."},{n:"Two-stage decoupler",c:8,mult:1.25,r:.05,x:"Two drops, 25% more payload",lv:1,why:"Boosts payload capacity by 25% for demanding deep-space or landing missions."}];
-const RFUS=[{n:"Aluminium fuselage",c:3,mult:1,r:.02,x:"Light and cheap",lv:0,why:"Standard structural shell with low cost and modest reliability gain."},{n:"Composite fuselage",c:8,mult:1.1,r:.04,x:"Stronger, 10% more payload",lv:1,why:"Higher strength-to-weight ratio adds +10% payload lift and +4% reliability."}];
-const RFAIR=[{n:"No fairing",c:0,r:0,x:"Spacecraft exposed in flight",lv:0,why:"Leaves delicate instruments exposed to aerodynamic drag and heating."},{n:"Standard fairing",c:5,r:.05,x:"Protects the spacecraft",lv:0,why:"Shields the spacecraft during ascent and adds +5% launch reliability."},{n:"Aerodynamic nose cone",c:8,r:.06,x:"Smoother airflow",lv:1,why:"Cuts drag and gives the highest ascent reliability bonus (+6%)."}];
-const RFIN=[{n:"No fins",c:0,r:0,x:"Unstable in the air",lv:0,why:"Risky early flight stability unless compensated elsewhere."},{n:"Stabilising fins",c:3,r:.05,x:"Keeps the rocket straight",lv:0,why:"Cheap passive stability that adds +5% reliability."}],
-RFC=[{n:"Basic flight computer",c:4,r:.03,x:"Simple guidance",lv:0,why:"Minimal guidance logic; lower reliability gain (+3%)."},{n:"Redundant flight computer",c:9,r:.05,x:"Has a backup if one fails",lv:1,why:"Backup avionics protect ascent guidance and add +5% reliability."}];
-const RTVC=[{n:"No thrust vectoring",c:0,r:0,x:"Cannot steer by engine",lv:0,why:"Relies strictly on passive aerodynamics; no active nozzle steering."},{n:"Gimbal actuators",c:5,r:.05,x:"Steers by tilting the engines",lv:0,why:"Active engine gimbaling improves trajectory control and adds +5% reliability."}];
-const RK=["engine","tank","decoupler","fuselage","fairing","fins","flightcomp","tvc"];
+/* Reduced rocket components (4 parts: engine, tank, decoupler, fairing) */
+const RENG=[{n:"Single engine",c:8,thr:2,x:"Thrust 2 of 4: light payloads",lv:0,why:"Low cost and solid baseline lift."},{n:"Triple engine",c:18,thr:3,x:"Thrust 3 of 4: medium payloads",lv:0,why:"Strong lift for lunar and Mars missions."},{n:"Five-engine cluster",c:35,thr:4,x:"Thrust 4 of 4: heavy payloads",lv:1,why:"Maximum lift capacity."}];
+const RTK=[{n:"Small tank",c:6,cap:2,x:"Propellant 2 of 4",lv:0,why:"Light and cheap."},{n:"Medium tank",c:12,cap:3,x:"Propellant 3 of 4",lv:0,why:"Balanced propellant capacity."},{n:"Large tank",c:22,cap:4,x:"Propellant 4 of 4",lv:1,why:"Full propellant capacity."}],
+RDEC=[{n:"No decoupler",c:0,mult:.85,r:.05,x:"15% less payload",lv:0,why:"Saves cost with mild lift penalty."},{n:"Stage decoupler",c:3,mult:1.1,r:.1,x:"+10% payload",lv:0,why:"Drops empty stage and boosts reliability."},{n:"Two-stage decoupler",c:6,mult:1.3,r:.12,x:"+30% payload",lv:1,why:"High staging efficiency."}],
+RFAIR=[{n:"No fairing",c:0,r:.05,x:"Exposed ascent",lv:0,why:"Free option."},{n:"Standard fairing",c:4,r:.1,x:"Protects spacecraft",lv:0,why:"Protects payload and raises reliability."},{n:"Aerodynamic nose cone",c:6,r:.12,x:"Smoother airflow",lv:1,why:"Best ascent protection."}];
+const RK=["engine","tank","decoupler","fairing"];
 
-const ST=[{n:"Light frame",m:80,c:5,hard:0,x:"Radiation shield 0/2",lv:0,why:"Saves mass and budget, but offers zero bus radiation shielding."},{n:"Standard bus",m:200,c:12,hard:1,x:"Radiation shield 1/2",lv:0,why:"Balanced structure with moderate radiation protection (1/2)."},{n:"Hardened bus",m:350,c:25,hard:2,x:"Radiation shield 2/2",lv:1,why:"Heavy, costly, and essential if flares or micrometeoroids threaten survival."}];
-const PW=[{n:"Solar 500 W",m:40,c:3,gen:500,x:"500 W at Earth",lv:0,why:"Fine for lean orbiters near Earth; too weak for Mars or power-hungry radar."},{n:"Solar 1500 W",m:110,c:9,gen:1500,x:"1500 W at Earth",lv:0,why:"Good headroom for multi-instrument spacecraft and lunar orbits."},{n:"Solar 4000 W",m:260,c:22,gen:4000,x:"4000 W at Earth",lv:1,why:"Heavy and expensive, needed when sunlight is weak (Mars) or loads are high."}];
-const BT=[{n:"No battery",m:0,c:0,tier:0,x:"Only works in constant sunlight",lv:0,why:"Zero mass/cost, but fails whenever an eclipse or surface night hits."},{n:"Li-ion pack",m:30,c:2,tier:1,x:"Covers short eclipses",lv:0,why:"Handles routine Earth-shadow passes at low mass."},{n:"Large pack",m:80,c:5,tier:2,x:"Covers long eclipses",lv:0,why:"Required for long lunar or Martian eclipses and power-drop events."}];
-const PR=[{n:"Cold gas",m:10,p:5,c:1,dv:100,x:"100 m/s",lv:0,why:"Tiny delta-v—only enough for minimal stationkeeping."},{n:"Hydrazine",m:150,p:5,c:6,dv:1200,x:"1,200 m/s",lv:0,why:"Reliable chemical propulsion with low electrical draw."},{n:"Bipropellant",m:300,p:10,c:12,dv:2200,x:"2,200 m/s",lv:0,why:"High delta-v for orbit insertion plus lunar or Martian descent."},{n:"Ion thruster",m:220,p:150,c:20,dv:3500,x:"3,500 m/s, power hungry",lv:2,why:"Highest delta-v, but draws 150 W continuously from your power budget."}];
-const CM=[{n:"UHF antenna",m:5,p:10,c:1,rate:.5,tier:0,x:"0.5 Mbps, near Earth only",lv:0,why:"Low power and mass, but cannot reach GEO, Moon, or Mars."},{n:"S-band radio",m:10,p:20,c:3,rate:4,tier:1,x:"4 Mbps, reaches GEO",lv:0,why:"Covers GEO links; may bottleneck high-rate instruments."},{n:"X-band radio",m:25,p:60,c:8,rate:40,tier:2,x:"40 Mbps, reaches the Moon",lv:0,why:"High downlink rate needed for lunar missions and heavy data."},{n:"Ka-band dish",m:60,p:150,c:18,rate:200,tier:3,x:"200 Mbps, deep space",lv:0,why:"Required for Mars links and massive data return, at 150 W draw."}];
-const AD=[{n:"Reaction wheels",m:15,p:20,c:4,pt:.8,x:"Pointing 80%",lv:0,why:"Caps pointing effectiveness at 80%, reducing science score."},{n:"Star tracker + wheels",m:25,p:30,c:8,pt:1,x:"Pointing 100%",lv:1,why:"Full 100% pointing accuracy maximizes science return."}];
-const CP=[{n:"Standard computer",m:5,p:10,c:1,rad:0,x:"Radiation tolerance 0/1",lv:0,why:"Cheaper and lighter, but vulnerable to radiation upsets."},{n:"Rad-hard computer",m:8,p:20,c:6,rad:1,x:"Radiation tolerance 1/1",lv:1,why:"Resists radiation and helps auto-recover comms dropouts."}];
-const TH=[{n:"Insulation blankets",m:10,p:0,c:1,tier:1,x:"Passive, mild temperatures",lv:0,why:"Zero power draw, suited only to mild low-power orbits."},{n:"Radiators + heaters",m:30,p:40,c:4,tier:2,x:"Active temperature control",lv:0,why:"Balances heat in lunar/Mars orbits or moderate power loads."},{n:"Heat pipes + radiators",m:55,p:60,c:9,tier:3,x:"For hot, high-power craft",lv:1,why:"Prevents thermal damage when power draw or solar heat is high."}];
-const FD=[{n:"No monitoring",m:0,p:0,c:0,safe:0,x:"No safe mode",lv:0,why:"Takes 100% of event damage with no automatic protection."},{n:"Watchdog + sensors",m:3,p:5,c:2,safe:1,x:"Basic safe mode, 30% less damage",lv:0,why:"Cuts incoming event damage by 30% for tiny mass/cost."},{n:"Full fault protection",m:6,p:10,c:5,safe:2,x:"Auto recovery, 60% less damage",lv:1,why:"Cuts incoming event damage by 60% during risky surface/deep-space ops."}];
-const FL=[{n:"Pressure-fed tanks",m:20,p:0,c:2,dvm:1,x:"Simple and reliable",lv:0,why:"No pump power needed; baseline delta-v efficiency."},{n:"Turbopump-fed tanks",m:40,p:15,c:5,dvm:1.2,x:"+20% delta-v",lv:1,why:"Multiplies thruster delta-v by 1.2x, adding +15 W and +40 kg."}];
+/* Reduced spacecraft components (8 systems + instruments, gear only for land/sample) */
+const ST=[{n:"Light frame",m:70,c:5,hard:1,x:"Shield 1/2",lv:0,why:"Light frame with baseline shielding."},{n:"Standard bus",m:140,c:10,hard:2,x:"Shield 2/2",lv:0,why:"Strong radiation protection."}];
+const PW=[{n:"Solar 1000 W",m:50,c:4,gen:1000,x:"1000 W at Earth",lv:0,why:"Plenty of power for standard payloads."},{n:"Solar 2500 W",m:110,c:9,gen:2500,x:"2500 W at Earth",lv:0,why:"High headroom for Mars and heavy instruments."}];
+const BT=[{n:"Li-ion pack",m:20,c:2,tier:1,x:"Covers eclipses",lv:0,why:"Reliable eclipse backup."},{n:"Large pack",m:45,c:4,tier:2,x:"Extended backup",lv:1,why:"Extra reserve."}];
+const PR=[{n:"Hydrazine",m:110,p:5,c:5,dv:900,x:"900 m/s",lv:0,why:"Covers orbit insertion and descent."},{n:"Bipropellant",m:180,p:10,c:9,dv:1600,x:"1,600 m/s",lv:0,why:"Generous delta-v margin."}];
+const CM=[{n:"S-band radio",m:10,p:15,c:3,rate:20,tier:1,x:"20 Mbps, reaches Moon",lv:0,why:"Strong link for Earth and Moon."},{n:"X-band radio",m:20,p:30,c:6,rate:80,tier:2,x:"80 Mbps, reaches Mars",lv:0,why:"High bandwidth for Mars."}];
+const AD=[{n:"Reaction wheels",m:15,p:15,c:3,pt:.95,x:"Pointing 95%",lv:0,why:"High pointing accuracy."},{n:"Star tracker + wheels",m:25,p:20,c:5,pt:1,x:"Pointing 100%",lv:0,why:"Full 100% pointing accuracy."}];
+const CP=[{n:"Rad-hard computer",m:8,p:15,c:4,rad:1,x:"Rad-tolerant",lv:0,why:"Resists radiation and recovers links."}];
+const TH=[{n:"Radiators + heaters",m:25,p:20,c:3,tier:2,x:"Active thermal control",lv:0,why:"Keeps electronics safe across all orbits."}];
 const IN=[
-{n:"Visible camera",m:25,p:40,c:6,data:4,sci:{eo:20,data:22,land:25,sample:10},lv:0,why:"Strong baseline imager for landing and Earth observation."},
-{n:"Multispectral imager",m:45,p:70,c:14,data:10,sci:{eo:40,data:28,land:15,sample:15},lv:1,why:"High Earth-observation science, but generates 10 Mbps of data."},
-{n:"Radar (SAR)",m:120,p:400,c:30,data:25,sci:{eo:55,data:30,land:8,sample:5},lv:2,why:"Huge orbit science score, but heavy (120 kg), hungry (400 W), and 25 Mbps."},
-{n:"Spectrometer",m:30,p:50,c:10,data:1,sci:{eo:25,data:40,land:20,sample:30},lv:0,why:"Compact, low-data instrument with strong data & sample science."},
-{n:"Magnetometer",m:5,p:5,c:2,data:.1,sci:{eo:8,data:22,land:10,sample:8},lv:0,why:"Ultra-light filler instrument (5 kg, 5 W) that boosts data science."},
-{n:"Laser altimeter",m:60,p:120,c:20,data:6,sci:{eo:15,data:38,land:35,sample:10},lv:1,why:"Great for terrain mapping and landing precision."},
-{n:"Sampling arm + drill",m:50,p:60,c:12,data:2,sci:{eo:0,data:0,land:10,sample:55},lv:0,surface:1,why:"Required to drill and store surface samples on sample missions."},
-{n:"Soil analyzer",m:35,p:40,c:9,data:1,sci:{eo:0,data:0,land:15,sample:40},lv:1,surface:1,why:"Analyses surface composition on-site for sample and land missions."}];
-const GR=[{n:"No landing gear",m:0,p:0,c:0,tier:0,x:"Cannot land",lv:0,why:"Only valid for orbital missions."},{n:"Landing legs",m:40,p:0,c:4,tier:1,x:"Soft landing on the airless Moon",lv:0,why:"Enough for airless lunar touchdown."},{n:"Legs + parachute",m:70,p:0,c:9,tier:2,x:"Lands through the thin Martian air",lv:0,why:"Needed to slow down through Mars's thin atmosphere."}];
+{n:"Visible camera",m:20,p:30,c:5,data:4,sci:{eo:35,data:35,land:40,sample:20},lv:0,why:"Fast, reliable imaging."},
+{n:"Multispectral imager",m:35,p:50,c:9,data:8,sci:{eo:50,data:45,land:35,sample:25},lv:0,why:"High science points with low data load."},
+{n:"Spectrometer",m:25,p:35,c:7,data:2,sci:{eo:40,data:55,land:40,sample:45},lv:0,why:"Great science-to-data ratio."},
+{n:"Sampling arm + drill",m:40,p:45,c:9,data:2,sci:{eo:10,data:10,land:25,sample:65},lv:0,surface:1,why:"Collects surface samples."}];
+const GR=[{n:"Landing legs",m:30,p:0,c:3,tier:1,x:"Soft landing",lv:0,why:"Soft touchdown on Moon or Mars."}];
 
-/* Ordered: Orbit exploration -> Landing -> Data collection -> Sample collection */
+/* Generous budgets and lower science thresholds */
 const MIS=[
-{id:"eo",n:"Earth observation",b:"Track coastlines, crops and storms from orbit.",budget:150,min:40,bonus:90,orbits:["leo","sso","geo"],body:"#2b4fb8",kind:"orbit",stage:"orbit",sk:"eo",dest:"earth",life:5},
-{id:"mexp",n:"Lunar orbit exploration",b:"Survey lunar craters, lighting and environment from orbit.",budget:220,min:50,bonus:95,orbits:["moon"],body:"#8d93a6",kind:"orbit",stage:"orbit",sk:"eo",dest:"moon",trip:"3 days",life:6},
-{id:"mland",n:"Lunar landing",b:"Pass orbit exploration, earn landing bonus points, touch down on the Moon, rove and send photos home.",budget:240,min:50,bonus:95,orbits:["moon"],body:"#8d93a6",kind:"land",stage:"land",sk:"land",dest:"moon",landDv:800,need:1,trip:"3 days",landReqPts:25},
-{id:"mdata",n:"Moon data collection",b:"Orbit the Moon and map its surface and magnetic field.",budget:250,min:55,bonus:100,orbits:["moon"],body:"#8d93a6",kind:"orbit",stage:"data",sk:"data",dest:"moon",trip:"3 days",life:6},
-{id:"msamp",n:"Moon sample collection",b:"Land on the Moon and drill samples of its soil.",budget:260,min:55,bonus:100,orbits:["moon"],body:"#8d93a6",kind:"sample",stage:"sample",sk:"sample",dest:"moon",landDv:800,need:1,trip:"3 days"},
-{id:"rexp",n:"Mars orbit exploration",b:"Scout Martian weather, dust storms and terrain from orbit.",budget:290,min:55,bonus:100,orbits:["mars"],body:"#c1583a",kind:"orbit",stage:"orbit",sk:"eo",dest:"mars",trip:"7 months",life:8},
-{id:"rland",n:"Mars landing",b:"Pass orbit exploration, earn landing bonus points, touch down on Mars, rove and send photos home.",budget:300,min:55,bonus:100,orbits:["mars"],body:"#c1583a",kind:"land",stage:"land",sk:"land",dest:"mars",landDv:600,need:2,trip:"7 months",landReqPts:25},
-{id:"rdata",n:"Mars data collection",b:"Orbit Mars and study its atmosphere and surface.",budget:320,min:60,bonus:100,orbits:["mars"],body:"#c1583a",kind:"orbit",stage:"data",sk:"data",dest:"mars",trip:"7 months",life:8},
-{id:"rsamp",n:"Mars sample collection",b:"Land on Mars and collect rock and soil samples.",budget:320,min:55,bonus:100,orbits:["mars"],body:"#c1583a",kind:"sample",stage:"sample",sk:"sample",dest:"mars",landDv:600,need:2,trip:"7 months"}];
+{id:"eo",n:"Earth observation",b:"Track coastlines, crops and storms from orbit.",budget:220,min:25,bonus:55,orbits:["leo","sso","geo"],body:"#2b4fb8",kind:"orbit",stage:"orbit",sk:"eo",dest:"earth",life:5},
+{id:"mexp",n:"Lunar orbit exploration",b:"Survey lunar craters, lighting and environment from orbit.",budget:260,min:25,bonus:60,orbits:["moon"],body:"#8d93a6",kind:"orbit",stage:"orbit",sk:"eo",dest:"moon",trip:"3 days",life:6},
+{id:"mland",n:"Lunar landing",b:"Pass orbit exploration, earn landing bonus points, touch down on the Moon, rove and send photos home.",budget:280,min:30,bonus:65,orbits:["moon"],body:"#8d93a6",kind:"land",stage:"land",sk:"land",dest:"moon",landDv:300,need:1,trip:"3 days",landReqPts:15},
+{id:"mdata",n:"Moon data collection",b:"Orbit the Moon and map its surface and magnetic field.",budget:280,min:30,bonus:65,orbits:["moon"],body:"#8d93a6",kind:"orbit",stage:"data",sk:"data",dest:"moon",trip:"3 days",life:6},
+{id:"msamp",n:"Moon sample collection",b:"Land on the Moon and drill samples of its soil.",budget:290,min:30,bonus:65,orbits:["moon"],body:"#8d93a6",kind:"sample",stage:"sample",sk:"sample",dest:"moon",landDv:300,need:1,trip:"3 days"},
+{id:"rexp",n:"Mars orbit exploration",b:"Scout Martian weather, dust storms and terrain from orbit.",budget:320,min:30,bonus:65,orbits:["mars"],body:"#c1583a",kind:"orbit",stage:"orbit",sk:"eo",dest:"mars",trip:"7 months",life:8},
+{id:"rland",n:"Mars landing",b:"Pass orbit exploration, earn landing bonus points, touch down on Mars, rove and send photos home.",budget:340,min:30,bonus:70,orbits:["mars"],body:"#c1583a",kind:"land",stage:"land",sk:"land",dest:"mars",landDv:300,need:1,trip:"7 months",landReqPts:15},
+{id:"rdata",n:"Mars data collection",b:"Orbit Mars and study its atmosphere and surface.",budget:350,min:35,bonus:70,orbits:["mars"],body:"#c1583a",kind:"orbit",stage:"data",sk:"data",dest:"mars",trip:"7 months",life:8},
+{id:"rsamp",n:"Mars sample collection",b:"Land on Mars and collect rock and soil samples.",budget:360,min:35,bonus:70,orbits:["mars"],body:"#c1583a",kind:"sample",stage:"sample",sk:"sample",dest:"mars",landDv:300,need:1,trip:"7 months"}];
 
 const STAGE_ORDER=["orbit","land","data","sample"];
 const STAGE_LABEL={orbit:"Orbit exploration",land:"Landing",data:"Data collection",sample:"Sample collection"};
 
-const LV=[{n:"Beginner",d:"Simple parts, a bigger budget, easier science targets and one random event. You start with a finished rocket and spacecraft to explore."},{n:"Intermediate",d:"More parts, the standard budget and two random events. You build the rocket and spacecraft from an empty launch pad."},{n:"Advanced",d:"Every part including advanced ones, a tight budget, higher science targets and three random events."}];
-const BM=[1.5,1.15,1],SM=[.8,1,1.15];
+const LV=[{n:"Beginner",d:"Generous budget, low science targets, and finished build to explore."},{n:"Intermediate",d:"Standard budget and parts from scratch."},{n:"Advanced",d:"Tighter budget and higher science targets."}];
+const BM=[1.8,1.4,1.15],SM=[.55,.75,.9];
 const INFO={
-structure:{t:"Structure (bus)",w:"The central box everything bolts onto, in the middle of the spacecraft.",y:"It holds all systems together and survives launch shaking and radiation. Stronger frames weigh more.",dec:"Pick a bus with enough radiation shielding for your orbit, without blowing mass or budget."},
-eps:{t:"Solar panels (electrical power)",w:"Wings on both sides of the bus, pointed at the Sun.",y:"They make the electricity every other system needs. Far from the Sun they make less.",dec:"Match panel generation to your orbit's solar factor and total instrument + thruster power draw."},
-battery:{t:"Battery",w:"Against the bus, close to the power electronics.",y:"It stores energy so the spacecraft keeps running in the shadow of a planet or moon.",dec:"Choose a battery tier that covers eclipses and absorbs power-drop events."},
-prop:{t:"Propulsion (engine)",w:"At the bottom of the bus, pointing opposite to the way you want to push.",y:"It changes your speed to enter orbit and correct your path. More delta-v means more mass.",dec:"Ensure delta-v covers orbit insertion plus landing burn if your mission touches down."},
-fluid:{t:"Propellant tanks and valves",w:"Next to the engine so fuel lines stay short, balanced around the center of mass.",y:"Tanks store the fuel; valves and regulators feed it safely. Pump-fed systems are more efficient but more complex.",dec:"Turbopumps boost delta-v by 20% at the cost of extra mass, cost, and power draw."},
-comms:{t:"Communication (antenna)",w:"On top, with a clear view of Earth and away from the engine plume.",y:"It sends science data home and receives commands. Bigger dishes send more data farther.",dec:"Match radio tier to distance and ensure downlink Mbps keeps up with instrument data."},
-gnc:{t:"Guidance, navigation and control",w:"A star tracker on an outer face with a clear sky view; reaction wheels near the center of mass.",y:"It knows where the spacecraft points and turns it. Instruments only work well when pointed accurately.",dec:"Star trackers unlock 100% pointing accuracy instead of 80%, directly boosting science."},
-cdh:{t:"Command and data handling (computer)",w:"Inside the bus, shielded and close to the systems it controls.",y:"The brain: it runs commands, stores instrument data and coordinates every system. Rad-hard chips resist radiation.",dec:"Rad-hard computers resist radiation and can recover comms dropouts automatically."},
-thermal:{t:"Thermal control",w:"Radiators on the shaded faces and insulation wrapped around the bus.",y:"Space is both scorching and freezing. This keeps electronics inside their safe temperature range.",dec:"Higher-power spacecraft and deeper orbits need higher thermal tiers to avoid damage."},
-payload:{t:"Science payload",w:"On the side that faces the target, with a clear field of view.",y:"These instruments are the reason for the mission. The mission goal decides which ones you need.",dec:"Balance science points against mass, power, and radio bandwidth so data isn't lost."},
-fault:{t:"Fault detection and protection",w:"Sensors spread through the spacecraft, with a watchdog in the computer.",y:"It watches voltage, temperature and software, and puts the spacecraft into safe mode when something fails.",dec:"Fault protection cuts incoming damage by 30% to 60% when space events strike."},
-fuel:{t:"Fuel and oxidizer tanks",w:"They fill most of the first stage, with the heaviest tank low in the stack.",y:"A rocket is mostly propellant. Fuel and oxidizer burn together to make thrust.",dec:"Increasing tank size raises lift potential, but only if engines match and budget/mass stay in bounds."},
-engine:{t:"Engines",w:"At the very bottom of the first stage, pointing down.",y:"They push hot gas down so the rocket goes up. More engines mean more thrust.",dec:"Rocket lift uses the weaker of engine thrust and tank size—pair them carefully."},
-tvc:{t:"Thrust vectoring",w:"Actuators on the engines that tilt (gimbal) the nozzles.",y:"Tilting the nozzle steers the rocket, so it can fly straight or turn without moving fins.",dec:"Gimbal actuators add +5% launch reliability for modest cost."},
-decoupler:{t:"Decoupler (stage separation)",w:"Between the stages, on top of the tank.",y:"It releases the empty stage so the rocket sheds dead weight and can carry more payload.",dec:"Skipping a decoupler cuts payload lift by 40%; staging unlocks full or 1.25x lift."},
-fins:{t:"Fins",w:"Around the base of the first stage.",y:"They keep the rocket stable while it flies through the air.",dec:"Stabilising fins add +5% launch reliability at low cost."},
-flightcomp:{t:"Flight computer",w:"In the avionics ring near the top of the rocket.",y:"It runs guidance, navigation and control: it reads sensors and commands the engines.",dec:"Redundant flight computers add +5% launch reliability over basic guidance."},
-fairing:{t:"Nose cone and fairing",w:"Around the spacecraft at the top of the rocket.",y:"It protects the spacecraft from air pressure and heat during ascent, then splits away in space.",dec:"Protects your spacecraft during climb and raises launch reliability."},
-fuselage:{t:"Fuselage",w:"The upper body between the fuel tank and the nose, carrying the avionics.",y:"The rocket’s skeleton and skin. It carries the loads of ascent; composite is lighter and stronger than aluminium.",dec:"Composite fuselage adds +10% payload capacity and +4% reliability over aluminium."},
-rprop:{t:"Rocket propulsion",w:"Tanks make up most of the rocket, with the engines at the very bottom.",y:"Tanks carry fuel and oxidizer, engines turn it into thrust. Lift depends on the weaker of the two, so match them.",dec:"Match engine thrust and tank size so neither starves the other."},
-rstruct:{t:"Structure and aerodynamics",w:"Fuselage on top of the tank, fins at the base, fairing around the spacecraft.",y:"These shape the airflow and protect the spacecraft on the climb through the atmosphere.",dec:"Structure and fairing choices control both payload lift multiplier and launch reliability."},
-rgnc:{t:"Rocket guidance and control",w:"Flight computer in the avionics ring, gimbal actuators on the engines.",y:"The computer decides where to go and the gimbals steer. Together they keep the rocket on its path.",dec:"Combining redundant guidance and gimbals maximizes ascent reliability."},
-gear:{t:"Landing gear",w:"Legs on the underside of the spacecraft around the engine, with a parachute pack on top.",y:"It absorbs the shock of touchdown. The Moon has no air, so legs are enough. Mars has a thin atmosphere, so you also need a parachute to slow down.",dec:"Pick legs for the Moon, or legs + parachute for Mars; skip for pure orbiters."}};
-const SETUP={w:"The orbit is where you fly; the rocket you build is what lifts you there.",y:"Higher orbits need more delta-v and stronger radios, and leave less payload mass. Hover over the rocket to learn its parts.",dec:"Choose an orbit compatible with your mission destination and power/comms plan."};
-const SYS=[{id:"setup",t:"Mission orbit",keys:["orbit"],hl:[],grp:"Mission"},
+structure:{t:"Structure (bus)",w:"Central box in the spacecraft.",y:"Holds systems together and shields electronics.",dec:"Light frame or standard bus both protect well."},
+eps:{t:"Solar panels",w:"Wings on both sides of the bus.",y:"Generates electrical power.",dec:"1000 W or 2500 W covers all systems easily."},
+battery:{t:"Battery",w:"Inside the bus.",y:"Stores power during eclipses.",dec:"Li-ion pack handles orbit shadows."},
+prop:{t:"Propulsion",w:"Bottom of the spacecraft.",y:"Provides delta-v for orbit and descent.",dec:"Hydrazine or bipropellant meets mission delta-v."},
+comms:{t:"Communication",w:"Top of the spacecraft.",y:"Sends science data back to Earth.",dec:"S-band for Moon, X-band for Mars."},
+gnc:{t:"Guidance & control",w:"Outer face and bus.",y:"Points instruments accurately.",dec:"Reaction wheels or star tracker keep pointing high."},
+cdh:{t:"Command & data computer",w:"Inside the bus.",y:"Coordinates spacecraft operations.",dec:"Rad-hard computer prevents upsets."},
+thermal:{t:"Thermal control",w:"Radiators around the bus.",y:"Keeps temperatures safe.",dec:"Active thermal control keeps damage near zero."},
+payload:{t:"Science payload",w:"Target-facing deck.",y:"Collects mission science.",dec:"Pick 1–2 instruments matching your goal."},
+fuel:{t:"Fuel & oxidizer tank",w:"Lower rocket stage.",y:"Stores propellant for lift.",dec:"Match tank size with engine thrust."},
+engine:{t:"Engines",w:"Base of the rocket.",y:"Provides liftoff thrust.",dec:"Match engine thrust with tank size."},
+decoupler:{t:"Decoupler",w:"Between stages.",y:"Drops empty stage for extra lift.",dec:"Stage decoupler boosts lift capacity."},
+fairing:{t:"Fairing",w:"Top of rocket around spacecraft.",y:"Protects spacecraft during launch.",dec:"Standard fairing protects payload."},
+gear:{t:"Landing gear",w:"Underside of lander.",y:"Absorbs touchdown impact.",dec:"Required for landing and sample missions."}};
+const SETUP={w:"Orbit selection.",y:"Sets destination, link range, and delta-v.",dec:"Pick the orbit for your mission."};
+const SYS=[
+{id:"setup",t:"Mission orbit",keys:["orbit"],hl:[],grp:"Mission"},
 {id:"rprop",t:"R1 Rocket propulsion",keys:["engine","tank"],hl:["engine","fuel"],grp:"Rocket"},
-{id:"decoupler",t:"R2 Decoupler (staging)",keys:["decoupler"]},
-{id:"rstruct",t:"R3 Structure and aerodynamics",keys:["fuselage","fairing","fins"],hl:["fuselage","fairing","fins"]},
-{id:"rgnc",t:"R4 Rocket guidance and control",keys:["flightcomp","tvc"],hl:["flightcomp","tvc"]},
-{id:"structure",t:"1 Structure",keys:["structure"],grp:"Spacecraft"},{id:"eps",t:"2 Electrical power",keys:["power","battery"],hl:["eps","battery"]},{id:"prop",t:"3 Propulsion",keys:["prop"]},{id:"comms",t:"4 Communication",keys:["comms"]},
-{id:"gnc",t:"5 Guidance, navigation and control",keys:["adcs"]},{id:"cdh",t:"6 Command and data handling",keys:["computer"]},{id:"thermal",t:"7 Thermal control",keys:["thermal"]},
-{id:"payload",t:"8 Science payload",keys:["inst"]},{id:"fault",t:"9 Fault detection and protection",keys:["fault"]},{id:"fluid",t:"10 Propellant management",keys:["fluid"]},{id:"gear",t:"11 Landing system",keys:["gear"]}];
+{id:"decoupler",t:"R2 Decoupler",keys:["decoupler"],hl:["decoupler"]},
+{id:"fairing",t:"R3 Fairing",keys:["fairing"],hl:["fairing"]},
+{id:"structure",t:"1 Structure",keys:["structure"],grp:"Spacecraft"},
+{id:"eps",t:"2 Power & battery",keys:["power","battery"],hl:["eps","battery"]},
+{id:"prop",t:"3 Propulsion",keys:["prop"]},
+{id:"comms",t:"4 Communication",keys:["comms"]},
+{id:"gnc",t:"5 Guidance & control",keys:["adcs"]},
+{id:"cdh",t:"6 Computer",keys:["computer"]},
+{id:"thermal",t:"7 Thermal control",keys:["thermal"]},
+{id:"payload",t:"8 Science payload",keys:["inst"]},
+{id:"gear",t:"9 Landing gear",keys:["gear"]}];
 SYS.forEach(S=>S.hl=S.hl||[S.id]);
-const KEYS=()=>[...RK,"structure","power","battery","prop","comms","adcs","computer","thermal","fault","fluid",...(MIS[mi].kind!=="orbit"?["gear"]:[])];
-const LIST={engine:RENG,tank:RTK,decoupler:RDEC,fuselage:RFUS,fairing:RFAIR,fins:RFIN,flightcomp:RFC,tvc:RTVC,structure:ST,power:PW,battery:BT,prop:PR,comms:CM,adcs:AD,computer:CP,thermal:TH,fault:FD,fluid:FL,gear:GR,inst:IN};
-const KN={power:"Solar panels",battery:"Battery",orbit:"Orbit",engine:"Engines",tank:"Fuel and oxidizer tanks",fuselage:"Fuselage",fairing:"Nose cone and fairing",fins:"Fins",flightcomp:"Flight computer",tvc:"Thrust vectoring"};
-const Z={n:"None",m:0,p:0,c:0,gen:0,tier:0,rate:0,rad:0,pt:0,dv:0,hard:0,safe:0,dvm:1};
+const KEYS=()=>[...RK,"structure","power","battery","prop","comms","adcs","computer","thermal",...(MIS[mi].kind!=="orbit"?["gear"]:[])];
+const LIST={engine:RENG,tank:RTK,decoupler:RDEC,fairing:RFAIR,structure:ST,power:PW,battery:BT,prop:PR,comms:CM,adcs:AD,computer:CP,thermal:TH,gear:GR,inst:IN};
+const KN={power:"Solar panels",battery:"Battery",orbit:"Orbit",engine:"Engines",tank:"Fuel tank",decoupler:"Decoupler",fairing:"Fairing"};
+const Z={n:"None",m:0,p:0,c:0,gen:0,tier:0,rate:0,rad:0,pt:0,dv:0,hard:0,safe:1,dvm:1};
 let mi=0,lv=0,sel,learn=false,openS="setup",panelHover=null,hoverId=null,vk="all",last={},whatifFuel=false,baseSel=null,orbitPassed=false,landingBonusPts=0,completedStages={moon:new Set(),mars:new Set(),earth:new Set()};
-const mm=()=>({...MIS[mi],budget:Math.round(MIS[mi].budget*BM[lv]),min:Math.round(MIS[mi].min*SM[lv]),bonus:Math.round(MIS[mi].bonus*SM[lv])});
-const pk=k=>sel[k]==null?Z:LIST[k][sel[k]];
-const scratch=()=>({orbit:MIS[mi].orbits[0],engine:null,tank:null,decoupler:null,fuselage:null,fairing:null,fins:null,flightcomp:null,tvc:null,structure:null,power:null,battery:null,prop:null,comms:null,adcs:null,computer:null,thermal:null,fault:null,fluid:null,gear:null,inst:new Set()});
-const showcase=()=>{const m=MIS[mi],o=m.orbits[0],mars=o==="mars",sf=m.kind!=="orbit";return{orbit:o,engine:1,tank:1,decoupler:1,fuselage:0,fairing:1,fins:1,flightcomp:1,tvc:1,structure:1,power:mars?2:1,battery:ORB[o].ecl>=2?2:1,prop:sf?2:1,comms:mars?3:2,adcs:1,computer:1,thermal:1,fault:1,fluid:1,gear:sf?(mars?2:1):null,inst:new Set(m.kind==="sample"?[3,6,7]:m.kind==="land"?[0,5,3]:[0,3,4])}};
+const mm=()=>({...MIS[mi],budget:Math.round(MIS[mi].budget*BM[lv]),min:Math.max(15,Math.round(MIS[mi].min*SM[lv])),bonus:Math.max(30,Math.round(MIS[mi].bonus*SM[lv]))});
+const scratch=()=>({orbit:MIS[mi].orbits[0],engine:null,tank:null,decoupler:null,fairing:null,structure:null,power:null,battery:null,prop:null,comms:null,adcs:null,computer:null,thermal:null,gear:null,inst:new Set()});
+const showcase=()=>{const m=MIS[mi],o=m.orbits[0],sf=m.kind!=="orbit";return{orbit:o,engine:1,tank:1,decoupler:1,fairing:1,structure:1,power:1,battery:0,prop:1,comms:o==="mars"?1:0,adcs:1,computer:0,thermal:0,gear:sf?0:null,inst:new Set(m.kind==="sample"?[1,3]:[1,2])}};
 
 function isStageUnlocked(m){
  if(m.dest==="earth")return true;
  const done=completedStages[m.dest]||new Set();
  const idx=STAGE_ORDER.indexOf(m.stage);
  if(idx<=0)return true;
- const prevStage=STAGE_ORDER[idx-1];
- return done.has(prevStage);
+ return done.has(STAGE_ORDER[idx-1]);
 }
 
 function rocketCalc(overrideSel){
  const s=overrideSel||sel;
- const g=k=>s[k]==null?null:LIST[k][s[k]],e=g("engine"),t=g("tank"),d=g("decoupler"),f=g("fuselage"),P=RK.map(g).filter(Boolean);
+ const g=k=>s[k]==null?null:LIST[k][s[k]],e=g("engine"),t=g("tank"),d=g("decoupler"),f=g("fairing"),P=RK.map(g).filter(Boolean);
  const thr=e?e.thr:0,cap=t?t.cap:0;
- return{n:"Your rocket",thr,cap,c:sum(P,"c"),rel:Math.min(.99,.7+sum(P,"r")),lc:Math.round(4500*Math.min(thr,cap)*(d?d.mult:.6)*(f?f.mult:1))}}
+ return{n:"Your rocket",thr,cap,c:sum(P,"c"),rel:Math.min(.99,.85+sum(P,"r")),lc:Math.round(6500*Math.min(thr,cap)*(d?d.mult:.85))}
+}
 function calc(overrideSel){
  const s=overrideSel||sel;
  const m=mm(),o=ORB[s.orbit],L=rocketCalc(s),ins=[...s.inst].map(i=>IN[i]);
- const st=s.structure==null?Z:LIST.structure[s.structure],pw=s.power==null?Z:LIST.power[s.power],bt=s.battery==null?Z:LIST.battery[s.battery],pr=s.prop==null?Z:LIST.prop[s.prop],cm=s.comms==null?Z:LIST.comms[s.comms],ad=s.adcs==null?Z:LIST.adcs[s.adcs],cp=s.computer==null?Z:LIST.computer[s.computer],th=s.thermal==null?Z:LIST.thermal[s.thermal],fd=s.fault==null?Z:LIST.fault[s.fault],fl=s.fluid==null?Z:LIST.fluid[s.fluid],gr=s.gear==null?Z:LIST.gear[s.gear];
- const P=[st,pw,bt,pr,cm,ad,cp,th,fd,fl,gr,...ins];
- const c={m,o,L,st,bt,cm,cp,ad,th,fd,gr,ins,mass:sum(P,"m"),use:sum(P,"p"),cost:sum(P,"c")+L.c,cap:Math.round(L.lc*o.cap),gen:Math.round(pw.gen*o.solar),dataGen:sum(ins,"data"),down:cm.rate*o.contact,dv:Math.round(pr.dv*fl.dvm)};
- c.ratio=c.dataGen?Math.min(1,c.down/c.dataGen):0;
+ const st=s.structure==null?Z:LIST.structure[s.structure],pw=s.power==null?Z:LIST.power[s.power],bt=s.battery==null?Z:LIST.battery[s.battery],pr=s.prop==null?Z:LIST.prop[s.prop],cm=s.comms==null?Z:LIST.comms[s.comms],ad=s.adcs==null?Z:LIST.adcs[s.adcs],cp=s.computer==null?Z:LIST.computer[s.computer],th=s.thermal==null?Z:LIST.thermal[s.thermal],gr=s.gear==null?Z:LIST.gear[s.gear];
+ const P=[st,pw,bt,pr,cm,ad,cp,th,gr,...ins];
+ const c={m,o,L,st,bt,cm,cp,ad,th,gr,ins,mass:sum(P,"m"),use:sum(P,"p"),cost:sum(P,"c")+L.c,cap:Math.round(L.lc*o.cap),gen:Math.round(pw.gen*o.solar),dataGen:sum(ins,"data"),down:cm.rate*o.contact,dv:pr.dv};
+ c.ratio=c.dataGen?Math.min(1,c.down/c.dataGen):1;
  c.sciRaw=ins.reduce((t,i)=>t+i.sci[m.sk],0);
- c.sci=Math.round(c.sciRaw*(ad.pt||.8)*c.ratio);
+ c.sci=Math.round(c.sciRaw*(ad.pt||.95)*c.ratio);
  c.prot=cp.rad+st.hard;
- c.thermNeed=Math.min(3,c.o.heat+(c.use>500?1:0));
+ c.thermNeed=1;
  const baseLife=m.life||o.life||5;
- const spareDv=Math.max(0,c.dv-c.o.dv);
- const lifeBonus=(c.bt.tier>=c.o.ecl?1:0)+(c.fd.safe||0)+(spareDv>=200?1:0);
- c.estLife=Math.max(1,baseLife+lifeBonus-Math.max(0,c.thermNeed-c.th.tier));
+ c.estLife=baseLife+2;
  c.targetLife=baseLife;
  return c;
 }
 function stat(k,o){
- if(k==="orbit")return`${o.dv} m/s needed · contact ${Math.round(o.contact*100)}% of the time · nominal life ${o.life} yr`;
- if(RK.includes(k))return`$${o.c}M · ${o.x}${o.r?" · +"+Math.round(o.r*100)+"% reliability":""}${o.why?" — "+o.why:""}`;
+ if(k==="orbit")return`${o.dv} m/s needed · contact ${Math.round(o.contact*100)}%`;
+ if(RK.includes(k))return`$${o.c}M · ${o.x}${o.why?" — "+o.why:""}`;
  const a=[`${o.m} kg`];if(o.p)a.push(`${o.p} W`);a.push(`$${o.c}M`);
- return a.join(" · ")+" · "+(k==="inst"?`${o.data} Mbps data · science ${o.sci[MIS[mi].sk]}`:o.x)+(o.why?" — "+o.why:"")}
+ return a.join(" · ")+" · "+(k==="inst"?`${o.data} Mbps · science ${o.sci[MIS[mi].sk]}`:o.x)+(o.why?" — "+o.why:"")}
 function opts(k){
  const list=k==="orbit"?MIS[mi].orbits.map(id=>({id,...ORB[id]})):LIST[k];
  return`<div class="opts">`+list.map((o,i)=>{if(k!=="orbit"&&(o.lv>lv||(o.surface&&MIS[mi].kind==="orbit")))return"";const v=k==="orbit"?o.id:i,ch=k==="inst"?sel.inst.has(i):sel[k]===v;
@@ -372,97 +357,62 @@ function evaluateBuild(s){
  if(!isStageUnlocked(c.m)){
   const idx=STAGE_ORDER.indexOf(c.m.stage);
   const prevLabel=STAGE_LABEL[STAGE_ORDER[idx-1]];
-  blockers.push(`[Stage Gate] Complete ${prevLabel} first before launching ${STAGE_LABEL[c.m.stage]}.`);
+  blockers.push(`Complete ${prevLabel} first before launching ${STAGE_LABEL[c.m.stage]}.`);
  }
  const ks=KEYS(),total=ks.length+1,miss=ks.filter(x=>targetSel[x]==null).length+(targetSel.inst.size?0:1);
  if(miss){
-  blockers.push(`${miss} of ${total} parts still to install — complete all rocket and spacecraft subsystems.`);
+  blockers.push(`${miss} of ${total} parts still to install.`);
  } else {
-  approved.push(`All ${total} rocket and spacecraft subsystems installed (${c.L.n} + ${targetSel.inst.size} instrument${targetSel.inst.size>1?"s":""}).`);
+  approved.push(`All ${total} parts installed.`);
  }
  const rk=targetSel.engine!=null&&targetSel.tank!=null;
  if(rk){
   if(c.mass<=c.cap){
-   approved.push(`[Available Resources] Mass within lift capacity: ${c.mass} kg of ${c.cap} kg (${c.cap-c.mass} kg margin).`);
+   approved.push(`Mass OK: ${c.mass} / ${c.cap} kg.`);
   } else {
-   blockers.push(`[Available Resources] Payload too heavy by ${c.mass-c.cap} kg (${c.mass} kg vs ${c.cap} kg lift) — remove heavy instruments/parts or increase fuel tank and engine thrust.`);
-  }
-  if(c.L.thr>=c.L.cap && c.L.cap>=c.L.thr){
-   approved.push(`[Orbital Constraints] Rocket propulsion matched: thrust ${c.L.thr}/4 and tank ${c.L.cap}/4.`);
-  } else if(c.L.thr<c.L.cap){
-   warnings.push("[Orbital Constraints] Fuel tank is larger than engine thrust — increase engine thrust to use the extra propellant.");
-  } else {
-   warnings.push("[Orbital Constraints] Fuel tank is small for your engines — increase fuel tank size to unlock more lift.");
+   blockers.push(`Too heavy by ${c.mass-c.cap} kg — increase tank/engine or remove an instrument.`);
   }
  }
  if(c.cost<=c.m.budget){
-  approved.push(`[Available Resources] Budget approved: $${c.cost}M of $${c.m.budget}M ($${c.m.budget-c.cost}M remaining).`);
+  approved.push(`Budget OK: $${c.cost}M / $${c.m.budget}M.`);
  } else {
-  blockers.push(`[Available Resources] Budget exceeded by $${c.cost-c.m.budget}M ($${c.cost}M vs $${c.m.budget}M budget) — choose lower-cost parts or lower difficulty.`);
+  blockers.push(`Over budget by $${c.cost-c.m.budget}M — pick lower-cost parts.`);
  }
  if(targetSel.power!=null){
   if(c.use<=c.gen){
-   approved.push(`[Available Resources] Power budget approved: ${c.use} W draw vs ${c.gen} W solar generation.`);
+   approved.push(`Power OK: ${c.use} / ${c.gen} W.`);
   } else {
-   blockers.push(`[Available Resources] Power deficit of ${c.use-c.gen} W (${c.use} W needed vs ${c.gen} W generated) — upgrade solar panels or trim power-hungry payload/thrusters.`);
-  }
- }
- if(RK.every(x=>targetSel[x]!=null)){
-  if(c.L.rel>=.9){
-   approved.push(`[Orbital Constraints] Rocket reliability approved: ${Math.round(c.L.rel*100)}%.`);
-  } else {
-   warnings.push(`[Orbital Constraints] Rocket reliability ${Math.round(c.L.rel*100)}% — add fins, fairing, decoupler, gimbals, or redundant flight computer.`);
+   blockers.push(`Power deficit of ${c.use-c.gen} W — upgrade solar panels.`);
   }
  }
  const need=c.o.dv+(c.m.landDv||0);
  if(targetSel.prop!=null){
   if(c.dv>=need){
-   approved.push(`[Orbital Constraints] Delta-v approved: ${c.dv} m/s available vs ${need} m/s required.`);
+   approved.push(`Delta-v OK: ${c.dv} / ${need} m/s.`);
   } else {
-   warnings.push(`[Orbital Constraints] Delta-v ${c.dv} m/s is below ${need} m/s required — upgrade thruster or turbopump tanks.`);
+   warnings.push(`Delta-v ${c.dv} m/s is below ${need} m/s.`);
   }
  }
  if(targetSel.gear!=null){
   if(c.gr.tier>=c.m.need){
-   approved.push(`Landing gear approved: ${c.gr.n} meets ${c.m.dest} requirement.`);
+   approved.push(`Landing gear OK.`);
   } else {
-   warnings.push(c.m.dest==="mars"?"Mars needs legs plus a parachute — upgrade landing gear.":"The Moon needs landing legs — upgrade landing gear.");
-  }
- }
- if(targetSel.battery!=null){
-  if(c.bt.tier>=c.o.ecl){
-   approved.push(`[Mission Lifetime] Battery approved: ${c.bt.n} covers orbit eclipses.`);
-  } else {
-   warnings.push("[Mission Lifetime] Battery too small for eclipses — upgrade to a larger battery pack.");
+   warnings.push(`Install landing gear.`);
   }
  }
  if(targetSel.comms!=null){
   if(c.cm.tier>=c.o.link){
-   approved.push(`[Communications Capacity] Link range approved: ${c.cm.n} reaches ${ORB[targetSel.orbit].n.split(",")[0]}.`);
+   approved.push(`Comms link OK.`);
   } else {
-   warnings.push("[Communications Capacity] Radio too weak for this distance — upgrade comms antenna/dish.");
-  }
-  if(c.ins.length){
-   if(c.ratio>=1){
-    approved.push(`[Communications Capacity] Downlink bandwidth approved: ${c.down.toFixed(1)} Mbps handles ${c.dataGen.toFixed(1)} Mbps instrument data.`);
-   } else {
-    warnings.push(`[Communications Capacity] Radio sends ${c.down.toFixed(1)} of ${c.dataGen.toFixed(1)} Mbps — upgrade radio or trim high-data instruments.`);
-   }
-  }
- }
- if(targetSel.thermal!=null){
-  if(c.th.tier>=c.thermNeed){
-   approved.push(`[Mission Lifetime] Thermal control approved: tier ${c.th.tier} meets required tier ${c.thermNeed} (est. life ${c.estLife} yr).`);
-  } else {
-   warnings.push(`[Mission Lifetime] Thermal control tier ${c.th.tier} is below tier ${c.thermNeed} — expected lifetime drops to ${c.estLife} yr.`);
+   warnings.push(`Upgrade radio for this orbit.`);
   }
  }
  if(c.m.kind==="land"){
-  const req=c.m.landReqPts||25;
+  const req=c.m.landReqPts||15;
   if(orbitPassed && landingBonusPts>=req){
-   approved.push(`[Landing Gate] Orbit exploration passed — ${landingBonusPts} landing bonus points unlocked (min ${req} pts).`);
+   approved.push(`Landing gate OK (${landingBonusPts} pts).`);
   } else {
-   blockers.push(`[Landing Gate] Must pass Orbit exploration first and earn at least ${req} landing-eligible bonus points (currently ${landingBonusPts} pts).`);
+   blockers.push(`Pass Orbit exploration first and earn at least ${req} landing points (current: ${landingBonusPts}).`);
   }
  }
  return {c, approved, blockers, warnings, launchable: blockers.length===0};
@@ -479,36 +429,31 @@ function renderImpact(){
  const imp=$("#impact");
  if(!imp)return;
  if(!baseSel){
-  imp.innerHTML=`<p class="mut" style="font-size:13px">Click <b>Review checklist &amp; launch</b> once to lock a baseline snapshot, then click <b>Modify components</b> and change any part to see live cross-system effects side by side.</p>`;
+  imp.innerHTML=`<p class="mut" style="font-size:13px">Click <b>Review checklist &amp; launch</b> once to lock a baseline snapshot, then modify any component to see live effects.</p>`;
   return;
  }
  const curC=calc(sel), baseC=calc(baseSel);
- const dMass=curC.mass-baseC.mass, dCap=curC.cap-baseC.cap, dCost=curC.cost-baseC.cost, dUse=curC.use-baseC.use, dGen=curC.gen-baseC.gen, dData=curC.dataGen-baseC.dataGen, dDv=curC.dv-baseC.dv, dSci=curC.sci-baseC.sci;
- const dTherm=curC.thermNeed-baseC.thermNeed, dLife=curC.estLife-baseC.estLife;
  const curEv=evaluateBuild(sel);
  imp.innerHTML=`<div class="imp-grid">
   <div class="imp-box"><b>Mass &amp; Lift</b>
-   <div>Mass: ${baseC.mass} → <b>${curC.mass} kg</b> (${fmtDelta(dMass,"kg",1)})</div>
-   <div>Lift cap: ${baseC.cap} → <b>${curC.cap} kg</b> (${fmtDelta(dCap,"kg",0)})</div>
+   <div>Mass: ${baseC.mass} → <b>${curC.mass} kg</b> (${fmtDelta(curC.mass-baseC.mass,"kg",1)})</div>
+   <div>Lift cap: ${baseC.cap} → <b>${curC.cap} kg</b> (${fmtDelta(curC.cap-baseC.cap,"kg",0)})</div>
   </div>
   <div class="imp-box"><b>Budget</b>
-   <div>Cost: $${baseC.cost}M → <b>$${curC.cost}M</b> (${fmtDelta(dCost,"M",1)})</div>
-   <div>Budget limit: $${curC.m.budget}M (${curC.cost<=curC.m.budget?"Within budget":"Over by $"+(curC.cost-curC.m.budget)+"M"})</div>
+   <div>Cost: $${baseC.cost}M → <b>$${curC.cost}M</b> (${fmtDelta(curC.cost-baseC.cost,"M",1)})</div>
+   <div>Limit: $${curC.m.budget}M</div>
   </div>
-  <div class="imp-box"><b>Power, Thermal &amp; Lifetime</b>
-   <div>Power draw: ${baseC.use} → <b>${curC.use} W</b> (${fmtDelta(dUse,"W",1)})</div>
-   <div>Solar gen: ${baseC.gen} → <b>${curC.gen} W</b> (${fmtDelta(dGen,"W",0)})</div>
-   <div>Thermal tier needed: ${baseC.thermNeed} → <b>${curC.thermNeed}</b> (${fmtDelta(dTherm,"tier",1)})</div>
-   <div>Est. mission life: ${baseC.estLife} → <b>${curC.estLife} yr</b> (${fmtDelta(dLife,"yr",0)})</div>
+  <div class="imp-box"><b>Power &amp; Science</b>
+   <div>Power: ${baseC.use} → <b>${curC.use} W</b> (${fmtDelta(curC.use-baseC.use,"W",1)})</div>
+   <div>Science: ${baseC.sci} → <b>${curC.sci} pts</b> (${fmtDelta(curC.sci-baseC.sci,"pts",0)})</div>
   </div>
-  <div class="imp-box"><b>Payload, Comms &amp; Delta-v</b>
-   <div>Instrument data: ${baseC.dataGen.toFixed(1)} → <b>${curC.dataGen.toFixed(1)} Mbps</b> (${fmtDelta(dData,"Mbps",1)})</div>
-   <div>Est. science: ${baseC.sci} → <b>${curC.sci} pts</b> (${fmtDelta(dSci,"pts",0)})</div>
-   <div>Spacecraft Δv: ${baseC.dv} → <b>${curC.dv} m/s</b> (${fmtDelta(dDv,"m/s",0)})</div>
+  <div class="imp-box"><b>Comms &amp; Δv</b>
+   <div>Data: ${baseC.dataGen.toFixed(1)} → <b>${curC.dataGen.toFixed(1)} Mbps</b></div>
+   <div>Δv: ${baseC.dv} → <b>${curC.dv} m/s</b></div>
   </div>
  </div>
  <div class="row" style="margin-top:12px;justify-content:space-between">
-  <span class="mut" style="font-size:13px">Checklist status: <b class="${curEv.launchable?"g":"r"}">${curEv.launchable?"All approved — ready for pre-flight check":curEv.blockers.length+" blocker(s) remaining"}</b></span>
+  <span class="mut" style="font-size:13px">Status: <b class="${curEv.launchable?"g":"r"}">${curEv.launchable?"Approved":"Blocked ("+curEv.blockers.length+")"}</b></span>
   <button class="btn pri sm" id="recheckBtn">Re-check pre-flight checklist</button>
  </div>`;
  const rb=$("#recheckBtn");
@@ -516,13 +461,13 @@ function renderImpact(){
 }
 
 function update(){
- const ev=evaluateBuild(sel), c=ev.c, k=[], add=(t,s)=>k.push(`<li class="${s||""}">${t}</li>`);
+ const ev=evaluateBuild(sel), c=ev.c, k=[];
  const ks=KEYS(),total=ks.length+1,miss=ks.filter(x=>sel[x]==null).length+(sel.inst.size?0:1);
  $("#hudn").textContent=`${total-miss} / ${total} parts`;$("#hudb").style.width=Math.round((total-miss)/total*100)+"%";
  $("#meters").innerHTML=meter("Mass",c.mass,c.cap,"kg")+meter("Cost",c.cost,c.m.budget,"$M")+meter("Power use",c.use,c.gen,"W")+meter("Science (est.)",c.sci,c.m.min,"pts",1);
- ev.approved.forEach(t=>add(t,""));
- ev.blockers.forEach(t=>add(t,"b"));
- ev.warnings.forEach(t=>add(t,"w"));
+ ev.approved.forEach(t=>k.push(`<li>${t}</li>`));
+ ev.blockers.forEach(t=>k.push(`<li class="b">${t}</li>`));
+ ev.warnings.forEach(t=>k.push(`<li class="w">${t}</li>`));
  $("#checks").innerHTML=k.join("");
 
  const g=$("#gate");
@@ -537,7 +482,6 @@ function update(){
   g.textContent="Not launchable yet: " + ev.blockers[0];
  }
 
- /* Real-time What-if: increase fuel tank */
  const curTank=sel.tank==null?-1:sel.tank;
  const nextTankIdx=curTank<0?0:Math.min(RTK.length-1,curTank+1);
  const canSimFuel=!learn && nextTankIdx>curTank && RTK[nextTankIdx].lv<=lv;
@@ -545,16 +489,12 @@ function update(){
  if(canSimFuel){
   const simSel={...sel,inst:new Set(sel.inst),tank:nextTankIdx};
   const wc=calc(simSel);
-  const dCap=wc.cap-c.cap, dCost=wc.cost-c.cost, dMassMargin=(wc.cap-wc.mass)-(c.cap-c.mass);
   wif.innerHTML=`<div class="row"><b>What-if: increase tank to ${RTK[nextTankIdx].n}</b><label style="display:flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" id="wifChk" ${whatifFuel?"checked":""}>Preview</label></div>`+
-    (whatifFuel?`<ul><li>Lift capacity: ${c.cap.toLocaleString()} → <b>${wc.cap.toLocaleString()} kg</b> (${dCap>=0?"+":""}${dCap.toLocaleString()} kg)</li>`+
-    `<li>Payload mass margin: ${(c.cap-c.mass).toLocaleString()} → <b>${(wc.cap-wc.mass).toLocaleString()} kg</b> (${dMassMargin>=0?"+":""}${dMassMargin.toLocaleString()} kg)</li>`+
-    `<li>Total cost: $${c.cost}M → <b>$${wc.cost}M</b> (${dCost>=0?"+":""}$${dCost}M vs $${c.m.budget}M budget)</li>`+
-    `<li>Power &amp; comms: unchanged (${c.use} W draw, ${c.down.toFixed(1)} Mbps downlink); spacecraft dv stays ${c.dv} m/s unless thruster/fluid changes.</li></ul>`:"");
+    (whatifFuel?`<ul><li>Lift capacity: ${c.cap} → <b>${wc.cap} kg</b></li><li>Total cost: $${c.cost}M → <b>$${wc.cost}M</b></li></ul>`:"");
   const chk=$("#wifChk");
   if(chk)chk.onchange=e=>{whatifFuel=e.target.checked;update()};
  } else {
-  wif.innerHTML=learn?"":`<span class="mut">What-if fuel: ${curTank<0?"select a tank to preview upgrades":nextTankIdx===curTank?"at maximum tank size for this level":"higher tank requires a higher difficulty level"}.</span>`;
+  wif.innerHTML="";
  }
 
  $("#launch").textContent="Review checklist & launch";
@@ -615,54 +555,34 @@ const M=(c,o)=>new THREE.MeshStandardMaterial(Object.assign({color:c,metalness:.
 const cyl=(a,b,h)=>new THREE.CylinderGeometry(a,b,h,24),box=(a,b,c)=>new THREE.BoxGeometry(a,b,c);
 function mesh(g,geo,mat,x,y,z,rx,rz){const m=new THREE.Mesh(geo,mat);m.position.set(x||0,y||0,z||0);if(rx)m.rotation.x=rx;if(rz)m.rotation.z=rz;m.userData={e:mat.emissive.getHex(),ei:mat.emissiveIntensity,gid:g.userData.id,sub:g.userData.sub};g.add(m);return m}
 function grp(par,id,sig,sub){const g=new THREE.Group();g.userData={id,sub};par.add(g);const key=id+(sub||"");newSig[key]=sig;if(prevSig[key]!==sig){g.userData.pop=performance.now();g.scale.setScalar(.01);pops.push(g)}return g}
-const hT=()=>sel.tank==null?0:[1.6,2.4,3.4][sel.tank],hF=()=>sel.fuselage==null?0:1.1,hD=()=>sel.decoupler>0?.14:0;
-const topY=()=>Math.max(.7,hT()+hD()+hF());
+const hT=()=>sel.tank==null?0:[1.6,2.4,3.4][sel.tank],hD=()=>sel.decoupler>0?.14:0;
+const topY=()=>Math.max(.7,hT()+hD()+1);
 function view(k){vk=k||vk;const t=topY();tgt=vk==="sc"?{y:t+1.15,d:4.4}:vk==="rk"?{y:t/2,d:Math.max(7,t*1.9)}:{y:t*.55+.9,d:t*1.4+6.5};document.querySelectorAll("[data-v]").forEach(b=>b.classList.toggle("on",b.dataset.v===vk))}
 function rebuild(){
  if(!R)return;
  while(root.children.length)root.remove(root.children[0]);pops=[];blink=[];newSig={};
- const s=sel,t=topY(),r=.75,tk=hT(),dh=hD(),fh=hF();
+ const s=sel,t=topY(),r=.75,tk=hT(),dh=hD();
  const gd=new THREE.Mesh(cyl(3.2,3.2,.1),M(0x141b3d));gd.position.y=-.65;root.add(gd);
  const spine=new THREE.Mesh(cyl(.28,.28,t),M(0x3a4160));spine.position.y=t/2;root.add(spine);
  let g;
- if(s.tank!=null){g=grp(root,"fuel","k"+s.tank);mesh(g,cyl(r,r,tk),M(0xeef1fa),0,tk/2,0);mesh(g,cyl(r+.01,r+.01,.18),M(0xd8434f),0,tk*.5,0);mesh(g,cyl(r+.01,r+.01,.1),M(0xd8434f),0,tk-.2,0)}
- if(dh){g=grp(root,"decoupler","d"+s.decoupler);mesh(g,cyl(r+.05,r+.05,.12),M(0x2c3454),0,tk+.06,0);if(s.decoupler==2)mesh(g,cyl(r+.05,r+.05,.1),M(0x2c3454),0,tk*.5+.3,0)}
- if(s.fuselage!=null){const co=s.fuselage==1;g=grp(root,"fuselage","u"+s.fuselage);mesh(g,cyl(r,r,fh),M(co?0x2b3150:0xdde3f5,{emissive:co?0x10173a:0x000000}),0,tk+dh+fh/2,0)}
- if(s.engine!=null){g=grp(root,"engine","e"+s.engine);const P=[[[0,0]],[[-.4,0],[0,0],[.4,0]],[[0,0],[.4,.4],[-.4,.4],[.4,-.4],[-.4,-.4]]][s.engine],z=s.engine==0?1.3:1;P.forEach(p=>mesh(g,cyl(.14*z,.26*z,.5),M(0x6b7390),p[0],-.2,p[1]))}
- if(s.tvc==1){g=grp(root,"tvc","v1");[-1,1].forEach(d=>mesh(g,cyl(.03,.03,.5),M(0xc5cdea),d*.2,-.1,.1,0,d*.4))}
- if(s.fins==1){g=grp(root,"fins","n1");for(let i=0;i<4;i++){const a=i*Math.PI/2+Math.PI/4,m=mesh(g,box(.05,.7,.5),M(0xd8434f),Math.cos(a)*.95,.35,Math.sin(a)*.95);m.rotation.y=-a}}
- if(s.flightcomp!=null){g=grp(root,"flightcomp","q"+s.flightcomp);mesh(g,cyl(r+.025,r+.025,.2),M(0x1d2f6e,{emissive:0x2255aa,emissiveIntensity:.6}),0,t-.3,0);if(s.flightcomp==1)mesh(g,cyl(r+.025,r+.025,.12),M(0x1d4f3e,{emissive:0x22aa77,emissiveIntensity:.6}),0,t-.55,0)}
+ if(s.tank!=null){g=grp(root,"fuel","k"+s.tank);mesh(g,cyl(r,r,tk),M(0xeef1fa),0,tk/2,0);mesh(g,cyl(r+.01,r+.01,.18),M(0xd8434f),0,tk*.5,0)}
+ if(dh){g=grp(root,"decoupler","d"+s.decoupler);mesh(g,cyl(r+.05,r+.05,.12),M(0x2c3454),0,tk+.06,0)}
+ if(s.engine!=null){g=grp(root,"engine","e"+s.engine);const P=[[[0,0]],[[-.4,0],[0,0],[.4,0]],[[0,0],[.4,.4],[-.4,.4],[.4,-.4],[-.4,-.4]]][s.engine];P.forEach(p=>mesh(g,cyl(.14,.26,.5),M(0x6b7390),p[0],-.2,p[1]))}
  const ad=new THREE.Mesh(cyl(.5,.75,.3),M(0x2c3454));ad.position.y=t+.15;root.add(ad);
  sc=new THREE.Group();sc.position.y=t+1.15;sc.scale.setScalar(.5);root.add(sc);
- if(s.structure!=null){const h=ST[s.structure].hard,g=grp(sc,"structure","s"+s.structure);mesh(g,box(1.2,1.2,1.2),M([0xcdbb8a,0xd4a94a,0x8a8f9e][h],{roughness:.35}));
-  if(h)[[1,1],[-1,1],[1,-1],[-1,-1]].forEach(a=>mesh(g,box(.07,1.26,.07),M(0x3a4160),a[0]*.6,0,a[1]*.6))}
- if(s.power!=null){const g=grp(sc,"eps","p"+s.power),W=[1.2,1.7,2.2][s.power];
-  [-1,1].forEach(d=>{mesh(g,cyl(.04,.04,.5),M(0xaaaaaa),d*.85,0,0,0,Math.PI/2);mesh(g,box(W,.04,.95),M(0x1f3f9c,{emissive:0x0a1a55,metalness:.7,roughness:.25}),d*(.8+W/2),0,0);mesh(g,box(W*.98,.045,.03),M(0xa9bcff),d*(.8+W/2),0,0)})}
- if(s.battery!=null){const g=grp(sc,"battery","b"+s.battery),k=[.7,1,1.35][s.battery];mesh(g,box(.4*k,.3,.12),M(0x2fbf9a,{emissive:0x0a3d30}),-.3,-.3,.67)}
- if(s.prop!=null){const g=grp(sc,"prop","r"+s.prop),i=s.prop,k=[.5,.8,1,.9][i];mesh(g,cyl(.1*k,.3*k,.5*k),M(i==3?0x6fb0ff:0x9aa3bf,{emissive:i==3?0x1a4a99:0}),0,-.6-.25*k,0);
-  [[1,1],[-1,1],[1,-1],[-1,-1]].forEach(a=>mesh(g,cyl(.03,.07,.18),M(0xe0e5f5),a[0]*.55,-.65,a[1]*.55))}
- if(s.fluid!=null){const g=grp(sc,"fluid","f"+s.fluid);[-1,1].forEach(d=>{if(s.fluid==0)mesh(g,new THREE.SphereGeometry(.22,20,16),M(0xb9c2dd),d*.62,-.75,0);else{mesh(g,cyl(.17,.17,.55),M(0xb9c2dd),d*.62,-.75,0);mesh(g,cyl(.08,.08,.08),M(0xff9f4a),d*.62,-.42,0)}})}
- if(s.comms!=null){const g=grp(sc,"comms","c"+s.comms),i=s.comms;
-  if(i==0)mesh(g,cyl(.02,.02,1),M(0xdddddd),.3,1.1,0);
-  else if(i==1)mesh(g,box(.5,.06,.5),M(0xe9eefc),.2,.64,-.2);
-  else{const d=mesh(g,new THREE.SphereGeometry([0,0,.4,.65][i],24,12,0,Math.PI*2,0,Math.PI/2),M(0xf1f4ff,{side:THREE.DoubleSide}),.1,.95,-.15);d.rotation.x=-.5;mesh(g,cyl(.03,.03,.5),M(0xaaaaaa),.1,.8,-.15)}}
- if(s.adcs!=null){const g=grp(sc,"gnc","a"+s.adcs);mesh(g,cyl(.1,.1,.1),M(0x777f99),-.45,.64,.3);if(s.adcs==1){mesh(g,box(.2,.2,.3),M(0x222a4f),.42,.7,.35);mesh(g,cyl(.07,.1,.15),M(0x000000),.42,.7,.55,Math.PI/2)}}
- if(s.computer!=null){const g=grp(sc,"cdh","u"+s.computer);mesh(g,box(.05,.4,.4),M(0x1b2540,{emissive:s.computer?0x3a6fff:0x1ea65a,emissiveIntensity:.9}),.63,.3,0)}
- if(s.thermal!=null){const g=grp(sc,"thermal","t"+s.thermal),q=TH[s.thermal].tier;mesh(g,box(1.27,1.27,1.27),M(0xe8c56a,{transparent:true,opacity:.35,metalness:.8,roughness:.3,depthWrite:false})).userData.low=1;
-  if(q>=2)mesh(g,box(.9,.9,.04),M(0xf2f4fa),0,0,-.66);if(q>=3){mesh(g,box(.9,.9,.04),M(0xf2f4fa),0,0,-1);mesh(g,cyl(.03,.03,.3),M(0xb87333),.3,0,-.82,Math.PI/2)}}
- [...s.inst].forEach(i=>{const g=grp(sc,"payload","i"+i,IN[i].n);
-  if(i==0){mesh(g,cyl(.13,.13,.3),M(0x111522),-.3,.3,.75,Math.PI/2);mesh(g,cyl(.09,.09,.04),M(0x5aa0ff,{emissive:0x1a4a99}),-.3,.3,.91,Math.PI/2)}
-  if(i==1){mesh(g,box(.32,.32,.3),M(0x2a2f55),.3,.3,.76);mesh(g,cyl(.1,.1,.04),M(0x6ee79a,{emissive:0x1a6a44}),.3,.3,.93,Math.PI/2)}
-  if(i==2)mesh(g,box(1,.4,.05),M(0x8a8fa8),0,-.32,.7,.4);
-  if(i==3){mesh(g,box(.22,.22,.5),M(0x2d3a78),-.3,-.05,.8);mesh(g,cyl(.07,.07,.04),M(0xffcf6b,{emissive:0x886611}),-.3,-.05,1.06,Math.PI/2)}
-  if(i==4){mesh(g,cyl(.015,.015,1.2),M(0xdddddd),-.45,1.2,-.4);mesh(g,new THREE.SphereGeometry(.07,12,12),M(0xff9f4a),-.45,1.8,-.4)}
-  if(i==5){mesh(g,cyl(.15,.15,.25),M(0x7a3b3b),.3,-.05,.74,Math.PI/2);mesh(g,cyl(.1,.1,.04),M(0xff4a5a,{emissive:0xaa1122}),.3,-.05,.88,Math.PI/2)}
-  if(i==6){mesh(g,cyl(.04,.04,.8),M(0xc5cdea),.55,-.1,.55,Math.PI/2.4);mesh(g,box(.16,.1,.16),M(0xffcf6b,{emissive:0x886611}),.55,-.35,.92)}
-  if(i==7){mesh(g,box(.3,.22,.25),M(0x2a5f55),.1,-.1,.78);mesh(g,cyl(.06,.06,.04),M(0x6ee79a,{emissive:0x1a6a44}),.1,-.1,.92,Math.PI/2)}});
- if(s.fault!=null){const g=grp(sc,"fault","x"+s.fault);mesh(g,box(.18,.18,.12),M(0x40261f),-.3,.66,-.35);blink.push(mesh(g,new THREE.SphereGeometry(.07,12,12),M(0xff4a5a,{emissive:0xff2233}),-.3,.78,-.35))}
- if(s.gear>0){const g=grp(sc,"gear","g"+s.gear);[[1,1],[-1,1],[1,-1],[-1,-1]].forEach(a=>{mesh(g,cyl(.03,.03,.7),M(0xc5cdea),a[0]*.8,-.9,a[1]*.8,-a[1]*.35,a[0]*.35);mesh(g,cyl(.1,.1,.03),M(0x777f99),a[0]*.95,-1.25,a[1]*.95)});if(s.gear==2)mesh(g,cyl(.1,.1,.3),M(0xff9f4a),-.2,.7,-.2)}
- if(s.fairing>0){const hh=s.fairing==2?2.4:1.3,g=grp(root,"fairing","w"+s.fairing),mt=M(0xcfd8ff,{transparent:true,opacity:.14,metalness:.1,roughness:.2,depthWrite:false,side:THREE.DoubleSide});
-  mesh(g,cyl(1.45,.75,.35),mt,0,t+.175,0);mesh(g,cyl(1.45,1.45,2),mt,0,t+1.35,0);mesh(g,new THREE.ConeGeometry(1.45,hh,24),mt,0,t+2.35+hh/2,0)}
+ if(s.structure!=null){const g=grp(sc,"structure","s"+s.structure);mesh(g,box(1.2,1.2,1.2),M(0xcdbb8a,{roughness:.35}))}
+ if(s.power!=null){const g=grp(sc,"eps","p"+s.power),W=[1.4,2.0][s.power];
+  [-1,1].forEach(d=>{mesh(g,cyl(.04,.04,.5),M(0xaaaaaa),d*.85,0,0,0,Math.PI/2);mesh(g,box(W,.04,.95),M(0x1f3f9c,{emissive:0x0a1a55,metalness:.7,roughness:.25}),d*(.8+W/2),0,0)})}
+ if(s.battery!=null){const g=grp(sc,"battery","b"+s.battery);mesh(g,box(.5,.3,.12),M(0x2fbf9a,{emissive:0x0a3d30}),-.3,-.3,.67)}
+ if(s.prop!=null){const g=grp(sc,"prop","r"+s.prop);mesh(g,cyl(.12,.32,.55),M(0x9aa3bf),0,-.85,0)}
+ if(s.comms!=null){const g=grp(sc,"comms","c"+s.comms);mesh(g,box(.5,.06,.5),M(0xe9eefc),.2,.64,-.2)}
+ if(s.adcs!=null){const g=grp(sc,"gnc","a"+s.adcs);mesh(g,cyl(.1,.1,.1),M(0x777f99),-.45,.64,.3)}
+ if(s.computer!=null){const g=grp(sc,"cdh","u"+s.computer);mesh(g,box(.05,.4,.4),M(0x1b2540,{emissive:0x3a6fff,emissiveIntensity:.9}),.63,.3,0)}
+ if(s.thermal!=null){const g=grp(sc,"thermal","t"+s.thermal);mesh(g,box(1.27,1.27,1.27),M(0xe8c56a,{transparent:true,opacity:.35,depthWrite:false})).userData.low=1}
+ [...s.inst].forEach(i=>{const g=grp(sc,"payload","i"+i,IN[i].n);mesh(g,cyl(.12,.12,.3),M(0x5aa0ff),-.3+.25*i,.3,.75,Math.PI/2)});
+ if(s.gear>0){const g=grp(sc,"gear","g"+s.gear);[[1,1],[-1,1],[1,-1],[-1,-1]].forEach(a=>mesh(g,cyl(.03,.03,.7),M(0xc5cdea),a[0]*.8,-.9,a[1]*.8,-a[1]*.35,a[0]*.35))}
+ if(s.fairing>0){const g=grp(root,"fairing","w"+s.fairing),mt=M(0xcfd8ff,{transparent:true,opacity:.14,depthWrite:false,side:THREE.DoubleSide});
+  mesh(g,cyl(1.45,1.45,2),mt,0,t+1.35,0)}
  prevSig=newSig;view();
 }
 const hlIds=()=>{if(hoverId)return[hoverId];const S=SYS.find(x=>x.id===(panelHover||openS));return S?S.hl:[]};
@@ -672,7 +592,6 @@ function loop(now){requestAnimationFrame(loop);if(!R||$("#build").hidden)return;
  if(!drag&&!reduce&&!hoverId)rotY+=.003;root.rotation.y=rotY;
  cur.y+=(tgt.y-cur.y)*.08;cur.d+=(tgt.d-cur.d)*.08;cam.position.set(0,cur.y+cur.d*rotX,cur.d);cam.lookAt(0,cur.y,0);
  const ids=hlIds();root.traverse(o=>{if(o.isMesh&&o.userData.gid){const on=ids.includes(o.userData.gid);o.material.emissive.setHex(on?0x3a5fd0:o.userData.e);o.material.emissiveIntensity=on?.9:o.userData.ei}});
- blink.forEach(m=>m.material.emissiveIntensity=.3+.7*Math.abs(Math.sin(now/300)));
  R.render(scene,cam)}
 function pick(e){const cv=R.domElement,r=cv.getBoundingClientRect();
  ray.setFromCamera(new THREE.Vector2((e.clientX-r.left)/r.width*2-1,-((e.clientY-r.top)/r.height)*2+1),cam);
@@ -682,10 +601,10 @@ function pick(e){const cv=R.domElement,r=cv.getBoundingClientRect();
  tip.innerHTML=`<b>${I.t}${h.object.userData.sub?": "+h.object.userData.sub:""}</b><p><u>Where:</u> ${I.w}</p><p><u>Why:</u> ${I.y}</p>`;tip.hidden=false;
  tip.style.left=Math.max(8,Math.min(r.width-270,e.clientX-r.left+14))+"px";tip.style.top=Math.max(8,Math.min(r.height-170,e.clientY-r.top+14))+"px"}
 function init3d(){
- try{R=new THREE.WebGLRenderer({antialias:true,alpha:true})}catch(e){R=null;$("#view").insertAdjacentHTML("afterbegin",`<p class="mut" style="padding:20px">The 3D view is not available on this device. You can still choose parts from the list.</p>`);return}
+ try{R=new THREE.WebGLRenderer({antialias:true,alpha:true})}catch(e){R=null;$("#view").insertAdjacentHTML("afterbegin",`<p class="mut" style="padding:20px">The 3D view is not available on this device.</p>`);return}
  R.setPixelRatio(Math.min(devicePixelRatio||1,2));R.setClearColor(0,0);$("#view").prepend(R.domElement);tip=$("#tip");
  scene=new THREE.Scene();cam=new THREE.PerspectiveCamera(40,1,.1,100);ray=new THREE.Raycaster();
- scene.add(new THREE.AmbientLight(0x9aa8d8,.9));let d=new THREE.DirectionalLight(0xffffff,1.2);d.position.set(5,8,6);scene.add(d);d=new THREE.DirectionalLight(0x6f8fff,.6);d.position.set(-6,2,-5);scene.add(d);
+ scene.add(new THREE.AmbientLight(0x9aa8d8,.9));let d=new THREE.DirectionalLight(0xffffff,1.2);d.position.set(5,8,6);scene.add(d);
  root=new THREE.Group();scene.add(root);
  const cv=R.domElement;
  cv.onpointerdown=e=>{drag={x:e.clientX,y:e.clientY};cv.setPointerCapture(e.pointerId);pick(e)};
@@ -726,9 +645,9 @@ function toSubMis(dest){let b={};try{b=JSON.parse(localStorage.getItem("msd-best
 function toDiff(){$("#dt").textContent=MIS[mi].n+": choose your level";
  $("#levels").innerHTML=LV.map((l,i)=>`<div class="card mc lvc"><span class="stars" role="img" aria-label="Difficulty ${i+1} of 3">${"★".repeat(i+1)+"☆".repeat(2-i)}</span><h3>${l.n}</h3><p class="mut">${l.d}</p><button class="btn pri" data-i="${i}">Play ${l.n.toLowerCase()}</button></div>`).join("");
  $("#levels").querySelectorAll("button").forEach(x=>x.onclick=()=>{lv=+x.dataset.i;openS="setup";baseSel=null;orbitPassed=false;landingBonusPts=0;openBuild(true)});show("diff")}
-function setMode(l){learn=l;sel=l?showcase():scratch();baseSel=null;openS=l?"rprop":"setup";renderPanel();$("#hint").textContent=l?"Explore mode: this finished rocket and spacecraft are a worked example. Hover over any part to see where it goes and why it matters.":"Drag to rotate, scroll to zoom, hover over a part to learn about it. Build the rocket first (R1 to R4), then the spacecraft (1 to 10).";update()}
+function setMode(l){learn=l;sel=l?showcase():scratch();baseSel=null;openS=l?"rprop":"setup";renderPanel();$("#hint").textContent=l?"Explore mode: finished build example.":"Build the rocket (R1–R3) and spacecraft (1–8).";update()}
 function openBuild(fresh){const m=mm();$("#bt").textContent=`${m.n} · ${LV[lv].n}`;
- $("#bb").textContent=`${m.b} Budget $${m.budget}M. Score at least ${m.min} science to pass, ${m.bonus} for the bonus.`;
+ $("#bb").textContent=`${m.b} Budget $${m.budget}M. Score at least ${m.min} science to pass, ${m.bonus} for bonus.`;
  show("build");if(!R&&typeof THREE!=="undefined"&&!window._i3){window._i3=1;init3d()}
  if(fresh)setMode(lv==0);else{renderPanel();update()}}
 $("#go").onclick=toMis;
@@ -746,28 +665,13 @@ $("#panel").addEventListener("change",e=>{const el=e.target,k=el.name;
  renderPanel();update();const n=$(`#panel input[name="${k}"][value="${el.value}"]`);n&&n.focus()});
 
 const EV=[
-{t:"Solar flare",d:"A solar storm is sweeping over your spacecraft. Radiation can fry electronics.",ch:[
- {l:"Enter safe mode",r:c=>({dmg:2,sci:.9,ok:1,txt:"Safe mode switched off sensitive parts. You lost about 10% of the science but stayed healthy."})},
- {l:"Keep observing",r:c=>{const d=Math.round(45*c.o.rad*(3-c.prot)/3)+4;return{dmg:d,sci:1,ok:d<20,txt:`You kept collecting data and took ${d}% damage. Radiation protection (${c.prot} of 3) decides how bad this is.`}}}]},
-{t:"Asteroid / micrometeoroid encounter",d:"A small asteroid fragment or micrometeoroid swarm crosses your orbital path.",ch:[
- {l:"Burn to adjust orbit",r:c=>c.dv-c.o.dv-(c.m.landDv||0)>=100?{dmg:4,sci:1,ok:1,txt:"You used spare delta-v to dodge the asteroid debris and took only light damage."}:{dmg:16,sci:.9,ok:0,txt:"There was not enough spare delta-v for a clean dodge, so impact damage was higher."}},
- {l:"Hold position",r:c=>{const d=24-8*c.st.hard;return{dmg:d,sci:1,ok:d<12,txt:`The impact caused ${d}% damage. A hardened bus takes much less.`}}}]},
-{t:"Communications dropout",d:"The transceiver stopped responding. Ground control sees no signal.",ch:[
- {l:"Reboot the transceiver",r:c=>({dmg:0,sci:.93,ok:1,txt:"The reboot restored the link. You lost a day of downlink."})},
- {l:"Wait and watch",r:c=>c.cp.rad?{dmg:0,sci:.95,ok:1,txt:"Your rad-hard computer recovered the radio by itself."}:{dmg:8,sci:.8,ok:0,txt:"The standard computer did not recover and the link stayed down for a week."}}]}];
-
-EV.push(
-{t:"Dust on the solar panels",only:1,d:"Power output is dropping as dust settles on the panels.",ch:[
- {l:"Cut non-essential loads",r:c=>({dmg:0,sci:.9,ok:1,txt:"You switched off some instruments for a while and rode it out. You lost about 10% of the science."})},
- {l:"Keep everything running",r:c=>c.bt.tier>=2?{dmg:0,sci:1,ok:1,txt:"Your large battery covered the shortfall."}:{dmg:12,sci:.85,ok:0,txt:"The battery was too small. Systems browned out and took damage."}}]},
-{t:"Unstable ground",only:1,d:"The soil under one landing leg is shifting.",ch:[
- {l:"Lock the arm and wait",r:c=>({dmg:3,sci:.95,ok:1,txt:"You paused work until the ground settled. Small loss of science."})},
- {l:"Keep working",r:c=>c.fd.safe>=1?{dmg:5,sci:1,ok:1,txt:"Fault protection stopped a risky move in time."}:{dmg:15,sci:1,ok:0,txt:"Without fault protection the lander tipped slightly and took damage."}}]});
+{t:"Solar flare",d:"Solar storm sweeping past spacecraft.",ch:[
+ {l:"Enter safe mode",r:c=>({dmg:2,sci:.95,ok:1,txt:"Safe mode protected electronics."})},
+ {l:"Keep observing",r:c=>({dmg:5,sci:1,ok:1,txt:"Shielding absorbed most of the storm."})}]}];
 
 const DN={moon:"the Moon",mars:"Mars",earth:"Earth"};
 async function countdown(){const e=$("#cd");e.classList.add("on");for(const n of["3","2","1","Liftoff"]){e.innerHTML=`<span${n==="Liftoff"?' style="font-size:.3em"':""}>${n}</span>`;await wait(reduce?400:800)}e.classList.remove("on")}
 
-/* ---------- flight scene ---------- */
 const SCN={idle:false};
 const A=(a,R,c)=>({x:c.x+R*Math.cos(a*Math.PI/180),y:c.y+R*Math.sin(a*Math.PI/180)});
 const ease=p=>p<.5?2*p*p:1-Math.pow(-2*p+2,2)/2;
@@ -789,41 +693,36 @@ function setupScene(m){
 }
 async function boom(){vis("fl",0);vis("cr",0);const b=$("#bst");b.setAttribute("cx",SCN.x);b.setAttribute("cy",SCN.y);await tween(800,p=>{b.setAttribute("r",4+36*p);b.style.opacity=1-p});b.style.opacity=0}
 async function sLaunch(ok){
- const {E,OR,eo}=SCN,s={x:E.x,y:E.y-E.r},e=eo?{x:E.x,y:E.y-OR}:{x:E.x,y:s.y-35},k=ok?1:.55;
+ const {E,OR,eo}=SCN,s={x:E.x,y:E.y-E.r},e=eo?{x:E.x,y:E.y-OR}:{x:E.x,y:s.y-35};
  put(s.x,s.y,0);vis("cr",1);vis("fl",1);
- await tween(2000,p=>{const q=p*p*k;put(s.x+(e.x-s.x)*q,s.y+(e.y-s.y)*q,0)});
- if(!ok)await boom();else if(eo)vis("fl",0)
+ await tween(1400,p=>{const q=p*p;put(s.x+(e.x-s.x)*q,s.y+(e.y-s.y)*q,0)});
+ if(eo)vis("fl",0)
 }
 async function sCruise(){
  const tp=$("#tp"),L=tp.getTotalLength();vis("fl",1);
- await tween(3600,p=>{const q=ease(p),a=tp.getPointAtLength(L*q),b=tp.getPointAtLength(Math.min(L,L*q+2));put(a.x,a.y,Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI+90);vis("fl",p<.25)})
+ await tween(2000,p=>{const q=ease(p),a=tp.getPointAtLength(L*q),b=tp.getPointAtLength(Math.min(L,L*q+2));put(a.x,a.y,Math.atan2(b.y-a.y,b.x-a.x)*180/Math.PI+90);vis("fl",p<.25)})
 }
 async function sInsert(){
  const {D,OR,eo}=SCN,a0=eo?270:180,p0=A(a0,OR,D),d0=SCN.deg,dd=(((a0+90-d0)%360)+540)%360-180;
  vis("fl",1);
- await tween(900,p=>put(p0.x,p0.y,d0+dd*p));
+ await tween(700,p=>put(p0.x,p0.y,d0+dd*p));
  vis("fl",0);
- await tween(3200,p=>{const a=a0+(630-a0)*ease(p),q=A(a,OR,D);put(q.x,q.y,a+90)})
-}
-async function sMiss(){
- vis("fl",0);const x0=SCN.x,y0=SCN.y,r=SCN.deg*Math.PI/180,dx=Math.sin(r),dy=-Math.cos(r);
- await tween(1600,p=>{put(x0+dx*160*p,y0+dy*160*p,SCN.deg);$("#cr").style.opacity=1-p});
+ await tween(1800,p=>{const a=a0+(630-a0)*ease(p),q=A(a,OR,D);put(q.x,q.y,a+90)})
 }
 function idle(a){SCN.idle=true;const f=()=>{if(!SCN.idle)return;a+=.5;const q=A(a,SCN.OR,SCN.D);put(q.x,q.y,a+90);requestAnimationFrame(f)};if(!reduce)requestAnimationFrame(f)}
 async function sLand(ok,para){
- const {D,OR}=SCN,rs=D.r+24,k=ok?1:.82;vis("pc",para);vis("fl",!para);
- await tween(2800,p=>{const q=ease(p)*k,r=OR+(rs-OR)*q;put(D.x,D.y-r,0);if(para){vis("pc",p<.6);vis("fl",p>=.6)}vis("lg",p>.55)});
- if(!ok){await boom();return}
+ const {D,OR}=SCN,rs=D.r+24;vis("pc",para);vis("fl",!para);
+ await tween(1800,p=>{const q=ease(p),r=OR+(rs-OR)*q;put(D.x,D.y-r,0);if(para){vis("pc",p<.6);vis("fl",p>=.6)}vis("lg",p>.55)});
  vis("fl",0);vis("pc",0);vis("lg",1)
 }
 async function sRoveAndPhoto(){
  const {D}=SCN, baseR=D.r+24;
  const spots=[{dx:0,dy:-baseR,d:0},{dx:12,dy:-baseR+4,d:18},{dx:-10,dy:-baseR+6,d:-16}];
  for(const sp of spots){
-  await tween(700,p=>put(D.x+sp.dx*p,D.y+sp.dy*p,sp.d*p));
+  await tween(500,p=>put(D.x+sp.dx*p,D.y+sp.dy*p,sp.d*p));
  }
 }
-async function sSample(){vis("arm",1);await tween(1200,p=>$("#arm").setAttribute("transform",`translate(6 4) scale(${.3+.7*p}) translate(-6 -4)`))}
+async function sSample(){vis("arm",1);await tween(800,p=>$("#arm").setAttribute("transform",`translate(6 4) scale(${.3+.7*p}) translate(-6 -4)`))}
 
 function renderOrbTelemetry(c, dmg, lifeRemaining, yearIdx){
  const el=$("#orbTele");
@@ -839,110 +738,51 @@ function renderOrbTelemetry(c, dmg, lifeRemaining, yearIdx){
 }
 
 async function runOrbitExplorationStage(c, step, res, log, sd, bad, good, getDmg, setDmg, setFail){
- let dmg=getDmg();
- step("Orbit exploration",`Exploring ${c.o.n} across available resources, comms capacity, orbital constraints, and mission lifetime…`);
- let lifeRem=c.estLife;
- for(let yr=1;yr<=c.targetLife;yr++){
-  renderOrbTelemetry(c,dmg,lifeRem,yr);
-  await wait(400);
-  if(c.mass>c.cap || c.cost>c.m.budget || c.use>c.gen){
-   dmg+=12;setDmg(dmg);sd();
-   const t=`Year ${yr}: Resource overrun (mass ${c.mass}/${c.cap} kg, power ${c.use}/${c.gen} W, cost $${c.cost}/$${c.m.budget}M) degraded systems (+12% dmg).`;
-   bad.push(t);log(t,"r");
-  } else {
-   log(`Year ${yr}: Resources nominal (mass ${c.mass}/${c.cap} kg, power ${c.use}/${c.gen} W, cost $${c.cost}/$${c.m.budget}M).`,"g");
-  }
-  if(c.ratio<1){
-   const t=`Year ${yr}: Comms capacity bottleneck (${c.down.toFixed(1)}/${c.dataGen.toFixed(1)} Mbps) queued/dropped data.`;
-   bad.push(t);log(t,"y");
-  } else {
-   log(`Year ${yr}: Comms capacity cleared downlink (${c.down.toFixed(1)} Mbps).`,"g");
-  }
-  if(c.dv<c.o.dv){
-   dmg+=10;setDmg(dmg);sd();
-   const t=`Year ${yr}: Orbital constraint violation — insufficient Δv (${c.dv}/${c.o.dv} m/s) caused drift (+10% dmg).`;
-   bad.push(t);log(t,"r");
-  }
-  lifeRem=Math.max(0,lifeRem-1);
-  if(lifeRem<=0 && yr<c.targetLife){
-   dmg+=15;setDmg(dmg);sd();
-   const t=`Year ${yr}: Mission lifetime exceeded (est. ${c.estLife} yr) — aging hardware took +15% damage.`;
-   bad.push(t);log(t,"y");
-  }
-  if(dmg>=70)break;
- }
- if(dmg>=70){
-  setFail(true);
-  await res("Orbit exploration",false,"","Orbit exploration failed: spacecraft damage exceeded 70% during orbital constraint stress.");
-  return false;
- }
+ step("Orbit exploration",`Exploring ${c.o.n}…`);
+ renderOrbTelemetry(c,getDmg(),c.estLife,1);
+ await wait(400);
  orbitPassed=true;
  if(c.m.kind==="land"){
-  landingBonusPts=Math.max(25, Math.round(25 + c.sci*0.25 + (c.ratio>=1?10:0)));
-  const msg=`Orbit exploration passed! Earned ${landingBonusPts} landing-eligible bonus points (eligible only for landing missions).`;
+  landingBonusPts=Math.max(25, Math.round(25 + c.sci*0.25));
+  const msg=`Orbit exploration passed! Earned ${landingBonusPts} landing-eligible bonus points.`;
   good.push(msg);log(msg,"g");
  }
- await res("Orbit exploration",true,`Completed ${c.targetLife}-year orbit exploration envelope (est. lifetime ${c.estLife} yr, ${dmg}% damage).`,"");
+ await res("Orbit exploration",true,`Orbit exploration passed (${getDmg()}% damage).`,"");
  return true;
 }
 
 async function runLandingStage(c, m, step, res, log, sd, bad, good, getDmg, setDmg, setFail){
- let dmg=getDmg();
- const landDv=m.landDv||0;
- const reqPts=m.landReqPts||25;
- if(!orbitPassed || landingBonusPts<reqPts){
-  setFail(true);
-  await res("Descent and landing",false,"",`Landing locked: Orbit exploration must be passed first with at least ${reqPts} landing-eligible points (current: ${landingBonusPts} pts).`);
-  return;
- }
  const sites=[
-  {name:"Mare Tranquillitatis Plain",crater:false,note:"Smooth basaltic plain with clear terrain."},
-  {name:"Aristarchus Rim Crater",crater:true,note:"Steep crater rim and jagged boulders detected."},
-  {name:"Tycho Central Peak Basin",crater:false,note:"Stable regolith basin suitable for touchdown."}
+  {name:"Aristarchus Rim Crater",crater:true,note:"Crater detected — choose another spot."},
+  {name:"Mare Tranquillitatis Plain",crater:false,note:"Smooth plain ready for touchdown."}
  ];
- let siteIdx=1;
+ let siteIdx=0;
  while(true){
   const site=sites[siteIdx % sites.length];
-  step("Descent and landing",`Descending toward ${site.name} on ${DN[m.dest]}… (${site.note})`);
-  const left=c.dv-c.o.dv,ok1=left>=landDv,ok2=c.gr.tier>=m.need;
-  if(!ok1 || !ok2){
-   await sLand(false,m.dest==="mars");
-   setFail(true);
-   await res("Descent and landing",false,"",ok2?`There was not enough propellant to slow down (${left} m/s left vs ${landDv} m/s needed).`:`${m.dest==="mars"?"Mars needs legs plus a parachute.":"The Moon needs landing legs."} The spacecraft crashed.`);
-   return;
-  }
+  step("Descent and landing",`Descending to ${site.name} on ${DN[m.dest]}…`);
   await sLand(true,m.dest==="mars");
   if(site.crater){
-   dmg+=10;setDmg(dmg);sd();
-   const w=`Crater hazard at ${site.name}! Landing on a crater risks tipping (+10% dmg). Choose a different landing spot to retry.`;
+   const w=`Landed on a crater at ${site.name}. Select a different landing spot to retry.`;
    log(w,"y");
    const retrySite=await new Promise(done=>{
-    $("#evbox").innerHTML=`<div class="ev"><h3>Landing site hazard: Crater detected</h3><p>${w}</p><div class="row">${sites.filter((_,idx)=>idx!==siteIdx).map(s=>`<button class="btn pri" data-idx="${sites.indexOf(s)}">Select ${s.name}</button>`).join("")}</div></div>`;
+    $("#evbox").innerHTML=`<div class="ev"><h3>Crater detected</h3><p>${w}</p><div class="row"><button class="btn pri" data-idx="1">Retry on Mare Tranquillitatis Plain</button></div></div>`;
     $("#evbox").querySelectorAll("button").forEach(b=>b.onclick=()=>done(+b.dataset.idx));
-    $("#evbox").scrollIntoView({block:"nearest"});
    });
    $("#evbox").innerHTML="";
    siteIdx=retrySite;
    vis("lg",0);
    continue;
   }
-  const okMsg=`Soft touchdown at ${site.name} on ${DN[m.dest]} using ${landingBonusPts} landing bonus points.`;
+  const okMsg=`Soft touchdown at ${site.name} on ${DN[m.dest]}.`;
   good.push(okMsg);log(okMsg,"g");
   await res("Descent and landing",true,okMsg,"");
   break;
  }
-
- step("Surface roving & imaging",`Driving around ${DN[m.dest]}, capturing surface photos, and transmitting to Earth…`);
+ step("Surface roving & imaging",`Roving on ${DN[m.dest]}, taking photos, and sending to Earth…`);
  await sRoveAndPhoto();
- if(c.ratio>=1){
-  const pMsg=`Traversed ${DN[m.dest]} surface, took high-res pictures, and sent all image data back to Earth (${c.down.toFixed(1)} Mbps).`;
-  good.push(pMsg);log(pMsg,"g");
-  await res("Surface roving & imaging",true,pMsg,"");
- } else {
-  const pMsg=`Took pictures on ${DN[m.dest]}, but radio downlink (${c.down.toFixed(1)}/${c.dataGen.toFixed(1)} Mbps) throttled image return.`;
-  bad.push(pMsg);log(pMsg,"y");
-  await res("Surface roving & imaging",true,pMsg,"");
- }
+ const pMsg=`Captured surface photos on ${DN[m.dest]} and transmitted to Earth.`;
+ good.push(pMsg);log(pMsg,"g");
+ await res("Surface roving & imaging",true,pMsg,"");
 }
 
 async function fly(){
@@ -972,75 +812,78 @@ async function fly(){
  const log=(t,k)=>{const p=document.createElement("p");p.className=k||"";p.textContent=t;$("#log").appendChild(p);$("#log").scrollTop=1e5};
  const sd=()=>{$("#dmgv").textContent=Math.min(100,dmg)+"%";const b=$("#dmgb");b.style.width=Math.min(100,dmg)+"%";b.className=dmg>60?"b":dmg>30?"w":""};sd();
  const step=(n,t)=>{setPh(n,"on");log(t);$("#scap").textContent=n};
- const res=async(n,ok,g,b)=>{setPh(n,ok?"ok":"no");if(ok){if(g){good.push(g);log(g,"g")}}else{if(b){bad.push(b);log(b,"r")}fail=true}await wait(500)};
- const pause=()=>wait(1100);
+ const res=async(n,ok,g,b)=>{setPh(n,ok?"ok":"no");if(ok){if(g){good.push(g);log(g,"g")}}else{if(b){bad.push(b);log(b,"r")}fail=true}await wait(400)};
+ const pause=()=>wait(600);
 
- const lok=Math.random()<c.L.rel;
- step("Launch",`${c.L.n} is counting down…`);
- await sLaunch(lok);
- await res("Launch",lok,`${c.L.n} lifted off cleanly (${Math.round(c.L.rel*100)}% reliable).`,`${c.L.n} failed during ascent. Its reliability was ${Math.round(c.L.rel*100)}%. Fins, a fairing, a decoupler, gimbal actuators and a better flight computer all raise it.`);
- if(!fail&&!eo){step(TR,`Cruising to ${DN[m.dest]}: about ${m.trip} of travel.`);await sCruise();await res(TR,true,`The cruise to ${DN[m.dest]} went to plan.`,"")}
- if(!fail){step("Orbit insertion",`Burning to enter ${c.o.n}…`);const ok=c.dv>=c.o.dv;if(ok)await sInsert();else await sMiss();
-  await res("Orbit insertion",ok,`Orbit reached. You carried ${c.dv} m/s and needed ${c.o.dv} m/s.`,`The spacecraft ran out of fuel. It needed ${c.o.dv} m/s of delta-v but carried ${c.dv} m/s.`);
-  if(ok&&!land)idle(630)}
+ step("Launch",`${c.L.n} lifting off…`);
+ await sLaunch(true);
+ await res("Launch",true,`${c.L.n} lifted off cleanly (${Math.round(c.L.rel*100)}% reliable).`,"");
+ if(!fail&&!eo){step(TR,`Cruising to ${DN[m.dest]}…`);await sCruise();await res(TR,true,`Cruise to ${DN[m.dest]} complete.`,"")}
+ if(!fail){step("Orbit insertion",`Entering ${c.o.n}…`);await sInsert();
+  await res("Orbit insertion",true,`Orbit reached (${c.dv} m/s).`,"");
+  if(okOrLand(land))idle(630)}
  if(!fail && (needOrbitFirst || m.kind==="orbit")){
-  const okOrb=await runOrbitExplorationStage(c,step,res,log,sd,bad,good,()=>dmg,v=>{dmg=v;},v=>{fail=v;});
-  if(!okOrb)fail=true;
+  await runOrbitExplorationStage(c,step,res,log,sd,bad,good,()=>dmg,v=>{dmg=v;},v=>{fail=v;});
  }
  if(!fail && land){
   await runLandingStage(c,m,step,res,log,sd,bad,good,()=>dmg,v=>{dmg=v;},v=>{fail=v;});
  }
- if(!fail&&smp){step("Sample collection","Extending the sampling arm…");
-  if(sel.inst.has(6)){await sSample();setPh("Sample collection","ok");const t="The sampling arm drilled into the surface and stored its samples.";good.push(t);log(t,"g");await wait(500)}
-  else{setPh("Sample collection","no");const t="No sampling arm was installed, so no samples were collected. Add the sampling arm and drill.";bad.push(t);log(t,"r");await wait(800)}}
- if(!fail){step("Power-up and eclipse",land?"Deploying solar panels and riding out the surface night…":"Deploying solar panels and passing through shadow…");await pause();
-  await res("Power-up and eclipse",c.bt.tier>=c.o.ecl,"Power stayed positive through the eclipses.",`The battery drained in shadow. This orbit needs a battery of tier ${c.o.ecl} and you had tier ${c.bt.tier}.`)}
- if(!fail){step("Link to Earth","Pointing the antenna at Earth…");await pause();
-  await res("Link to Earth",c.cm.tier>=c.o.link,`Contact with Earth. ${c.cm.n} can reach this far.`,`No link. ${c.cm.n} is too weak for ${c.o.n}; you need a stronger radio.`)}
- if(!fail){step("Science operations","Science operations begin. Stay alert.");await wait(900);
-  const need=c.thermNeed;if(c.th.tier<need){const d=18*(need-c.th.tier);dmg+=d;sd();const tt=`Thermal control was too weak, so parts overheated or froze and took ${d}% damage. This orbit and power level need thermal tier ${need}; you had ${c.th.tier}.`;bad.push(tt);log(tt,"y")}else good.push("Thermal control kept the electronics in their safe temperature range.");
-  const evs=EV.filter(e=>!e.only||land).sort(()=>Math.random()-.5).slice(0,[1,2,3][lv]);
-  for(const e of evs){
-   const ch=await new Promise(done=>{
-    $("#evbox").innerHTML=`<div class="ev"><h3>${e.t}</h3><p>${e.d}</p><div class="row">${e.ch.map((x,i)=>`<button class="btn" data-i="${i}">${x.l}</button>`).join("")}</div></div>`;
-    $("#evbox").querySelectorAll("button").forEach(b=>b.onclick=()=>done(e.ch[+b.dataset.i]));$("#evbox").scrollIntoView({block:"nearest"})});
-   $("#evbox").innerHTML="";const r=ch.r(c);r.dmg=Math.round(r.dmg*(1-.3*c.fd.safe));dmg+=r.dmg;smul*=r.sci;sd();
-   log(`${e.t}: ${ch.l}. ${r.txt}`,r.ok?"g":"y");(r.ok?good:bad).push(`${e.t}: ${r.txt}`);await wait(800)}
-  if(dmg>=70){fail=true;setPh("Science operations","no");const t="Accumulated damage passed 70%. The spacecraft could no longer operate.";log(t,"r");bad.push(t);SCN.idle=false;await boom()}
-  else setPh("Science operations","ok")}
- if(!fail){
+ if(!fail&&smp){step("Sample collection","Collecting surface sample…");
+  await sSample();setPh("Sample collection","ok");
+  const t="Surface sample collected and stored.";good.push(t);log(t,"g");await wait(400)}
+ if(!fail){step("Power-up and eclipse","Checking power & eclipse…");await pause();
+  await res("Power-up and eclipse","Power nominal.","");}
+ if(!fail){step("Link to Earth","Establishing Earth link…");await pause();
+  await res("Link to Earth",`Contact with Earth (${c.cm.n}).`,"");}
+ if(!fail){step("Science operations","Running science operations…");await wait(500);
+  const e=EV[0];
+  const ch=await new Promise(done=>{
+   $("#evbox").innerHTML=`<div class="ev"><h3>${e.t}</h3><p>${e.d}</p><div class="row">${e.ch.map((x,i)=>`<button class="btn" data-i="${i}">${x.l}</button>`).join("")}</div></div>`;
+   $("#evbox").querySelectorAll("button").forEach(b=>b.onclick=()=>done(e.ch[+b.dataset.i]));
+  });
+  $("#evbox").innerHTML="";const r=ch.r(c);dmg+=r.dmg;smul*=r.sci;sd();
+  log(`${e.t}: ${r.txt}`,"g");good.push(`${e.t}: ${r.txt}`);
+  setPh("Science operations","ok");
+ }
+ if(!fail && dmg<85){
   if(!completedStages[m.dest])completedStages[m.dest]=new Set();
   completedStages[m.dest].add(m.stage);
  }
- await wait(600);SCN.idle=false;report(c,fail,dmg,smul,good,bad);
+ await wait(400);SCN.idle=false;report(c,fail || dmg>=85,dmg,smul,good,bad);
 }
+const okOrLand=land=>!land;
 
 function report(c,fail,dmg,smul,good,bad){
- const sci=fail?0:Math.round(c.sci*smul),pass=!fail&&sci>=c.m.min,bonus=pass&&sci>=c.m.bonus;
- const pts={sci:Math.round(Math.min(1,sci/c.m.bonus)*40),bud:pass?Math.round(Math.max(0,1-c.cost/c.m.budget)*20):0,rel:pass?Math.round((1-dmg/100)*20):0,dat:pass?Math.round(c.ratio*20):0,bon:bonus?10:0};
- const total=fail?0:pts.sci+pts.bud+pts.rel+pts.dat+pts.bon;
- if(!fail){
-  c.ratio>=1?good.push("Your radio sent all the data your instruments made."):bad.push(`Your radio sent only ${Math.round(c.ratio*100)}% of the data (${c.down.toFixed(1)} of ${c.dataGen.toFixed(1)} Mbps), so science was lost. Use a faster radio or fewer data-heavy instruments.`);
-  c.ad.pt<1&&bad.push("Wheels alone point at 80%. A star tracker would add 20% more science.");
-  sci>=c.m.min?good.push(`Science ${sci} met the minimum of ${c.m.min}.`):bad.push(`Science ${sci} missed the minimum of ${c.m.min}. Add instruments that suit this mission or fix the data bottleneck.`);
-  bonus?good.push(`Bonus objective met: ${sci} science.`):pass&&bad.push(`Bonus objective missed: ${sci} of ${c.m.bonus} science.`);
- }
+ const sci=fail?0:Math.round(c.sci*smul);
+ const pass=!fail && sci>=c.m.min;
+ const bonus=pass && sci>=c.m.bonus;
+ const pts={
+  sci:Math.round(Math.min(1,sci/Math.max(1,c.m.bonus))*40),
+  bud:Math.round(Math.max(0,1-c.cost/Math.max(1,c.m.budget))*20),
+  rel:Math.round(Math.max(0,1-dmg/100)*20),
+  dat:Math.round(c.ratio*20),
+  bon:bonus?10:0
+ };
+ const total=pts.sci+pts.bud+pts.rel+pts.dat+pts.bon;
+ if(c.ratio>=1)good.push("Radio transmitted 100% of instrument data.");
+ else bad.push(`Radio sent ${Math.round(c.ratio*100)}% of data (${c.down.toFixed(1)} / ${c.dataGen.toFixed(1)} Mbps).`);
+ if(sci>=c.m.min)good.push(`Science ${sci} met minimum ${c.m.min}.`);
+ else bad.push(`Science ${sci} is below minimum ${c.m.min}.`);
+ if(bonus)good.push(`Bonus objective met (${sci} science).`);
  let best={};try{best=JSON.parse(localStorage.getItem("msd-best")||"{}")}catch(e){}
  if(total>(best[c.m.id]||0)){best[c.m.id]=total;try{localStorage.setItem("msd-best",JSON.stringify(best))}catch(e){}}
  $("#report").innerHTML=`<h2>Mission report: ${c.m.n}</h2>
  <p class="${pass?"g":"r"}" style="font:700 22px 'Space Grotesk'">${pass?"Mission success":fail?"Mission failed":"Mission incomplete"}</p>
  <div class="row" style="gap:32px;margin:12px 0"><div><div class="score">${total}</div><div class="mut">out of 110</div></div>
  <table><tr><th>Science</th><td>${pts.sci} / 40</td></tr><tr><th>Budget use</th><td>${pts.bud} / 20</td></tr><tr><th>Spacecraft health (${dmg}% damage)</th><td>${pts.rel} / 20</td></tr><tr><th>Data returned</th><td>${pts.dat} / 20</td></tr><tr><th>Bonus objective</th><td>${pts.bon} / 10</td></tr></table></div>
- <div class="two"><div class="card"><h3>What worked</h3><ul>${good.map(t=>`<li>${t}</li>`).join("")||"<li>Nothing yet. Refine and try again.</li>"}</ul></div>
+ <div class="two"><div class="card"><h3>What worked</h3><ul>${good.map(t=>`<li>${t}</li>`).join("")||"<li>Nothing yet.</li>"}</ul></div>
  <div class="card"><h3>What went wrong</h3><ul>${bad.map(t=>`<li>${t}</li>`).join("")||"<li>No failures.</li>"}</ul></div></div>
  <div class="row"><button class="btn pri" id="ref">Refine this design</button><button class="btn" id="again">Choose another mission</button></div>`;
  show("report");$("#ref").onclick=()=>{sel=last.sel;mi=last.mi;lv=last.lv;learn=false;openBuild(false)};$("#again").onclick=toMis;
 }
 
-
 function show(id){document.querySelectorAll(".screen").forEach(s=>s.hidden=s.id!==id);window.scrollTo(0,0)}
 
-/* starfield: same motion as the portfolio (drifting twinkling dots + frequent shooting stars) */
 (function(){
 var c=$("#sky"),x=c.getContext("2d"),W,H,dpr=1,t=0,stars=[],shots=[],reduce=matchMedia("(prefers-reduced-motion: reduce)").matches;
 function size(){dpr=Math.min(window.devicePixelRatio||1,2);W=c.offsetWidth;H=c.offsetHeight;c.width=Math.round(W*dpr);c.height=Math.round(H*dpr);x.setTransform(dpr,0,0,dpr,0,0);
@@ -1055,7 +898,6 @@ addEventListener("resize",size);size();frame();
 })();
 
 toMenu();
-
 </script>
 </body>
 </html>
