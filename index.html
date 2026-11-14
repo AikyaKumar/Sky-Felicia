@@ -305,7 +305,7 @@ function opts(k){
 function lab(k){if(k==="inst")return sel.inst.size?sel.inst.size+(sel.inst.size>1?" instruments":" instrument"):null;if(k==="orbit")return ORB[sel.orbit].n.split(",")[0];return sel[k]==null?null:LIST[k][sel[k]].n}
 function renderPanel(){
  $("#panel").innerHTML=SYS.filter(S=>S.id!=="gear"||MIS[mi].kind!=="orbit").map(S=>{const labs=S.keys.map(lab),done=labs.every(x=>x),I=INFO[S.id]||SETUP;
-  return(S.grp?`<div class="gh">${S.grp}</div>`:"")+`<div class="sys ${openS===S.id?"open":""}" data-id="${S.id}"><button class="sh" aria-expanded="${openS===S.id}"><span>${S.t}</span><em class="${done?"ok":""}">${done?labs.join(", "):"Not installed"}</em></button><div class="sb"><p><b>Where:</b> ${I.w}</p><p><b>Why:</b> ${I.y}</p>${learn?"":S.keys.map(k=>(S.keys.length>1?`<h4>${KN[k]}</h4>`:"")+opts(k)).join("")}</div></div>`}).join("")}
+ return(S.grp?`<div class="gh">${S.grp}</div>`:"")+`<div class="sys ${openS===S.id?"open":""}" data-id="${S.id}"><button class="sh" aria-expanded="${openS===S.id}"><span>${S.t}</span><em class="${done?"ok":""}">${done?labs.join(", "):"Not installed"}</em></button><div class="sb"><p><b>Where:</b> ${I.w}</p><p><b>Why:</b> ${I.y}</p>${learn?"":S.keys.map(k=>(S.keys.length>1?`<h4>${KN[k]}</h4>`:"")+opts(k)).join("")}</div></div>`}).join("")}
 function meter(l,v,max,u,inv){const p=Math.min(100,max?v/max*100:0),cls=inv?(v>=max?"":v>=max*.7?"w":"b"):(v>max?"b":v>max*.9?"w":"");
  return`<div class="meter"><div class="l"><span>${l}</span><span>${Math.round(v).toLocaleString()} / ${Math.round(max).toLocaleString()} ${u}</span></div><div class="bar"><i class="${cls}" style="width:${p}%"></i></div></div>`}
 function update(){
@@ -423,8 +423,14 @@ function init3d(){
 let tt;function toast(t){const e=$("#toast");e.textContent=t;e.classList.add("on");clearTimeout(tt);tt=setTimeout(()=>e.classList.remove("on"),1400)}
 function toMenu(){show("menu")}
 function missionIcon(m){return`<svg class="ic" viewBox="0 0 88 88" aria-hidden="true"><circle cx="44" cy="44" r="26" fill="${m.body}"/><circle cx="35" cy="35" r="9" fill="#fff" opacity=".18"/>${m.dest==="moon"?`<circle cx="52" cy="50" r="5" fill="#000" opacity=".18"/><circle cx="40" cy="56" r="3" fill="#000" opacity=".18"/>`:""}<ellipse cx="44" cy="44" rx="40" ry="13" fill="none" stroke="#a9bcff" stroke-width="1.5" transform="rotate(-20 44 44)"/><circle cx="78" cy="30" r="3.5" fill="#fff"/></svg>`}
+const MGROUPS=[
+  {dest:"earth",title:"Earth · Blue Horizon",sub:"Stay close to home and watch our planet from orbit."},
+  {dest:"moon",title:"Lunar · Silver Gateway",sub:"Cross cislunar space to orbit, land, or sample the Moon."},
+  {dest:"mars",title:"Mars · Red Frontier",sub:"Brave deep-space transit, thin air, and long radio delays."}
+];
 function toMis(){let b={};try{b=JSON.parse(localStorage.getItem("msd-best")||"{}")}catch(e){}
- $("#missions").innerHTML=MIS.map((m,i)=>`<div class="card mc">${missionIcon(m)}<h3>${m.n}</h3><p class="mut">${m.b}</p><div class="tags"><span class="pill">${{orbit:"Orbit and data",land:"Landing",sample:"Sample collection"}[m.kind]}</span><span class="pill">Best score ${b[m.id]||"none yet"}</span></div><button class="btn pri" data-i="${i}">Select mission</button></div>`).join("");
+ const card=m=>{const i=MIS.indexOf(m);return`<div class="card mc">${missionIcon(m)}<h3>${m.n}</h3><p class="mut">${m.b}</p><div class="tags"><span class="pill">${{orbit:"Orbit and data",land:"Landing",sample:"Sample collection"}[m.kind]}</span><span class="pill">Best score ${b[m.id]||"none yet"}</span></div><button class="btn pri" data-i="${i}">Select mission</button></div>`};
+ $("#missions").innerHTML=MGROUPS.map(g=>{const list=MIS.filter(m=>m.dest===g.dest);return`<div class="mgrp"><h3>${g.title}</h3><p class="mut">${g.sub}</p></div><div class="grid3">${list.map(card).join("")}</div>`}).join("");
  $("#missions").querySelectorAll("button").forEach(x=>x.onclick=()=>{mi=+x.dataset.i;toDiff()});show("mis")}
 function toDiff(){$("#dt").textContent=MIS[mi].n+": choose your level";
  $("#levels").innerHTML=LV.map((l,i)=>`<div class="card mc lvc"><span class="stars" role="img" aria-label="Difficulty ${i+1} of 3">${"★".repeat(i+1)+"☆".repeat(2-i)}</span><h3>${l.n}</h3><p class="mut">${l.d}</p><button class="btn pri" data-i="${i}">Play ${l.n.toLowerCase()}</button></div>`).join("");
@@ -548,7 +554,7 @@ async function fly(){
   const left=c.dv-c.o.dv,ok1=left>=landDv,ok2=c.gr.tier>=m.need,ok=ok1&&ok2;await sLand(ok,m.dest==="mars");
   await res("Descent and landing",ok,`Soft touchdown on ${DN[m.dest]}. You had ${left} m/s left for the descent and needed ${landDv} m/s.`,
    ok1?`The landing gear could not cope. ${m.dest==="mars"?"Mars has a thin atmosphere, so you need legs plus a parachute.":"You need at least landing legs."} The spacecraft crashed.`
-      :`There was not enough propellant to slow down. The descent needed ${landDv} m/s after orbit insertion but you had ${Math.max(0,left)} m/s left. The spacecraft crashed.`)}
+     :`There was not enough propellant to slow down. The descent needed ${landDv} m/s after orbit insertion but you had ${Math.max(0,left)} m/s left. The spacecraft crashed.`)}
  if(!fail&&smp){step("Sample collection","Extending the sampling arm…");
   if(sel.inst.has(6)){await sSample();setPh("Sample collection","ok");const t="The sampling arm drilled into the surface and stored its samples.";good.push(t);log(t,"g");await wait(500)}
   else{setPh("Sample collection","no");const t="No sampling arm was installed, so no samples were collected. Add the sampling arm and drill.";bad.push(t);log(t,"r");await wait(800)}}
