@@ -192,7 +192,7 @@ table{border-collapse:collapse;font-size:15px}td,th{padding:6px 18px 6px 0;text-
     <svg id="scene" viewBox="0 0 640 420" width="100%" role="img" aria-label="Your spacecraft travelling to its destination" style="border-radius:12px;background:rgba(7,11,26,.5)">
       <g id="eth"><circle r="100" fill="#2b4fb8"/><g fill="#3f8f5a" opacity=".75"><ellipse cx="-35" cy="-40" rx="38" ry="22"/><ellipse cx="40" cy="-5" rx="26" ry="34"/><ellipse cx="-20" cy="50" rx="30" ry="16"/></g><circle r="100" fill="none" stroke="#9cc2ff" stroke-opacity=".6" stroke-width="3"/></g>
       <g id="dst"><circle id="dc" r="100" fill="#8d93a6"/><circle cx="-30" cy="-30" r="45" fill="#fff" opacity=".12"/><g id="cra" fill="#000" opacity=".18"><circle cx="30" cy="25" r="16"/><circle cx="-35" cy="35" r="10"/><circle cx="-10" cy="-40" r="12"/></g><circle id="atm" r="108" fill="none" stroke="#ffb08a" stroke-opacity=".4" stroke-width="6"/></g>
-      <g id="surfView" hidden>
+      <g id="surfView" style="display:none">
         <defs>
           <linearGradient id="moonSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#040712"/><stop offset="1" stop-color="#141b33"/></linearGradient>
           <linearGradient id="marsSky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3a1c16"/><stop offset=".6" stop-color="#8c3b27"/><stop offset="1" stop-color="#d97b54"/></linearGradient>
@@ -298,7 +298,7 @@ const IN=[
 {n:"Visible camera",m:25,p:40,c:6,data:5,sci:{eo:30,data:30,land:35,sample:15},lv:0,why:"Baseline imager."},
 {n:"Multispectral imager",m:45,p:70,c:14,data:12,sci:{eo:45,data:40,land:30,sample:20},lv:0,why:"Higher science, 12 Mbps."},
 {n:"Spectrometer",m:30,p:50,c:10,data:2,sci:{eo:35,data:50,land:35,sample:40},lv:1,why:"Low data load."},
-{n:"Sampling arm + drill",m:50,p:60,c:12,data:3,sci:{eo:10,data:10,land:20,sample:60},lv:0,surface:1,why:"Surface sampling."}],
+{n:"Sampling arm + drill",m:50,p:60,c:12,data:3,sci:{eo:10,data:10,land:20,sample:60},lv:0,surface:1,why:"Surface sampling."}];
 const GR=[{n:"Landing legs",m:40,p:0,c:4,tier:1,x:"Soft landing",lv:0,why:"Required for landing."}];
 
 const MIS=[
@@ -465,14 +465,7 @@ function evaluateBuild(s){
    warnings.push(`Upgrade radio for this orbit.`);
   }
  }
- if(c.m.kind==="land"){
-  const req=c.m.landReqPts||20;
-  if(orbitPassed && landingBonusPts>=req){
-   approved.push(`Landing gate OK (${landingBonusPts} pts).`);
-  } else {
-   blockers.push(`Pass Orbit exploration first and earn at least ${req} landing points (current: ${landingBonusPts}).`);
-  }
- }
+ if(c.m.kind==="land")approved.push("Landing gate OK: orbit exploration is part of this flight.");
  return {c, approved, blockers, warnings, launchable: blockers.length===0};
 }
 
@@ -518,6 +511,14 @@ function renderImpact(){
  if(rb)rb.onclick=openPreflight;
 }
 
+function sciTips(c){
+ const out=[],base=c.sci,sg=n=>(n>=0?"+":"")+n;
+ const tryS=(label,sl,addI)=>{const s2={...sel,inst:new Set(sel.inst),...sl};if(addI!=null)s2.inst.add(addI);const ev=evaluateBuild(s2),c2=ev.c,g=c2.sci-base;
+  if(g>0)out.push({g,t:`${label}: <b>+${g} science</b> (${sg(c2.cost-c.cost)} $M, ${sg(c2.mass-c.mass)} kg, ${sg(c2.use-c.use)} W)${c2.mass>c2.cap||c2.cost>c2.m.budget||c2.use>c2.gen?` <span class="r">but it exceeds a limit; free up mass, power or budget first</span>`:""}`})};
+ IN.forEach((o,i)=>{if(sel.inst.has(i)||o.lv>lv||(o.surface&&MIS[mi].kind!=="sample"))return;tryS("Add "+o.n,{},i)});
+ if(sel.adcs!=null&&sel.adcs<AD.length-1&&AD[AD.length-1].lv<=lv)tryS("Upgrade pointing to "+AD[AD.length-1].n,{adcs:AD.length-1});
+ if(sel.comms!=null)CM.forEach((o,i)=>{if(i>sel.comms&&o.lv<=lv)tryS("Upgrade radio to "+o.n,{comms:i})});
+ out.sort((a,b)=>b.g-a.g);return out.slice(0,4)}
 function update(){
  const ev=evaluateBuild(sel), c=ev.c, k=[];
  const ks=KEYS(),total=ks.length+1,miss=ks.filter(x=>sel[x]==null).length+(sel.inst.size?0:1);
@@ -555,6 +556,11 @@ function update(){
   wif.innerHTML="";
  }
 
+ {const tips=sciTips(c),pt=Math.round((c.ad.pt||.8)*100);
+  $("#sci").innerHTML=`<b>Science boosters</b><p class="mut" style="margin:6px 0">Estimate ${c.sci} (minimum ${c.m.min}, bonus ${c.m.bonus}) = ${c.sciRaw} instrument science × ${pt}% pointing × ${Math.round(c.ratio*100)}% of data returned.</p>`+
+  (sel.comms==null?`<p class="mut">Install a radio: science only counts if the data can be sent home.</p>`:"")+
+  (tips.length?`<ul>${tips.map(x=>`<li>${x.t}</li>`).join("")}</ul>`:`<p class="mut">No single upgrade adds more science right now.</p>`)+
+  `<details><summary>How science works</summary><p>Raise it with better instruments, 100% pointing (star tracker), a radio that sends all your data (faster radio, or an orbit with more ground contact), and safe choices in random events.</p></details>`}
  $("#launch").textContent="Review checklist & launch";
  $("#launch").disabled=false;
  $("#mLearn").classList.toggle("on",learn);
