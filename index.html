@@ -111,6 +111,14 @@ table{border-collapse:collapse;font-size:15px}td,th{padding:6px 18px 6px 0;text-
 @media(prefers-reduced-motion:reduce){.art .a-rk{display:none}}
 #scene{display:block;height:auto}
 .mc .tags{display:flex;gap:8px;flex-wrap:wrap}
+.gate{border-radius:12px;padding:10px 12px;margin:10px 0;font-size:14px;font-weight:500;border:1px solid var(--line);background:rgba(7,11,26,.65)}
+.gate.ok{border-color:var(--ok);color:var(--ok)}
+.gate.no{border-color:var(--bad);color:var(--bad)}
+.whatif{margin-top:14px;padding-top:12px;border-top:1px solid var(--line);font-size:13px}
+.whatif .row{justify-content:space-between;margin-bottom:8px}
+.whatif ul{margin:6px 0 0;padding-left:18px;color:var(--mut)}
+.whatif li{margin-bottom:4px}
+.dec{font-size:13px;color:var(--acc);background:rgba(169,188,255,.07);border-left:2px solid var(--acc);padding:6px 10px;border-radius:0 8px 8px 0;margin:0 0 10px}
 </style>
 </head>
 <body>
@@ -145,12 +153,13 @@ table{border-collapse:collapse;font-size:15px}td,th{padding:6px 18px 6px 0;text-
 </svg></div></section>
 
 <section id="mis" class="screen" hidden><button class="btn" data-go="menu">Back</button><h2 style="margin-top:22px">Choose your mission</h2><div id="missions" class="grid3"></div></section>
+<section id="submis" class="screen" hidden><button class="btn" data-go="mis">Back</button><h2 id="smt" style="margin-top:22px"></h2><p id="smb" class="mut"></p><div id="submissions" class="grid3"></div></section>
 <section id="diff" class="screen" hidden><button class="btn" data-go="mis">Back</button><h2 id="dt" style="margin-top:22px"></h2><p class="mut">Higher levels unlock more advanced parts and tighten the rules.</p><div id="levels" class="grid3"></div></section>
 <section id="build" class="screen" hidden>
 <div class="row" style="justify-content:space-between"><button class="btn" data-go="mis">Change mission</button><div class="row"><button class="btn" id="mLearn">Explore a finished build</button><button class="btn" id="mBuild">Build from scratch</button></div></div>
 <div class="card hud"><div><h2 id="bt" style="font-size:26px"></h2><p id="bb" class="mut" style="margin:4px 0 0;font-size:14px"></p></div><div class="pr"><div class="meter" style="margin:0"><div class="l"><span>Build progress</span><span id="hudn"></span></div><div class="bar"><i id="hudb"></i></div></div></div></div>
 <div class="build"><div class="vcol"><div id="view" class="card"><div id="tip" class="tip" hidden></div><div class="vb"><button class="btn sm" data-v="sc">Spacecraft</button><button class="btn sm" data-v="rk">Rocket</button><button class="btn sm" data-v="all">Whole stack</button></div></div><p class="mut" id="hint" style="font-size:14px;margin-top:10px"></p></div>
-<aside class="side"><div class="card"><div id="meters"></div><ul class="chk" id="checks"></ul><button class="btn pri" id="launch" style="width:100%">Launch mission</button></div><div id="panel" style="margin-top:12px"></div></aside></div>
+<aside class="side"><div class="card"><div id="gate" class="gate"></div><div id="meters"></div><ul class="chk" id="checks"></ul><div id="whatif" class="whatif"></div><button class="btn pri" id="launch" style="width:100%">Launch mission</button></div><div id="panel" style="margin-top:12px"></div></aside></div>
 </section>
 <section id="sim" class="screen" hidden>
   <h2 id="simt">Mission in progress</h2>
@@ -193,36 +202,36 @@ moon:{n:"Lunar orbit, 100 km",dv:1000,contact:.35,solar:1,ecl:2,rad:.6,heat:2,ca
 mars:{n:"Mars orbit, 400 km",dv:1800,contact:.3,solar:.43,ecl:2,rad:.5,heat:2,cap:.12,link:3,d:"Radio signals take 4 to 24 minutes one way, and sunlight is only about 43% as strong as at Earth."}};
 
 /* rocket parts: you build the launch vehicle yourself. Lift to low orbit = 4,500 kg x the weaker of engine thrust and tank size, then modified by staging and fuselage. */
-const RENG=[{n:"Single engine",c:8,thr:1,x:"Thrust 1 of 4: small payloads",lv:0},{n:"Triple engine",c:25,thr:2,x:"Thrust 2 of 4: medium payloads",lv:0},{n:"Five-engine cluster",c:55,thr:4,x:"Thrust 4 of 4: heavy payloads",lv:1}];
-const RTK=[{n:"Small tank",c:6,cap:1,x:"Propellant 1 of 4",lv:0},{n:"Medium tank",c:16,cap:2,x:"Propellant 2 of 4",lv:0},{n:"Large tank",c:30,cap:4,x:"Propellant 4 of 4",lv:1}];
-const RDEC=[{n:"No decoupler",c:0,mult:.6,r:0,x:"Carries the empty tank, 40% less payload",lv:0},{n:"Stage decoupler",c:4,mult:1,r:.05,x:"Drops the empty stage",lv:0},{n:"Two-stage decoupler",c:8,mult:1.25,r:.05,x:"Two drops, 25% more payload",lv:1}];
-const RFUS=[{n:"Aluminium fuselage",c:3,mult:1,r:.02,x:"Light and cheap",lv:0},{n:"Composite fuselage",c:8,mult:1.1,r:.04,x:"Stronger, 10% more payload",lv:1}];
-const RFAIR=[{n:"No fairing",c:0,r:0,x:"Spacecraft exposed in flight",lv:0},{n:"Standard fairing",c:5,r:.05,x:"Protects the spacecraft",lv:0},{n:"Aerodynamic nose cone",c:8,r:.06,x:"Smoother airflow",lv:1}];
-const RFIN=[{n:"No fins",c:0,r:0,x:"Unstable in the air",lv:0},{n:"Stabilising fins",c:3,r:.05,x:"Keeps the rocket straight",lv:0}];
-const RFC=[{n:"Basic flight computer",c:4,r:.03,x:"Simple guidance",lv:0},{n:"Redundant flight computer",c:9,r:.05,x:"Has a backup if one fails",lv:1}];
-const RTVC=[{n:"No thrust vectoring",c:0,r:0,x:"Cannot steer by engine",lv:0},{n:"Gimbal actuators",c:5,r:.05,x:"Steers by tilting the engines",lv:0}];
+const RENG=[{n:"Single engine",c:8,thr:1,x:"Thrust 1 of 4: small payloads",lv:0,why:"Lowest cost and mass, but caps lift even if you attach a bigger tank."},{n:"Triple engine",c:25,thr:2,x:"Thrust 2 of 4: medium payloads",lv:0,why:"Balanced thrust for lunar or multi-instrument spacecraft without extreme cost."},{n:"Five-engine cluster",c:55,thr:4,x:"Thrust 4 of 4: heavy payloads",lv:1,why:"Maximum lift capability for heavy Mars landers or dense payloads, at high cost."}];
+const RTK=[{n:"Small tank",c:6,cap:1,x:"Propellant 1 of 4",lv:0,why:"Light and inexpensive, but restricts lift and leaves little margin for heavy buses."},{n:"Medium tank",c:16,cap:2,x:"Propellant 2 of 4",lv:0,why:"Solid sweet spot for medium lift; pairs well with triple or multi-stage setups."},{n:"Large tank",c:30,cap:4,x:"Propellant 4 of 4",lv:1,why:"Unlocks maximum propellant capacity, though it raises rocket cost and adds weight."}];
+const RDEC=[{n:"No decoupler",c:0,mult:.6,r:0,x:"Carries the empty tank, 40% less payload",lv:0,why:"Saves upfront cost and parts, but dead weight slashes payload lift by 40%."},{n:"Stage decoupler",c:4,mult:1,r:.05,x:"Drops the empty stage",lv:0,why:"Baseline staging efficiency plus +5% launch reliability."},{n:"Two-stage decoupler",c:8,mult:1.25,r:.05,x:"Two drops, 25% more payload",lv:1,why:"Boosts payload capacity by 25% for demanding deep-space or landing missions."}];
+const RFUS=[{n:"Aluminium fuselage",c:3,mult:1,r:.02,x:"Light and cheap",lv:0,why:"Standard structural shell with low cost and modest reliability gain."},{n:"Composite fuselage",c:8,mult:1.1,r:.04,x:"Stronger, 10% more payload",lv:1,why:"Higher strength-to-weight ratio adds +10% payload lift and +4% reliability."}];
+const RFAIR=[{n:"No fairing",c:0,r:0,x:"Spacecraft exposed in flight",lv:0,why:"Leaves delicate instruments exposed to aerodynamic drag and heating."},{n:"Standard fairing",c:5,r:.05,x:"Protects the spacecraft",lv:0,why:"Shields the spacecraft during ascent and adds +5% launch reliability."},{n:"Aerodynamic nose cone",c:8,r:.06,x:"Smoother airflow",lv:1,why:"Cuts drag and gives the highest ascent reliability bonus (+6%)."}];
+const RFIN=[{n:"No fins",c:0,r:0,x:"Unstable in the air",lv:0,why:"Risky early flight stability unless compensated elsewhere."},{n:"Stabilising fins",c:3,r:.05,x:"Keeps the rocket straight",lv:0,why:"Cheap passive stability that adds +5% reliability."}],
+RFC=[{n:"Basic flight computer",c:4,r:.03,x:"Simple guidance",lv:0,why:"Minimal guidance logic; lower reliability gain (+3%)."},{n:"Redundant flight computer",c:9,r:.05,x:"Has a backup if one fails",lv:1,why:"Backup avionics protect ascent guidance and add +5% reliability."}];
+const RTVC=[{n:"No thrust vectoring",c:0,r:0,x:"Cannot steer by engine",lv:0,why:"Relies strictly on passive aerodynamics; no active nozzle steering."},{n:"Gimbal actuators",c:5,r:.05,x:"Steers by tilting the engines",lv:0,why:"Active engine gimbaling improves trajectory control and adds +5% reliability."}];
 const RK=["engine","tank","decoupler","fuselage","fairing","fins","flightcomp","tvc"];
 
-const ST=[{n:"Light frame",m:80,c:5,hard:0,x:"Radiation shield 0/2",lv:0},{n:"Standard bus",m:200,c:12,hard:1,x:"Radiation shield 1/2",lv:0},{n:"Hardened bus",m:350,c:25,hard:2,x:"Radiation shield 2/2",lv:1}];
-const PW=[{n:"Solar 500 W",m:40,c:3,gen:500,x:"500 W at Earth",lv:0},{n:"Solar 1500 W",m:110,c:9,gen:1500,x:"1500 W at Earth",lv:0},{n:"Solar 4000 W",m:260,c:22,gen:4000,x:"4000 W at Earth",lv:1}];
-const BT=[{n:"No battery",m:0,c:0,tier:0,x:"Only works in constant sunlight",lv:0},{n:"Li-ion pack",m:30,c:2,tier:1,x:"Covers short eclipses",lv:0},{n:"Large pack",m:80,c:5,tier:2,x:"Covers long eclipses",lv:0}];
-const PR=[{n:"Cold gas",m:10,p:5,c:1,dv:100,x:"100 m/s",lv:0},{n:"Hydrazine",m:150,p:5,c:6,dv:1200,x:"1,200 m/s",lv:0},{n:"Bipropellant",m:300,p:10,c:12,dv:2200,x:"2,200 m/s",lv:0},{n:"Ion thruster",m:220,p:150,c:20,dv:3500,x:"3,500 m/s, power hungry",lv:2}];
-const CM=[{n:"UHF antenna",m:5,p:10,c:1,rate:.5,tier:0,x:"0.5 Mbps, near Earth only",lv:0},{n:"S-band radio",m:10,p:20,c:3,rate:4,tier:1,x:"4 Mbps, reaches GEO",lv:0},{n:"X-band radio",m:25,p:60,c:8,rate:40,tier:2,x:"40 Mbps, reaches the Moon",lv:0},{n:"Ka-band dish",m:60,p:150,c:18,rate:200,tier:3,x:"200 Mbps, deep space",lv:0}];
-const AD=[{n:"Reaction wheels",m:15,p:20,c:4,pt:.8,x:"Pointing 80%",lv:0},{n:"Star tracker + wheels",m:25,p:30,c:8,pt:1,x:"Pointing 100%",lv:1}];
-const CP=[{n:"Standard computer",m:5,p:10,c:1,rad:0,x:"Radiation tolerance 0/1",lv:0},{n:"Rad-hard computer",m:8,p:20,c:6,rad:1,x:"Radiation tolerance 1/1",lv:1}];
-const TH=[{n:"Insulation blankets",m:10,p:0,c:1,tier:1,x:"Passive, mild temperatures",lv:0},{n:"Radiators + heaters",m:30,p:40,c:4,tier:2,x:"Active temperature control",lv:0},{n:"Heat pipes + radiators",m:55,p:60,c:9,tier:3,x:"For hot, high-power craft",lv:1}];
-const FD=[{n:"No monitoring",m:0,p:0,c:0,safe:0,x:"No safe mode",lv:0},{n:"Watchdog + sensors",m:3,p:5,c:2,safe:1,x:"Basic safe mode, 30% less damage",lv:0},{n:"Full fault protection",m:6,p:10,c:5,safe:2,x:"Auto recovery, 60% less damage",lv:1}];
-const FL=[{n:"Pressure-fed tanks",m:20,p:0,c:2,dvm:1,x:"Simple and reliable",lv:0},{n:"Turbopump-fed tanks",m:40,p:15,c:5,dvm:1.2,x:"+20% delta-v",lv:1}];
+const ST=[{n:"Light frame",m:80,c:5,hard:0,x:"Radiation shield 0/2",lv:0,why:"Saves mass and budget, but offers zero bus radiation shielding."},{n:"Standard bus",m:200,c:12,hard:1,x:"Radiation shield 1/2",lv:0,why:"Balanced structure with moderate radiation protection (1/2)."},{n:"Hardened bus",m:350,c:25,hard:2,x:"Radiation shield 2/2",lv:1,why:"Heavy, costly, and essential if flares or micrometeoroids threaten survival."}];
+const PW=[{n:"Solar 500 W",m:40,c:3,gen:500,x:"500 W at Earth",lv:0,why:"Fine for lean orbiters near Earth; too weak for Mars or power-hungry radar."},{n:"Solar 1500 W",m:110,c:9,gen:1500,x:"1500 W at Earth",lv:0,why:"Good headroom for multi-instrument spacecraft and lunar orbits."},{n:"Solar 4000 W",m:260,c:22,gen:4000,x:"4000 W at Earth",lv:1,why:"Heavy and expensive, needed when sunlight is weak (Mars) or loads are high."}];
+const BT=[{n:"No battery",m:0,c:0,tier:0,x:"Only works in constant sunlight",lv:0,why:"Zero mass/cost, but fails whenever an eclipse or surface night hits."},{n:"Li-ion pack",m:30,c:2,tier:1,x:"Covers short eclipses",lv:0,why:"Handles routine Earth-shadow passes at low mass."},{n:"Large pack",m:80,c:5,tier:2,x:"Covers long eclipses",lv:0,why:"Required for long lunar or Martian eclipses and power-drop events."}];
+const PR=[{n:"Cold gas",m:10,p:5,c:1,dv:100,x:"100 m/s",lv:0,why:"Tiny delta-v—only enough for minimal stationkeeping."},{n:"Hydrazine",m:150,p:5,c:6,dv:1200,x:"1,200 m/s",lv:0,why:"Reliable chemical propulsion with low electrical draw."},{n:"Bipropellant",m:300,p:10,c:12,dv:2200,x:"2,200 m/s",lv:0,why:"High delta-v for orbit insertion plus lunar or Martian descent."},{n:"Ion thruster",m:220,p:150,c:20,dv:3500,x:"3,500 m/s, power hungry",lv:2,why:"Highest delta-v, but draws 150 W continuously from your power budget."}];
+const CM=[{n:"UHF antenna",m:5,p:10,c:1,rate:.5,tier:0,x:"0.5 Mbps, near Earth only",lv:0,why:"Low power and mass, but cannot reach GEO, Moon, or Mars."},{n:"S-band radio",m:10,p:20,c:3,rate:4,tier:1,x:"4 Mbps, reaches GEO",lv:0,why:"Covers GEO links; may bottleneck high-rate instruments."},{n:"X-band radio",m:25,p:60,c:8,rate:40,tier:2,x:"40 Mbps, reaches the Moon",lv:0,why:"High downlink rate needed for lunar missions and heavy data."},{n:"Ka-band dish",m:60,p:150,c:18,rate:200,tier:3,x:"200 Mbps, deep space",lv:0,why:"Required for Mars links and massive data return, at 150 W draw."}];
+const AD=[{n:"Reaction wheels",m:15,p:20,c:4,pt:.8,x:"Pointing 80%",lv:0,why:"Caps pointing effectiveness at 80%, reducing science score."},{n:"Star tracker + wheels",m:25,p:30,c:8,pt:1,x:"Pointing 100%",lv:1,why:"Full 100% pointing accuracy maximizes science return."}];
+const CP=[{n:"Standard computer",m:5,p:10,c:1,rad:0,x:"Radiation tolerance 0/1",lv:0,why:"Cheaper and lighter, but vulnerable to radiation upsets."},{n:"Rad-hard computer",m:8,p:20,c:6,rad:1,x:"Radiation tolerance 1/1",lv:1,why:"Resists radiation and helps auto-recover comms dropouts."}];
+const TH=[{n:"Insulation blankets",m:10,p:0,c:1,tier:1,x:"Passive, mild temperatures",lv:0,why:"Zero power draw, suited only to mild low-power orbits."},{n:"Radiators + heaters",m:30,p:40,c:4,tier:2,x:"Active temperature control",lv:0,why:"Balances heat in lunar/Mars orbits or moderate power loads."},{n:"Heat pipes + radiators",m:55,p:60,c:9,tier:3,x:"For hot, high-power craft",lv:1,why:"Prevents thermal damage when power draw or solar heat is high."}];
+const FD=[{n:"No monitoring",m:0,p:0,c:0,safe:0,x:"No safe mode",lv:0,why:"Takes 100% of event damage with no automatic protection."},{n:"Watchdog + sensors",m:3,p:5,c:2,safe:1,x:"Basic safe mode, 30% less damage",lv:0,why:"Cuts incoming event damage by 30% for tiny mass/cost."},{n:"Full fault protection",m:6,p:10,c:5,safe:2,x:"Auto recovery, 60% less damage",lv:1,why:"Cuts incoming event damage by 60% during risky surface/deep-space ops."}];
+const FL=[{n:"Pressure-fed tanks",m:20,p:0,c:2,dvm:1,x:"Simple and reliable",lv:0,why:"No pump power needed; baseline delta-v efficiency."},{n:"Turbopump-fed tanks",m:40,p:15,c:5,dvm:1.2,x:"+20% delta-v",lv:1,why:"Multiplies thruster delta-v by 1.2x, adding +15 W and +40 kg."}];
 const IN=[
-{n:"Visible camera",m:25,p:40,c:6,data:4,sci:{eo:20,data:22,land:25,sample:10},lv:0},
-{n:"Multispectral imager",m:45,p:70,c:14,data:10,sci:{eo:40,data:28,land:15,sample:15},lv:1},
-{n:"Radar (SAR)",m:120,p:400,c:30,data:25,sci:{eo:55,data:30,land:8,sample:5},lv:2},
-{n:"Spectrometer",m:30,p:50,c:10,data:1,sci:{eo:25,data:40,land:20,sample:30},lv:0},
-{n:"Magnetometer",m:5,p:5,c:2,data:.1,sci:{eo:8,data:22,land:10,sample:8},lv:0},
-{n:"Laser altimeter",m:60,p:120,c:20,data:6,sci:{eo:15,data:38,land:35,sample:10},lv:1},
-{n:"Sampling arm + drill",m:50,p:60,c:12,data:2,sci:{eo:0,data:0,land:10,sample:55},lv:0,surface:1},
-{n:"Soil analyzer",m:35,p:40,c:9,data:1,sci:{eo:0,data:0,land:15,sample:40},lv:1,surface:1}];
-const GR=[{n:"No landing gear",m:0,p:0,c:0,tier:0,x:"Cannot land",lv:0},{n:"Landing legs",m:40,p:0,c:4,tier:1,x:"Soft landing on the airless Moon",lv:0},{n:"Legs + parachute",m:70,p:0,c:9,tier:2,x:"Lands through the thin Martian air",lv:0}];
+{n:"Visible camera",m:25,p:40,c:6,data:4,sci:{eo:20,data:22,land:25,sample:10},lv:0,why:"Strong baseline imager for landing and Earth observation."},
+{n:"Multispectral imager",m:45,p:70,c:14,data:10,sci:{eo:40,data:28,land:15,sample:15},lv:1,why:"High Earth-observation science, but generates 10 Mbps of data."},
+{n:"Radar (SAR)",m:120,p:400,c:30,data:25,sci:{eo:55,data:30,land:8,sample:5},lv:2,why:"Huge orbit science score, but heavy (120 kg), hungry (400 W), and 25 Mbps."},
+{n:"Spectrometer",m:30,p:50,c:10,data:1,sci:{eo:25,data:40,land:20,sample:30},lv:0,why:"Compact, low-data instrument with strong data & sample science."},
+{n:"Magnetometer",m:5,p:5,c:2,data:.1,sci:{eo:8,data:22,land:10,sample:8},lv:0,why:"Ultra-light filler instrument (5 kg, 5 W) that boosts data science."},
+{n:"Laser altimeter",m:60,p:120,c:20,data:6,sci:{eo:15,data:38,land:35,sample:10},lv:1,why:"Great for terrain mapping and landing precision."},
+{n:"Sampling arm + drill",m:50,p:60,c:12,data:2,sci:{eo:0,data:0,land:10,sample:55},lv:0,surface:1,why:"Required to drill and store surface samples on sample missions."},
+{n:"Soil analyzer",m:35,p:40,c:9,data:1,sci:{eo:0,data:0,land:15,sample:40},lv:1,surface:1,why:"Analyses surface composition on-site for sample and land missions."}];
+const GR=[{n:"No landing gear",m:0,p:0,c:0,tier:0,x:"Cannot land",lv:0,why:"Only valid for orbital missions."},{n:"Landing legs",m:40,p:0,c:4,tier:1,x:"Soft landing on the airless Moon",lv:0,why:"Enough for airless lunar touchdown."},{n:"Legs + parachute",m:70,p:0,c:9,tier:2,x:"Lands through the thin Martian air",lv:0,why:"Needed to slow down through Mars's thin atmosphere."}];
 const MIS=[
 {id:"eo",n:"Earth observation",b:"Track coastlines, crops and storms from orbit.",budget:150,min:40,bonus:90,orbits:["leo","sso","geo"],body:"#2b4fb8",kind:"orbit",sk:"eo",dest:"earth"},
 {id:"mland",n:"Lunar landing",b:"Fly to the Moon, touch down softly and image the surface.",budget:240,min:50,bonus:95,orbits:["moon"],body:"#8d93a6",kind:"land",sk:"land",dest:"moon",landDv:800,need:1,trip:"3 days"},
@@ -235,30 +244,30 @@ const MIS=[
 const LV=[{n:"Beginner",d:"Simple parts, a bigger budget, easier science targets and one random event. You start with a finished rocket and spacecraft to explore."},{n:"Intermediate",d:"More parts, the standard budget and two random events. You build the rocket and spacecraft from an empty launch pad."},{n:"Advanced",d:"Every part including advanced ones, a tight budget, higher science targets and three random events."}];
 const BM=[1.5,1.15,1],SM=[.8,1,1.15];
 const INFO={
-structure:{t:"Structure (bus)",w:"The central box everything bolts onto, in the middle of the spacecraft.",y:"It holds all systems together and survives launch shaking and radiation. Stronger frames weigh more."},
-eps:{t:"Solar panels (electrical power)",w:"Wings on both sides of the bus, pointed at the Sun.",y:"They make the electricity every other system needs. Far from the Sun they make less."},
-battery:{t:"Battery",w:"Against the bus, close to the power electronics.",y:"It stores energy so the spacecraft keeps running in the shadow of a planet or moon."},
-prop:{t:"Propulsion (engine)",w:"At the bottom of the bus, pointing opposite to the way you want to push.",y:"It changes your speed to enter orbit and correct your path. More delta-v means more mass."},
-fluid:{t:"Propellant tanks and valves",w:"Next to the engine so fuel lines stay short, balanced around the center of mass.",y:"Tanks store the fuel; valves and regulators feed it safely. Pump-fed systems are more efficient but more complex."},
-comms:{t:"Communication (antenna)",w:"On top, with a clear view of Earth and away from the engine plume.",y:"It sends science data home and receives commands. Bigger dishes send more data farther."},
-gnc:{t:"Guidance, navigation and control",w:"A star tracker on an outer face with a clear sky view; reaction wheels near the center of mass.",y:"It knows where the spacecraft points and turns it. Instruments only work well when pointed accurately."},
-cdh:{t:"Command and data handling (computer)",w:"Inside the bus, shielded and close to the systems it controls.",y:"The brain: it runs commands, stores instrument data and coordinates every system. Rad-hard chips resist radiation."},
-thermal:{t:"Thermal control",w:"Radiators on the shaded faces and insulation wrapped around the bus.",y:"Space is both scorching and freezing. This keeps electronics inside their safe temperature range."},
-payload:{t:"Science payload",w:"On the side that faces the target, with a clear field of view.",y:"These instruments are the reason for the mission. The mission goal decides which ones you need."},
-fault:{t:"Fault detection and protection",w:"Sensors spread through the spacecraft, with a watchdog in the computer.",y:"It watches voltage, temperature and software, and puts the spacecraft into safe mode when something fails."},
-fuel:{t:"Fuel and oxidizer tanks",w:"They fill most of the first stage, with the heaviest tank low in the stack.",y:"A rocket is mostly propellant. Fuel and oxidizer burn together to make thrust."},
-engine:{t:"Engines",w:"At the very bottom of the first stage, pointing down.",y:"They push hot gas down so the rocket goes up. More engines mean more thrust."},
-tvc:{t:"Thrust vectoring",w:"Actuators on the engines that tilt (gimbal) the nozzles.",y:"Tilting the nozzle steers the rocket, so it can fly straight or turn without moving fins."},
-decoupler:{t:"Decoupler (stage separation)",w:"Between the stages, on top of the tank.",y:"It releases the empty stage so the rocket sheds dead weight and can carry more payload."},
-fins:{t:"Fins",w:"Around the base of the first stage.",y:"They keep the rocket stable while it flies through the air."},
-flightcomp:{t:"Flight computer",w:"In the avionics ring near the top of the rocket.",y:"It runs guidance, navigation and control: it reads sensors and commands the engines."},
-fairing:{t:"Nose cone and fairing",w:"Around the spacecraft at the top of the rocket.",y:"It protects the spacecraft from air pressure and heat during ascent, then splits away in space."},
-fuselage:{t:"Fuselage",w:"The upper body between the fuel tank and the nose, carrying the avionics.",y:"The rocket’s skeleton and skin. It carries the loads of ascent; composite is lighter and stronger than aluminium."},
-rprop:{t:"Rocket propulsion",w:"Tanks make up most of the rocket, with the engines at the very bottom.",y:"Tanks carry fuel and oxidizer, engines turn it into thrust. Lift depends on the weaker of the two, so match them."},
-rstruct:{t:"Structure and aerodynamics",w:"Fuselage on top of the tank, fins at the base, fairing around the spacecraft.",y:"These shape the airflow and protect the spacecraft on the climb through the atmosphere."},
-rgnc:{t:"Rocket guidance and control",w:"Flight computer in the avionics ring, gimbal actuators on the engines.",y:"The computer decides where to go and the gimbals steer. Together they keep the rocket on its path."},
-gear:{t:"Landing gear",w:"Legs on the underside of the spacecraft around the engine, with a parachute pack on top.",y:"It absorbs the shock of touchdown. The Moon has no air, so legs are enough. Mars has a thin atmosphere, so you also need a parachute to slow down."}};
-const SETUP={w:"The orbit is where you fly; the rocket you build is what lifts you there.",y:"Higher orbits need more delta-v and stronger radios, and leave less payload mass. Hover over the rocket to learn its parts."};
+structure:{t:"Structure (bus)",w:"The central box everything bolts onto, in the middle of the spacecraft.",y:"It holds all systems together and survives launch shaking and radiation. Stronger frames weigh more.",dec:"Pick a bus with enough radiation shielding for your orbit, without blowing mass or budget."},
+eps:{t:"Solar panels (electrical power)",w:"Wings on both sides of the bus, pointed at the Sun.",y:"They make the electricity every other system needs. Far from the Sun they make less.",dec:"Match panel generation to your orbit's solar factor and total instrument + thruster power draw."},
+battery:{t:"Battery",w:"Against the bus, close to the power electronics.",y:"It stores energy so the spacecraft keeps running in the shadow of a planet or moon.",dec:"Choose a battery tier that covers eclipses and absorbs power-drop events."},
+prop:{t:"Propulsion (engine)",w:"At the bottom of the bus, pointing opposite to the way you want to push.",y:"It changes your speed to enter orbit and correct your path. More delta-v means more mass.",dec:"Ensure delta-v covers orbit insertion plus landing burn if your mission touches down."},
+fluid:{t:"Propellant tanks and valves",w:"Next to the engine so fuel lines stay short, balanced around the center of mass.",y:"Tanks store the fuel; valves and regulators feed it safely. Pump-fed systems are more efficient but more complex.",dec:"Turbopumps boost delta-v by 20% at the cost of extra mass, cost, and power draw."},
+comms:{t:"Communication (antenna)",w:"On top, with a clear view of Earth and away from the engine plume.",y:"It sends science data home and receives commands. Bigger dishes send more data farther.",dec:"Match radio tier to distance and ensure downlink Mbps keeps up with instrument data."},
+gnc:{t:"Guidance, navigation and control",w:"A star tracker on an outer face with a clear sky view; reaction wheels near the center of mass.",y:"It knows where the spacecraft points and turns it. Instruments only work well when pointed accurately.",dec:"Star trackers unlock 100% pointing accuracy instead of 80%, directly boosting science."},
+cdh:{t:"Command and data handling (computer)",w:"Inside the bus, shielded and close to the systems it controls.",y:"The brain: it runs commands, stores instrument data and coordinates every system. Rad-hard chips resist radiation.",dec:"Rad-hard computers resist radiation and can recover comms dropouts automatically."},
+thermal:{t:"Thermal control",w:"Radiators on the shaded faces and insulation wrapped around the bus.",y:"Space is both scorching and freezing. This keeps electronics inside their safe temperature range.",dec:"Higher-power spacecraft and deeper orbits need higher thermal tiers to avoid damage."},
+payload:{t:"Science payload",w:"On the side that faces the target, with a clear field of view.",y:"These instruments are the reason for the mission. The mission goal decides which ones you need.",dec:"Balance science points against mass, power, and radio bandwidth so data isn't lost."},
+fault:{t:"Fault detection and protection",w:"Sensors spread through the spacecraft, with a watchdog in the computer.",y:"It watches voltage, temperature and software, and puts the spacecraft into safe mode when something fails.",dec:"Fault protection cuts incoming damage by 30% to 60% when space events strike."},
+fuel:{t:"Fuel and oxidizer tanks",w:"They fill most of the first stage, with the heaviest tank low in the stack.",y:"A rocket is mostly propellant. Fuel and oxidizer burn together to make thrust.",dec:"Increasing tank size raises lift potential, but only if engines match and budget/mass stay in bounds."},
+engine:{t:"Engines",w:"At the very bottom of the first stage, pointing down.",y:"They push hot gas down so the rocket goes up. More engines mean more thrust.",dec:"Rocket lift uses the weaker of engine thrust and tank size—pair them carefully."},
+tvc:{t:"Thrust vectoring",w:"Actuators on the engines that tilt (gimbal) the nozzles.",y:"Tilting the nozzle steers the rocket, so it can fly straight or turn without moving fins.",dec:"Gimbal actuators add +5% launch reliability for modest cost."},
+decoupler:{t:"Decoupler (stage separation)",w:"Between the stages, on top of the tank.",y:"It releases the empty stage so the rocket sheds dead weight and can carry more payload.",dec:"Skipping a decoupler cuts payload lift by 40%; staging unlocks full or 1.25x lift."},
+fins:{t:"Fins",w:"Around the base of the first stage.",y:"They keep the rocket stable while it flies through the air.",dec:"Stabilising fins add +5% launch reliability at low cost."},
+flightcomp:{t:"Flight computer",w:"In the avionics ring near the top of the rocket.",y:"It runs guidance, navigation and control: it reads sensors and commands the engines.",dec:"Redundant flight computers add +5% launch reliability over basic guidance."},
+fairing:{t:"Nose cone and fairing",w:"Around the spacecraft at the top of the rocket.",y:"It protects the spacecraft from air pressure and heat during ascent, then splits away in space.",dec:"Protects your spacecraft during climb and raises launch reliability."},
+fuselage:{t:"Fuselage",w:"The upper body between the fuel tank and the nose, carrying the avionics.",y:"The rocket’s skeleton and skin. It carries the loads of ascent; composite is lighter and stronger than aluminium.",dec:"Composite fuselage adds +10% payload capacity and +4% reliability over aluminium."},
+rprop:{t:"Rocket propulsion",w:"Tanks make up most of the rocket, with the engines at the very bottom.",y:"Tanks carry fuel and oxidizer, engines turn it into thrust. Lift depends on the weaker of the two, so match them.",dec:"Match engine thrust and tank size so neither starves the other."},
+rstruct:{t:"Structure and aerodynamics",w:"Fuselage on top of the tank, fins at the base, fairing around the spacecraft.",y:"These shape the airflow and protect the spacecraft on the climb through the atmosphere.",dec:"Structure and fairing choices control both payload lift multiplier and launch reliability."},
+rgnc:{t:"Rocket guidance and control",w:"Flight computer in the avionics ring, gimbal actuators on the engines.",y:"The computer decides where to go and the gimbals steer. Together they keep the rocket on its path.",dec:"Combining redundant guidance and gimbals maximizes ascent reliability."},
+gear:{t:"Landing gear",w:"Legs on the underside of the spacecraft around the engine, with a parachute pack on top.",y:"It absorbs the shock of touchdown. The Moon has no air, so legs are enough. Mars has a thin atmosphere, so you also need a parachute to slow down.",dec:"Pick legs for the Moon, or legs + parachute for Mars; skip for pure orbiters."}};
+const SETUP={w:"The orbit is where you fly; the rocket you build is what lifts you there.",y:"Higher orbits need more delta-v and stronger radios, and leave less payload mass. Hover over the rocket to learn its parts.",dec:"Choose an orbit compatible with your mission destination and power/comms plan."};
 const SYS=[{id:"setup",t:"Mission orbit",keys:["orbit"],hl:[],grp:"Mission"},
 {id:"rprop",t:"R1 Rocket propulsion",keys:["engine","tank"],hl:["engine","fuel"],grp:"Rocket"},
 {id:"decoupler",t:"R2 Decoupler (staging)",keys:["decoupler"]},
@@ -272,19 +281,21 @@ const KEYS=()=>[...RK,"structure","power","battery","prop","comms","adcs","compu
 const LIST={engine:RENG,tank:RTK,decoupler:RDEC,fuselage:RFUS,fairing:RFAIR,fins:RFIN,flightcomp:RFC,tvc:RTVC,structure:ST,power:PW,battery:BT,prop:PR,comms:CM,adcs:AD,computer:CP,thermal:TH,fault:FD,fluid:FL,gear:GR,inst:IN};
 const KN={power:"Solar panels",battery:"Battery",orbit:"Orbit",engine:"Engines",tank:"Fuel and oxidizer tanks",fuselage:"Fuselage",fairing:"Nose cone and fairing",fins:"Fins",flightcomp:"Flight computer",tvc:"Thrust vectoring"};
 const Z={n:"None",m:0,p:0,c:0,gen:0,tier:0,rate:0,rad:0,pt:0,dv:0,hard:0,safe:0,dvm:1};
-let mi=0,lv=0,sel,learn=false,openS="setup",panelHover=null,hoverId=null,vk="all",last={};
+let mi=0,lv=0,sel,learn=false,openS="setup",panelHover=null,hoverId=null,vk="all",last={},whatifFuel=false;
 const mm=()=>({...MIS[mi],budget:Math.round(MIS[mi].budget*BM[lv]),min:Math.round(MIS[mi].min*SM[lv]),bonus:Math.round(MIS[mi].bonus*SM[lv])});
 const pk=k=>sel[k]==null?Z:LIST[k][sel[k]];
 const scratch=()=>({orbit:MIS[mi].orbits[0],engine:null,tank:null,decoupler:null,fuselage:null,fairing:null,fins:null,flightcomp:null,tvc:null,structure:null,power:null,battery:null,prop:null,comms:null,adcs:null,computer:null,thermal:null,fault:null,fluid:null,gear:null,inst:new Set()});
 const showcase=()=>{const m=MIS[mi],o=m.orbits[0],mars=o==="mars",sf=m.kind!=="orbit";return{orbit:o,engine:1,tank:1,decoupler:1,fuselage:0,fairing:1,fins:1,flightcomp:1,tvc:1,structure:1,power:mars?2:1,battery:ORB[o].ecl>=2?2:1,prop:sf?2:1,comms:mars?3:2,adcs:1,computer:1,thermal:1,fault:1,fluid:1,gear:sf?(mars?2:1):null,inst:new Set(m.kind==="sample"?[3,6,7]:m.kind==="land"?[0,5,3]:[0,3,4])}};
 
-function rocketCalc(){
- const g=k=>sel[k]==null?null:LIST[k][sel[k]],e=g("engine"),t=g("tank"),d=g("decoupler"),f=g("fuselage"),P=RK.map(g).filter(Boolean);
+function rocketCalc(overrideSel){
+ const s=overrideSel||sel;
+ const g=k=>s[k]==null?null:LIST[k][s[k]],e=g("engine"),t=g("tank"),d=g("decoupler"),f=g("fuselage"),P=RK.map(g).filter(Boolean);
  const thr=e?e.thr:0,cap=t?t.cap:0;
  return{n:"Your rocket",thr,cap,c:sum(P,"c"),rel:Math.min(.99,.7+sum(P,"r")),lc:Math.round(4500*Math.min(thr,cap)*(d?d.mult:.6)*(f?f.mult:1))}}
-function calc(){
- const m=mm(),o=ORB[sel.orbit],L=rocketCalc(),ins=[...sel.inst].map(i=>IN[i]);
- const st=pk("structure"),pw=pk("power"),bt=pk("battery"),pr=pk("prop"),cm=pk("comms"),ad=pk("adcs"),cp=pk("computer"),th=pk("thermal"),fd=pk("fault"),fl=pk("fluid"),gr=pk("gear");
+function calc(overrideSel){
+ const s=overrideSel||sel;
+ const m=mm(),o=ORB[s.orbit],L=rocketCalc(s),ins=[...s.inst].map(i=>IN[i]);
+ const st=s.structure==null?Z:LIST.structure[s.structure],pw=s.power==null?Z:LIST.power[s.power],bt=s.battery==null?Z:LIST.battery[s.battery],pr=s.prop==null?Z:LIST.prop[s.prop],cm=s.comms==null?Z:LIST.comms[s.comms],ad=s.adcs==null?Z:LIST.adcs[s.adcs],cp=s.computer==null?Z:LIST.computer[s.computer],th=s.thermal==null?Z:LIST.thermal[s.thermal],fd=s.fault==null?Z:LIST.fault[s.fault],fl=s.fluid==null?Z:LIST.fluid[s.fluid],gr=s.gear==null?Z:LIST.gear[s.gear];
  const P=[st,pw,bt,pr,cm,ad,cp,th,fd,fl,gr,...ins];
  const c={m,o,L,st,bt,cm,cp,ad,th,fd,gr,ins,mass:sum(P,"m"),use:sum(P,"p"),cost:sum(P,"c")+L.c,cap:Math.round(L.lc*o.cap),gen:Math.round(pw.gen*o.solar),dataGen:sum(ins,"data"),down:cm.rate*o.contact,dv:Math.round(pr.dv*fl.dvm)};
  c.ratio=c.dataGen?Math.min(1,c.down/c.dataGen):0;
@@ -295,9 +306,9 @@ function calc(){
 }
 function stat(k,o){
  if(k==="orbit")return`${o.dv} m/s needed · contact ${Math.round(o.contact*100)}% of the time`;
- if(RK.includes(k))return`$${o.c}M · ${o.x}${o.r?" · +"+Math.round(o.r*100)+"% reliability":""}`;
+ if(RK.includes(k))return`$${o.c}M · ${o.x}${o.r?" · +"+Math.round(o.r*100)+"% reliability":""}${o.why?" — "+o.why:""}`;
  const a=[`${o.m} kg`];if(o.p)a.push(`${o.p} W`);a.push(`$${o.c}M`);
- return a.join(" · ")+" · "+(k==="inst"?`${o.data} Mbps data · science ${o.sci[MIS[mi].sk]}`:o.x)}
+ return a.join(" · ")+" · "+(k==="inst"?`${o.data} Mbps data · science ${o.sci[MIS[mi].sk]}`:o.x)+(o.why?" — "+o.why:"")}
 function opts(k){
  const list=k==="orbit"?MIS[mi].orbits.map(id=>({id,...ORB[id]})):LIST[k];
  return`<div class="opts">`+list.map((o,i)=>{if(k!=="orbit"&&(o.lv>lv||(o.surface&&MIS[mi].kind==="orbit")))return"";const v=k==="orbit"?o.id:i,ch=k==="inst"?sel.inst.has(i):sel[k]===v;
@@ -305,31 +316,66 @@ function opts(k){
 function lab(k){if(k==="inst")return sel.inst.size?sel.inst.size+(sel.inst.size>1?" instruments":" instrument"):null;if(k==="orbit")return ORB[sel.orbit].n.split(",")[0];return sel[k]==null?null:LIST[k][sel[k]].n}
 function renderPanel(){
  $("#panel").innerHTML=SYS.filter(S=>S.id!=="gear"||MIS[mi].kind!=="orbit").map(S=>{const labs=S.keys.map(lab),done=labs.every(x=>x),I=INFO[S.id]||SETUP;
- return(S.grp?`<div class="gh">${S.grp}</div>`:"")+`<div class="sys ${openS===S.id?"open":""}" data-id="${S.id}"><button class="sh" aria-expanded="${openS===S.id}"><span>${S.t}</span><em class="${done?"ok":""}">${done?labs.join(", "):"Not installed"}</em></button><div class="sb"><p><b>Where:</b> ${I.w}</p><p><b>Why:</b> ${I.y}</p>${learn?"":S.keys.map(k=>(S.keys.length>1?`<h4>${KN[k]}</h4>`:"")+opts(k)).join("")}</div></div>`}).join("")}
+ return(S.grp?`<div class="gh">${S.grp}</div>`:"")+`<div class="sys ${openS===S.id?"open":""}" data-id="${S.id}"><button class="sh" aria-expanded="${openS===S.id}"><span>${S.t}</span><em class="${done?"ok":""}">${done?labs.join(", "):"Not installed"}</em></button><div class="sb"><p><b>Where:</b> ${I.w}</p><p><b>Why:</b> ${I.y}</p>${I.dec?`<p class="dec"><b>Decision:</b> ${I.dec}</p>`:""}${learn?"":S.keys.map(k=>(S.keys.length>1?`<h4>${KN[k]}</h4>`:"")+opts(k)).join("")}</div></div>`}).join("")}
 function meter(l,v,max,u,inv){const p=Math.min(100,max?v/max*100:0),cls=inv?(v>=max?"":v>=max*.7?"w":"b"):(v>max?"b":v>max*.9?"w":"");
  return`<div class="meter"><div class="l"><span>${l}</span><span>${Math.round(v).toLocaleString()} / ${Math.round(max).toLocaleString()} ${u}</span></div><div class="bar"><i class="${cls}" style="width:${p}%"></i></div></div>`}
 function update(){
- const c=calc(),k=[],add=(t,s)=>k.push(`<li class="${s||""}">${t}</li>`);
+ const c=calc(),k=[],blockers=[],add=(t,s)=>{k.push(`<li class="${s||""}">${t}</li>`);if(s==="b")blockers.push(t)};
  const ks=KEYS(),total=ks.length+1,miss=ks.filter(x=>sel[x]==null).length+(sel.inst.size?0:1);
  $("#hudn").textContent=`${total-miss} / ${total} parts`;$("#hudb").style.width=Math.round((total-miss)/total*100)+"%";
  $("#meters").innerHTML=meter("Mass",c.mass,c.cap,"kg")+meter("Cost",c.cost,c.m.budget,"$M")+meter("Power use",c.use,c.gen,"W")+meter("Science (est.)",c.sci,c.m.min,"pts",1);
- miss?add(`${miss} of ${total} parts still to install.`,"w"):add("Every system is installed");
+ if(miss){add(`${miss} of ${total} parts still to install — finish installing all parts before launch.`,"w")}else{add("Every system is installed")}
  const rk=sel.engine!=null&&sel.tank!=null;
- rk&&c.mass>c.cap?add(`Too heavy by ${c.mass-c.cap} kg. Remove parts or build a stronger rocket.`,"b"):0;
- c.cost>c.m.budget?add(`Over budget by $${c.cost-c.m.budget}M.`,"b"):0;
- c.use>c.gen?add(`Needs ${c.use} W but panels give ${c.gen} W here.`,"b"):0;
- if(rk&&c.L.thr<c.L.cap)add("Engines are weaker than the tank, so thrust limits your lift.","w");
- if(rk&&c.L.cap<c.L.thr)add("The tank is smaller than the engines can use. A bigger tank lifts more.","w");
- if(RK.every(x=>sel[x]!=null)&&c.L.rel<.9)add(`Rocket reliability ${Math.round(c.L.rel*100)}%. Fins, fairing, a decoupler, gimbals and a better computer raise it.`,"w");
- const need=c.o.dv+(c.m.landDv||0);if(sel.prop!=null&&c.dv<need)add(`Delta-v ${c.dv} m/s is below the ${need} m/s this mission needs.`,"w");
- if(sel.gear!=null&&c.gr.tier<c.m.need)add(c.m.dest==="mars"?"Mars needs legs plus a parachute to land.":"The Moon needs at least landing legs.","w");
- if(sel.battery!=null&&c.bt.tier<c.o.ecl)add("Battery too small for this orbit’s eclipses.","w");
- if(sel.comms!=null&&c.cm.tier<c.o.link)add("Radio is too weak to reach from this orbit.","w");
- if(sel.thermal!=null&&c.th.tier<Math.min(3,c.o.heat+(c.use>500?1:0)))add("Thermal control may be too weak for this orbit.","w");
- if(sel.comms!=null&&c.ins.length&&c.ratio<1)add(`Radio sends ${c.down.toFixed(1)} of ${c.dataGen.toFixed(1)} Mbps. Some data is lost.`,"w");
+ if(rk&&c.mass>c.cap){add(`Too heavy by ${c.mass-c.cap} kg — remove heavy parts or increase the fuel tank and engine thrust.`,"b")}
+ if(c.cost>c.m.budget){add(`Budget is too small by $${c.cost-c.m.budget}M — increase budget (pick a lower difficulty) or choose lower-cost parts.`,"b")}
+ if(c.use>c.gen){add(`Needs ${c.use} W but panels give ${c.gen} W here — upgrade solar panels or reduce power-hungry parts.`,"b")}
+ if(rk&&c.L.thr<c.L.cap){add("Fuel tank is larger than engine thrust — increase engine thrust to use the extra propellant.","w")}
+ if(rk&&c.L.cap<c.L.thr){add("Fuel tank is small for your engines — increase the fuel tank size to unlock more lift.","w")}
+ if(RK.every(x=>sel[x]!=null)&&c.L.rel<.9){add(`Rocket reliability ${Math.round(c.L.rel*100)}% — add fins, fairing, decoupler, gimbals, or a redundant flight computer.`,"w")}
+ const need=c.o.dv+(c.m.landDv||0);if(sel.prop!=null&&c.dv<need){add(`Delta-v ${c.dv} m/s is below the ${need} m/s needed — use a higher-dv thruster or turbopump tanks.`,"w")}
+ if(sel.gear!=null&&c.gr.tier<c.m.need){add(c.m.dest==="mars"?"Mars needs legs plus a parachute — upgrade landing gear.":"The Moon needs landing legs — upgrade landing gear.","w")}
+ if(sel.battery!=null&&c.bt.tier<c.o.ecl){add("Battery too small for eclipses — upgrade to a larger battery pack.","w")}
+ if(sel.comms!=null&&c.cm.tier<c.o.link){add("Radio too weak for this distance — upgrade comms antenna/dish.","w")}
+ if(sel.thermal!=null&&c.th.tier<Math.min(3,c.o.heat+(c.use>500?1:0))){add("Thermal control too weak — upgrade thermal tier for this orbit and power draw.","w")}
+ if(sel.comms!=null&&c.ins.length&&c.ratio<1){add(`Radio sends ${c.down.toFixed(1)} of ${c.dataGen.toFixed(1)} Mbps — upgrade radio or trim high-data instruments.`,"w")}
  $("#checks").innerHTML=k.join("");
+
+ const canLaunch=!learn && miss===0 && blockers.length===0;
+ const g=$("#gate");
+ if(learn){
+  g.className="gate";
+  g.textContent="Explore mode: inspect this finished build, then switch to Build from scratch to launch.";
+ } else if(canLaunch){
+  g.className="gate ok";
+  g.textContent="Checklist approved — rocket and spacecraft are cleared for launch.";
+ } else {
+  g.className="gate no";
+  const reason=blockers[0] || (miss>0?`Install the remaining ${miss} part(s) first.`:"Resolve checklist warnings before launch.");
+  g.textContent="Not ready to launch: " + reason;
+ }
+
+ /* Real-time What-if: increase fuel tank */
+ const curTank=sel.tank==null?-1:sel.tank;
+ const nextTankIdx=curTank<0?0:Math.min(RTK.length-1,curTank+1);
+ const canSimFuel=!learn && nextTankIdx>curTank && RTK[nextTankIdx].lv<=lv;
+ const wif=$("#whatif");
+ if(canSimFuel){
+  const simSel={...sel,inst:new Set(sel.inst),tank:nextTankIdx};
+  const wc=calc(simSel);
+  const dCap=wc.cap-c.cap, dCost=wc.cost-c.cost, dMassMargin=(wc.cap-wc.mass)-(c.cap-c.mass);
+  wif.innerHTML=`<div class="row"><b>What-if: increase tank to ${RTK[nextTankIdx].n}</b><label style="display:flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" id="wifChk" ${whatifFuel?"checked":""}>Preview</label></div>`+
+    (whatifFuel?`<ul><li>Lift capacity: ${c.cap.toLocaleString()} → <b>${wc.cap.toLocaleString()} kg</b> (${dCap>=0?"+":""}${dCap.toLocaleString()} kg)</li>`+
+    `<li>Payload mass margin: ${(c.cap-c.mass).toLocaleString()} → <b>${(wc.cap-wc.mass).toLocaleString()} kg</b> (${dMassMargin>=0?"+":""}${dMassMargin.toLocaleString()} kg)</li>`+
+    `<li>Total cost: $${c.cost}M → <b>$${wc.cost}M</b> (${dCost>=0?"+":""}$${dCost}M vs $${c.m.budget}M budget)</li>`+
+    `<li>Power &amp; comms: unchanged (${c.use} W draw, ${c.down.toFixed(1)} Mbps downlink); spacecraft dv stays ${c.dv} m/s unless thruster/fluid changes.</li></ul>`:"");
+  const chk=$("#wifChk");
+  if(chk)chk.onchange=e=>{whatifFuel=e.target.checked;update()};
+ } else {
+  wif.innerHTML=learn?"":`<span class="mut">What-if fuel: ${curTank<0?"select a tank to preview upgrades":nextTankIdx===curTank?"at maximum tank size for this level":"higher tank requires a higher difficulty level"}.</span>`;
+ }
+
  $("#launch").textContent=learn?"Start building from scratch":"Launch mission";
- $("#launch").disabled=!learn&&(miss>0||c.mass>c.cap||c.cost>c.m.budget||c.use>c.gen);
+ $("#launch").disabled=!learn && !canLaunch;
  $("#mLearn").classList.toggle("on",learn);$("#mBuild").classList.toggle("on",!learn);
  rebuild();
 }
@@ -423,15 +469,24 @@ function init3d(){
 let tt;function toast(t){const e=$("#toast");e.textContent=t;e.classList.add("on");clearTimeout(tt);tt=setTimeout(()=>e.classList.remove("on"),1400)}
 function toMenu(){show("menu")}
 function missionIcon(m){return`<svg class="ic" viewBox="0 0 88 88" aria-hidden="true"><circle cx="44" cy="44" r="26" fill="${m.body}"/><circle cx="35" cy="35" r="9" fill="#fff" opacity=".18"/>${m.dest==="moon"?`<circle cx="52" cy="50" r="5" fill="#000" opacity=".18"/><circle cx="40" cy="56" r="3" fill="#000" opacity=".18"/>`:""}<ellipse cx="44" cy="44" rx="40" ry="13" fill="none" stroke="#a9bcff" stroke-width="1.5" transform="rotate(-20 44 44)"/><circle cx="78" cy="30" r="3.5" fill="#fff"/></svg>`}
-const MGROUPS=[
-  {dest:"earth",title:"Earth · Blue Horizon",sub:"Stay close to home and watch our planet from orbit."},
-  {dest:"moon",title:"Lunar · Silver Gateway",sub:"Cross cislunar space to orbit, land, or sample the Moon."},
-  {dest:"mars",title:"Mars · Red Frontier",sub:"Brave deep-space transit, thin air, and long radio delays."}
+const DESTS=[
+  {id:"moon",n:"Moon",b:"Explore cislunar space — choose orbiting, lunar landing, or sample collection.",body:"#8d93a6",dest:"moon"},
+  {id:"mars",n:"Mars",b:"Cross to the Red Planet — choose orbiting, Mars landing, or sample collection.",body:"#c1583a",dest:"mars"},
+  {id:"earth",n:"Earth",b:"Track coastlines, crops and storms from Earth orbit.",body:"#2b4fb8",dest:"earth"}
 ];
 function toMis(){let b={};try{b=JSON.parse(localStorage.getItem("msd-best")||"{}")}catch(e){}
- const card=m=>{const i=MIS.indexOf(m);return`<div class="card mc">${missionIcon(m)}<h3>${m.n}</h3><p class="mut">${m.b}</p><div class="tags"><span class="pill">${{orbit:"Orbit and data",land:"Landing",sample:"Sample collection"}[m.kind]}</span><span class="pill">Best score ${b[m.id]||"none yet"}</span></div><button class="btn pri" data-i="${i}">Select mission</button></div>`};
- $("#missions").innerHTML=MGROUPS.map(g=>{const list=MIS.filter(m=>m.dest===g.dest);return`<div class="mgrp"><h3>${g.title}</h3><p class="mut">${g.sub}</p></div><div class="grid3">${list.map(card).join("")}</div>`}).join("");
- $("#missions").querySelectorAll("button").forEach(x=>x.onclick=()=>{mi=+x.dataset.i;toDiff()});show("mis")}
+ $("#missions").innerHTML=DESTS.map(d=>{const list=MIS.filter(m=>m.dest===d.dest);const best=list.map(m=>b[m.id]).filter(Boolean);
+  return`<div class="card mc">${missionIcon(d)}<h3>${d.n}</h3><p class="mut">${d.b}</p><div class="tags"><span class="pill">${list.length===1?"Orbit exploring":list.length+" mission choices"}</span><span class="pill">Best score ${best.length?Math.max(...best):"none yet"}</span></div><button class="btn pri" data-d="${d.dest}">Select ${d.n}</button></div>`}).join("");
+ $("#missions").querySelectorAll("button").forEach(x=>x.onclick=()=>{
+  const dest=x.dataset.d,list=MIS.filter(m=>m.dest===dest);
+  if(list.length===1){mi=MIS.indexOf(list[0]);toDiff()}else{toSubMis(dest)}
+ });show("mis")}
+function toSubMis(dest){let b={};try{b=JSON.parse(localStorage.getItem("msd-best")||"{}")}catch(e){}
+ const D=DESTS.find(x=>x.dest===dest),list=MIS.filter(m=>m.dest===dest);
+ $("#smt").textContent=D.n+" missions";
+ $("#smb").textContent="Pick the mission profile you want to build and fly.";
+ $("#submissions").innerHTML=list.map(m=>{const i=MIS.indexOf(m);return`<div class="card mc">${missionIcon(m)}<h3>${m.n}</h3><p class="mut">${m.b}</p><div class="tags"><span class="pill">${{orbit:"Orbit and data",land:"Landing",sample:"Sample collection"}[m.kind]}</span><span class="pill">Best score ${b[m.id]||"none yet"}</span></div><button class="btn pri" data-i="${i}">Select mission</button></div>`}).join("");
+ $("#submissions").querySelectorAll("button").forEach(x=>x.onclick=()=>{mi=+x.dataset.i;toDiff()});show("submis")}
 function toDiff(){$("#dt").textContent=MIS[mi].n+": choose your level";
  $("#levels").innerHTML=LV.map((l,i)=>`<div class="card mc lvc"><span class="stars" role="img" aria-label="Difficulty ${i+1} of 3">${"★".repeat(i+1)+"☆".repeat(2-i)}</span><h3>${l.n}</h3><p class="mut">${l.d}</p><button class="btn pri" data-i="${i}">Play ${l.n.toLowerCase()}</button></div>`).join("");
  $("#levels").querySelectorAll("button").forEach(x=>x.onclick=()=>{lv=+x.dataset.i;openS="setup";openBuild(true)});show("diff")}
