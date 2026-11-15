@@ -96,7 +96,7 @@ if(!cheap)R.push('No available rocket can reach '+o.dest+'.');else if(d.b<cheap.
 if(o.id==='jup'&&D.diff!=='sand')R.push('Sunlight at Jupiter is only 4% of Earth’s: you would need an RTG and a deep-space antenna.');return R}
 
 /* ---------- screens ---------- */
-function render(){const a=$('#app');a.innerHTML=({auth,hub,mission,sim,report,learn}[ST.scr])()}
+function render(){const a=$('#app');a.innerHTML=({auth,hub,mission,sim,report,learn}[ST.scr])();if(ST.scr==='sim')startAnim()}
 function head(){return`<div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap"><h1>✦ SKY FELICIA</h1><div class="dim">${ST.m.join(', ')} · Funds <b class="ok">${eur(G.euro)}</b> <button class="s" onclick="ST.scr='hub';render()">Menu</button></div></div>`}
 function auth(){return`<h1>✦ SKY FELICIA</h1><p>Space mission design for up to four crew members.</p><div class="g"><div class="card"><h3>${ST.mode==='login'?'Log in':'Create your Sky Felicia account'}</h3>
 <input id="u" placeholder="Username"><input id="p" type="password" placeholder="Password"><p class="bad">${ST.msg}</p>
@@ -142,19 +142,19 @@ function share(){prompt('Copy this design code to share it:',btoa(JSON.stringify
 function imp(){const c=prompt('Paste a design code:');try{D=G.draft=JSON.parse(atob(c));D.step=3;ST.scr='mission';sv();render()}catch(e){alert('Invalid code')}}
 
 /* ---------- simulation ---------- */
-function launch(){const r=calc();SIM={ph:0,dmg:0,mult:1,bonus:[],log:[],r,eva:0};ST.scr='sim';render()}
+function launch(){const r=calc();SIM={ph:0,dmg:0,mult:1,bonus:[],log:[],r,eva:0,t:0,curv:1,cur:1,days:DAYS[D.orbit],fuel:D.fuel,fx:null};ST.scr='sim';render()}
 const chat=(l)=>`<div class="chat">${l.map(x=>`<p><b>${x[0]}:</b> ${x[1]}</p>`).join('')}</div>`;
-function sim(){const S=SIM,d=df(),n=crew(),team=ST.m.length>1;let h=head()+`<div class="card"><h3>Mission control – ${obj().n}</h3><p>Spacecraft damage: ${Math.round(S.dmg)}%<div class="bar"><i class="${S.dmg>40?'bad':''}" style="width:${S.dmg}%"></i></div></p>`;
+function sim(){const S=SIM,d=df(),n=crew(),team=ST.m.length>1;let h=head()+`<div class="card"><h3>Mission control – ${obj().n}</h3><canvas id="tc" width="900" height="300" style="width:100%;border-radius:10px;background:rgba(0,0,0,.35)"></canvas><div id="hud" class="dim"></div><p>Spacecraft damage: ${Math.round(S.dmg)}%<div class="bar"><i class="${S.dmg>40?'bad':''}" style="width:${S.dmg}%"></i></div></p>`;
 if(S.ph===0)h+=`<p>🚀 Liftoff on ${S.r.ln.n}! Mass ${Math.round(S.r.mass)} kg into ${S.r.orb.n}.</p><button onclick="SIM.ph=1;render()">Continue to mid-course ▶</button>`;
-if(S.ph===1){const can=D.fuel>=100;h+=`<h3>Mid-course decision ${ib('fuel')}</h3>`;
+if(S.ph===1){const can=D.fuel>=100;h+=`<h3>Mid-course decision ${ib('fuel')}</h3><p class="dim">On the map, your current route is the grey dashed line. The green dashed line is the shorter route a burn would give you.</p>`;
 if(team){const t=[[n[0][0],'Planning here: a short burn could bring us to target sooner and add science time.'],[n[1][0],'Systems here: burning uses 100 kg fuel. I want a margin kept for safety.'],[n[2][0],'Science here: earlier arrival means more data. I vote burn!'],[n[3][0],'Comms here: more data needs the dish at full power. I need the power margin protected.'],[n[0][0],'Compromise: a half-length burn, the dish stays on schedule, we keep 50 kg reserve.'],[n[1][0],'Agreed. Systems approves.'],[n[2][0],'Great, science wins too!'],[n[3][0],'Comms approved. Everyone happy 🎉']];
-h+=`<div id="cc" class="chat"></div><button id="ap" disabled onclick="SIM.mult*=1.12;SIM.bonus.push(['Team coordination: a negotiated compromise',8]);SIM.ph=2;render()">Approve team plan</button>`;let i=0;setTimeout(function f(){const c=$('#cc');if(!c||i>=t.length){const b=$('#ap');if(b)b.disabled=false;return}c.innerHTML+=`<p><b>${t[i][0]}:</b> ${t[i][1]}</p>`;i++;setTimeout(f,900)},200)}
-else h+=`<button ${can?'':'disabled'} onclick="SIM.mult*=1.15;SIM.bonus.push(['Burn for faster arrival',6]);SIM.ph=2;render()">Burn 100 kg: arrive sooner (+15% science)</button> <button onclick="SIM.bonus.push(['Saved propellant by coasting',4]);SIM.ph=2;render()">Coast: save fuel</button>${can?'':'<p class="dim">Burn needs ≥100 kg propellant: you planned '+D.fuel+' kg.</p>'}`}
+h+=`<div id="cc" class="chat"></div><button id="ap" disabled onclick="SIM.curv=.6;SIM.fuel=Math.max(0,SIM.fuel-50);SIM.days*=.88;SIM.mult*=1.12;SIM.bonus.push(['Team coordination: a negotiated compromise',8]);SIM.ph=2;render()">Approve team plan</button>`;let i=0;setTimeout(function f(){const c=$('#cc');if(!c||i>=t.length){const b=$('#ap');if(b)b.disabled=false;return}c.innerHTML+=`<p><b>${t[i][0]}:</b> ${t[i][1]}</p>`;i++;setTimeout(f,900)},200)}
+else h+=`<button ${can?'':'disabled'} onclick="SIM.curv=.35;SIM.fuel-=100;SIM.days*=.8;SIM.mult*=1.15;SIM.bonus.push(['Burn for faster arrival',6]);SIM.ph=2;render()">Burn 100 kg: arrive in ${Math.round(S.days*.8)} days (+15% science)</button> <button onclick="SIM.bonus.push(['Saved propellant by coasting',4]);SIM.ph=2;render()">Coast: save fuel, arrive in ${Math.round(S.days)} days</button>${can?'':'<p class="dim">Burn needs ≥100 kg propellant: you planned '+D.fuel+' kg.</p>'}`}
 if(S.ph===2){const e=EV[d.ev>0?(S.ei||0):0];if(!d.ev){S.ph=3;return sim()}h+=`<h3>⚠ ${e.t}</h3><p>${e.d}</p>`+[e.a,e.b].map((o,i)=>`<button class="s" style="margin:3px" onclick="ev(${i})">${o[0]}</button>`).join('');if(S.fb)h+=`<p class="ok">${S.fb}</p>`}
 if(S.ph===3){if(S.dmg>=25&&S.eva<3)h+=`<h3>🧑‍🚀 Spacewalk repair needed</h3><p>Tighten ${3-S.eva} bolt(s) on the damaged panel, then return inside. Each trip drains crew health.</p><button onclick="eva()">Tighten bolt (${S.eva}/3)</button>`;
 else h+=`<p>All systems stable. Starting science operations for ${d.y} years…</p><button onclick="finish()">Finish mission & see report ▶</button>`}
 return h+'</div>'}
-function ev(i){const d=df(),e=EV[(SIM.ei||0)],o=i?e.b:e.a;let dm=o[1]*(SIM.r.rf?.5:1)*(SIM.r.hm?.5:1);SIM.dmg+=dm;SIM.mult*=1+o[2]/100;SIM.fb=o[4]+(dm?' Damage taken: '+Math.round(dm)+'%.':'');if(o[3])SIM.bonus.push(['Event: '+e.t+' handled well',o[3]]);
+function ev(i){const d=df(),e=EV[(SIM.ei||0)],o=i?e.b:e.a;let dm=o[1]*(SIM.r.rf?.5:1)*(SIM.r.hm?.5:1);SIM.dmg+=dm;SIM.mult*=1+o[2]/100;SIM.fx={k:SIM.ei?'ast':'flare',t0:performance.now(),hit:dm>0};SIM.fb=o[4]+(dm?' Damage taken: '+Math.round(dm)+'%.':'');if(o[3])SIM.bonus.push(['Event: '+e.t+' handled well',o[3]]);
 if(d.ev>1&&!SIM.ei){SIM.ei=1}else SIM.ph=3;render()}
 function eva(){SIM.eva++;SIM.dmg=Math.max(0,SIM.dmg-8);crew().forEach(c=>G.hp[c[0]]=Math.max(40,(G.hp[c[0]]??100)-3));if(SIM.eva===3)SIM.bonus.push(['Safe spacewalk repair',5]);render()}
 function finish(){const S=SIM,r=S.r,ob=obj(),d=df(),sci=r.sci*S.mult*(1-S.dmg/200),thr=d.thr,okSci=sci>=ob.need,okData=r.ratio>=thr,ok=okSci&&okData,why=[],sc=[];
@@ -172,5 +172,29 @@ function report(){const R=SIM.res,r=SIM.r;return head()+`<div class="card"><h2 c
 <h3>Rewards for good decisions</h3>${R.sc.map(x=>`<p class="ok">+ ${eur(x[1])} ${x[0]}</p>`).join('')||'<p class="dim">Try right-sizing your rocket and matching instruments to the objective.</p>'}<h2>Total earned: ${eur(R.tot)}</h2>
 <p class="dim">Design: ${Math.round(r.mass)} kg, ${Math.round(r.use)} W, ${eur(r.total)}, ${r.orb.n}. Try again with different parts: there is rarely only one perfect solution!</p><button onclick="ST.scr='hub';render()">Back to menu</button></div>`}
 function learn(){return head()+`<div class="card"><h3>Space basics</h3><div class="g">${Object.keys(INFO).map(k=>`<div class="opt" onclick="info('${k}')"><b>${INFO[k][0]}</b><br><span class="dim">${INFO[k][1].split('.')[0]}. (tap for more)</span></div>`).join('')}</div></div>`}
+
+const DAYS={leo:1,sso:1,geo:2,llo:5,mo:210,jo:1800};
+function startAnim(){cancelAnimationFrame(window._r);const c=$('#tc');if(!c)return;const x=c.getContext('2d'),W=c.width,H=c.height,A=[70,H/2],B=[W-90,H/2];let last='';
+const pos=(t,k)=>{const C=[(A[0]+B[0])/2,H/2-k*H*.42],u=1-t;return[u*u*A[0]+2*u*t*C[0]+t*t*B[0],u*u*A[1]+2*u*t*C[1]+t*t*B[1]]};
+const path=(k,col,dash)=>{x.beginPath();x.setLineDash(dash);x.strokeStyle=col;x.lineWidth=2;for(let i=0;i<=40;i++){const p=pos(i/40,k);i?x.lineTo(p[0],p[1]):x.moveTo(p[0],p[1])}x.stroke();x.setLineDash([])};
+const ball=(p,r,col,lb)=>{x.fillStyle=col;x.beginPath();x.arc(p[0],p[1],r,0,7);x.fill();x.fillStyle='#fff';x.font='12px sans-serif';x.fillText(lb,p[0]-r,p[1]+r+16)};
+(function f(now){const S=SIM;if(!S||ST.scr!=='sim'||!$('#tc'))return;const r=S.r,tt=[.35,.35,.75,1][S.ph]??1;
+S.t+=Math.sign(tt-S.t)*Math.min(Math.abs(tt-S.t),.0025);S.cur+=(S.curv-S.cur)*.03;x.clearRect(0,0,W,H);
+ball(A,26,'#2e6bd6','Earth');const dst=obj().dest;ball(B,dst==='Jupiter'?30:dst==='Earth'?10:16,{Moon:'#bbb',Mars:'#d1603d',Jupiter:'#d9a066',Earth:'#2e6bd6'}[dst],r.orb.n);
+if(S.ph===1){path(S.cur,'#8fa0d6',[4,6]);path(.35,'#6fe3a0',[8,6]);x.fillStyle='#6fe3a0';x.fillText('Burn route: faster',W/2-50,H/2-20)}
+else{if(S.curv<1)path(1,'#556',[3,6]);path(S.cur,'#6fe3a0',[])}
+let p=pos(Math.min(S.t,1),S.cur),orbiting=S.t>=.99;
+if(orbiting){const a=now/600;p=[B[0]+Math.cos(a)*34,B[1]+Math.sin(a)*34];x.strokeStyle='#ffffff55';x.beginPath();x.arc(B[0],B[1],34,0,7);x.stroke();
+for(let k=0;k<4;k++){const u=(now/1200+k/4)%1,ok=k/4<r.ratio-.01,q=[p[0]+(A[0]-p[0])*u,p[1]+(A[1]-p[1])*u*(ok?1:.3)];x.fillStyle=ok?'#6fe3a0':'#ff6b6b';x.globalAlpha=1-(ok?0:u);x.fillRect(q[0],q[1],5,5);x.globalAlpha=1}}
+if(S.t<.05){x.fillStyle='#ffb347';x.beginPath();x.moveTo(p[0]-4,p[1]);x.lineTo(p[0]-4-18-Math.random()*8,p[1]+3);x.lineTo(p[0]-4,p[1]+6);x.fill()}
+const pw=Math.min(22,r.gen/20+6);x.fillStyle='#3a6df0';x.fillRect(p[0]-7-pw,p[1]-2,pw,5);x.fillRect(p[0]+7,p[1]-2,pw,5);x.fillStyle=S.dmg>20?'#ff8080':'#8aa0ff';x.fillRect(p[0]-7,p[1]-5,14,10);
+if(r.L.some(i=>i.r>2)){x.strokeStyle='#fff';x.beginPath();x.arc(p[0],p[1]-8,5,0,Math.PI,true);x.stroke()}
+r.L.filter(i=>i.s).forEach((i,k)=>{x.fillStyle='#6fe3a0';x.fillRect(p[0]-7+k*4,p[1]+6,3,3)});if(r.bt){x.fillStyle='#ffd166';x.fillRect(p[0]-2,p[1]-2,4,4)}
+if(S.ph===3&&S.dmg>=25&&S.eva<3){x.strokeStyle='#fff';x.beginPath();x.moveTo(p[0],p[1]+5);x.lineTo(p[0]+20,p[1]+30);x.stroke();ball([p[0]+22,p[1]+32],5,'#fff','')}
+const fx=S.fx,el=fx?now-fx.t0:9e9;if(el<2500){if(fx.k==='flare'){x.fillStyle='rgba(255,220,80,'+(.5-el/5000)+')';x.beginPath();x.arc(W/2,-20,160+el/10,0,7);x.fill();x.fillText('☀ Solar flare!',W/2-40,H-20)}
+else{x.fillStyle='#999';for(let k=0;k<6;k++){x.beginPath();x.arc(W-el/3+k*60,40+((k*53)%200),6+k%3*2,0,7);x.fill()}x.fillStyle='#fff';x.fillText('☄ Asteroids!',W/2-40,H-20)}
+if(fx.hit){x.strokeStyle='#ff4040';x.beginPath();x.arc(p[0],p[1],14+el/80,0,7);x.stroke()}}
+const h=`ETA ${Math.max(0,Math.round(S.days*(1-Math.min(S.t,1))))} days · Fuel ${Math.max(0,S.fuel)} kg · Power ${Math.round(r.use)}/${Math.round(r.gen)} W · Data home ${Math.round(r.ratio*100)}% · Mass ${Math.round(r.mass-D.fuel+Math.max(0,S.fuel))} kg · Damage ${Math.round(S.dmg)}%`;if(h!==last){last=h;$('#hud').textContent=h}
+window._r=requestAnimationFrame(f)})(performance.now())}
 render();
 </script></body></html>
