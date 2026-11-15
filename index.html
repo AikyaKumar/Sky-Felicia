@@ -178,13 +178,23 @@ function startAnim(){cancelAnimationFrame(window._r);const c=$('#tc');if(!c)retu
 const pos=(t,k)=>{const C=[(A[0]+B[0])/2,H/2-k*H*.42],u=1-t;return[u*u*A[0]+2*u*t*C[0]+t*t*B[0],u*u*A[1]+2*u*t*C[1]+t*t*B[1]]};
 const path=(k,col,dash)=>{x.beginPath();x.setLineDash(dash);x.strokeStyle=col;x.lineWidth=2;for(let i=0;i<=40;i++){const p=pos(i/40,k);i?x.lineTo(p[0],p[1]):x.moveTo(p[0],p[1])}x.stroke();x.setLineDash([])};
 const ball=(p,r,col,lb)=>{x.fillStyle=col;x.beginPath();x.arc(p[0],p[1],r,0,7);x.fill();x.fillStyle='#fff';x.font='12px sans-serif';x.fillText(lb,p[0]-r,p[1]+r+16)};
+const rn=q=>{q=Math.sin(q*127.1)*43758.5453;return q-Math.floor(q)};
+const planet=(p,r,k,lb,now)=>{const X=p[0],Y=p[1],el=(a,b,w,h,c,al)=>{x.globalAlpha=al||1;x.fillStyle=c;x.beginPath();x.ellipse(a,b,w,h,0,0,7);x.fill();x.globalAlpha=1};x.save();
+if(k==='Earth'||k==='Mars'){const g=x.createRadialGradient(X,Y,r*.95,X,Y,r*1.35);g.addColorStop(0,k==='Earth'?'rgba(120,180,255,.6)':'rgba(255,160,110,.3)');g.addColorStop(1,'rgba(0,0,0,0)');x.fillStyle=g;x.beginPath();x.arc(X,Y,r*1.35,0,7);x.fill()}
+x.beginPath();x.arc(X,Y,r,0,7);x.clip();const cl={Earth:['#5db0ff','#1d56b0','#0a2a66'],Moon:['#ececec','#a0a0a0','#585858'],Mars:['#e8975f','#b8532f','#6e2a16'],Jupiter:['#e8d4b0','#c99a6a','#8a5a3a']}[k],g=x.createRadialGradient(X-r*.35,Y-r*.35,r*.1,X,Y,r*1.1);g.addColorStop(0,cl[0]);g.addColorStop(.6,cl[1]);g.addColorStop(1,cl[2]);x.fillStyle=g;x.fillRect(X-r,Y-r,2*r,2*r);
+if(k==='Earth'){for(let i=0;i<7;i++){const ox=((rn(i*3)*2.4*r+now*.008)%(2.4*r))-1.2*r,oy=(rn(i*7)-.5)*r*1.3,c=i%3?'#4c9a4f':'#9a8650';el(X+ox,Y+oy,r*(.18+rn(i+9)*.25),r*(.12+rn(i+4)*.2),c);el(X+ox+r*.12,Y+oy+r*.08,r*.14,r*.1,c)}
+el(X,Y-r*.97,r*.4,r*.12,'#fff',.9);for(let i=0;i<8;i++)el(X+((rn(i*5+1)*2.6*r+now*.015)%(2.6*r))-1.3*r,Y+(rn(i*3+2)-.5)*1.7*r,r*.35,r*.06,'#fff',.55)}
+if(k==='Moon'){[[-.3,-.2,.35,.25],[.25,.1,.3,.2],[-.1,.4,.25,.15]].forEach(m=>el(X+m[0]*r,Y+m[1]*r,m[2]*r,m[3]*r,'#6f6f74',.5));for(let i=0;i<16;i++){const a=rn(i)*6.28,d=Math.sqrt(rn(i+30))*r*.9,cx=X+Math.cos(a)*d,cy=Y+Math.sin(a)*d,cr=r*(.05+rn(i+60)*.1);el(cx,cy,cr,cr,'#3c3c3c',.4);x.strokeStyle='rgba(255,255,255,.3)';x.beginPath();x.arc(cx,cy,cr,0,7);x.stroke()}}
+if(k==='Mars'){for(let i=0;i<5;i++)el(X+(rn(i)-.5)*r*1.3,Y+(rn(i+8)-.3)*r,r*(.2+rn(i+3)*.25),r*.15,'#6e3420',.55);el(X,Y-r*.95,r*.35,r*.14,'#fff',.85);for(let i=0;i<8;i++){const cr=r*(.04+rn(i+50)*.06);el(X+(rn(i+20)-.5)*r*1.5,Y+(rn(i+40)-.5)*r*1.5,cr,cr,'#5a2412',.4)}}
+if(k==='Jupiter'){const bc=['#d8b890','#b8875a','#e8d4b0','#a0643c'];for(let i=0;i<9;i++){x.globalAlpha=.8;x.fillStyle=bc[i%4];x.fillRect(X-r,Y-r+i*2*r/9,2*r,2*r/9+1)}x.globalAlpha=1;el(X+r*.25,Y+r*.3,r*.2,r*.12,'#b33a2a')}
+const sh=x.createRadialGradient(X-r*.45,Y-r*.45,r*.2,X,Y,r*1.1);sh.addColorStop(0,'rgba(0,0,0,0)');sh.addColorStop(1,'rgba(0,0,12,.65)');x.fillStyle=sh;x.fillRect(X-r,Y-r,2*r,2*r);x.restore();x.fillStyle='#fff';x.font='12px sans-serif';x.fillText(lb,X-r,Y+r+16)};
 (function f(now){const S=SIM;if(!S||ST.scr!=='sim'||!$('#tc'))return;const r=S.r,tt=[.35,.35,.75,1][S.ph]??1;
 S.t+=Math.sign(tt-S.t)*Math.min(Math.abs(tt-S.t),.0025);S.cur+=(S.curv-S.cur)*.03;x.clearRect(0,0,W,H);
-ball(A,26,'#2e6bd6','Earth');const dst=obj().dest;ball(B,dst==='Jupiter'?30:dst==='Earth'?10:16,{Moon:'#bbb',Mars:'#d1603d',Jupiter:'#d9a066',Earth:'#2e6bd6'}[dst],r.orb.n);
+planet(A,34,'Earth','Earth',now);const dst=obj().dest,tr={Jupiter:34,Earth:14,Moon:18,Mars:20}[dst];planet(B,tr,dst,r.orb.n,now);
 if(S.ph===1){path(S.cur,'#8fa0d6',[4,6]);path(.35,'#6fe3a0',[8,6]);x.fillStyle='#6fe3a0';x.fillText('Burn route: faster',W/2-50,H/2-20)}
 else{if(S.curv<1)path(1,'#556',[3,6]);path(S.cur,'#6fe3a0',[])}
 let p=pos(Math.min(S.t,1),S.cur),orbiting=S.t>=.99;
-if(orbiting){const a=now/600;p=[B[0]+Math.cos(a)*34,B[1]+Math.sin(a)*34];x.strokeStyle='#ffffff55';x.beginPath();x.arc(B[0],B[1],34,0,7);x.stroke();
+if(orbiting){const a=now/600;p=[B[0]+Math.cos(a)*(tr+16),B[1]+Math.sin(a)*(tr+16)];x.strokeStyle='#ffffff55';x.beginPath();x.arc(B[0],B[1],tr+16,0,7);x.stroke();
 for(let k=0;k<4;k++){const u=(now/1200+k/4)%1,ok=k/4<r.ratio-.01,q=[p[0]+(A[0]-p[0])*u,p[1]+(A[1]-p[1])*u*(ok?1:.3)];x.fillStyle=ok?'#6fe3a0':'#ff6b6b';x.globalAlpha=1-(ok?0:u);x.fillRect(q[0],q[1],5,5);x.globalAlpha=1}}
 if(S.t<.05){x.fillStyle='#ffb347';x.beginPath();x.moveTo(p[0]-4,p[1]);x.lineTo(p[0]-4-18-Math.random()*8,p[1]+3);x.lineTo(p[0]-4,p[1]+6);x.fill()}
 const pw=Math.min(22,r.gen/20+6);x.fillStyle='#3a6df0';x.fillRect(p[0]-7-pw,p[1]-2,pw,5);x.fillRect(p[0]+7,p[1]-2,pw,5);x.fillStyle=S.dmg>20?'#ff8080':'#8aa0ff';x.fillRect(p[0]-7,p[1]-5,14,10);
