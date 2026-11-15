@@ -1,0 +1,6 @@
+{
+  "name": "OrbitalFrontier.Editor",
+  "rootNamespace": "OrbitalFrontier.Editor",
+  "references": [],
+  "includePlatforms": ["Editor"]
+}

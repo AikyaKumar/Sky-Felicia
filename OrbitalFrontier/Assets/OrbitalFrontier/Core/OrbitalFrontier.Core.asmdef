@@ -1,0 +1,5 @@
+{
+  "name": "OrbitalFrontier.Core",
+  "rootNamespace": "OrbitalFrontier.Core",
+  "noEngineReferences": true
+}

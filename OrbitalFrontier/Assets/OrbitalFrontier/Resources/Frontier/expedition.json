@@ -1,0 +1,568 @@
+{
+  "worlds": [
+    {
+      "id": "moon",
+      "latitude": 26.132254151206855,
+      "longitude": 3.63382640448242,
+      "heightFile": "moon_height",
+      "texture": "moon_site",
+      "mapSize": 361,
+      "spacing": 5,
+      "datumHeight": -1928.661,
+      "rasterWindow": "1678,4299,361,361",
+      "name": "Hadley–Apennine",
+      "body": "Moon",
+      "tag": "LUNAR GEOLOGY",
+      "subtitle": "Traverse the Apollo 15 landing region",
+      "gravity": 1.625,
+      "radius": 1737400,
+      "mu": 4902800118000,
+      "spin": 2360592,
+      "pressure": 0,
+      "starDistance": 1,
+      "budget": 3150,
+      "orbitLow": 80,
+      "orbitHigh": 150,
+      "days": 4.95,
+      "fastDays": 3.25,
+      "lightTime": 2.57,
+      "arrivalDV": 415,
+      "terminalDV": 1120,
+      "landingLimit": 3,
+      "startingAlt": 370,
+      "startingVertical": -28,
+      "startingHorizontal": 17,
+      "color": "b9aec7",
+      "source": "https://data.lroc.im-ldi.com/lroc/view_rdr/NAC_DTM_APOLLO15_2",
+      "research": "https://science.nasa.gov/photojournal/retracing-the-steps-of-apollo-15/",
+      "credit": "LRO / LROC NAC stereo • 5 m source cells",
+      "description": "Survey mare and regolith terrain at the Apollo 15 landing region. Compare field measurements and bring both records back to the ship.",
+      "points": [
+        {
+          "name": "Mare reference station",
+          "x": 66,
+          "z": -109,
+          "observation": "The Apollo 15 crew investigated mare basalt and sampled material near Hadley Rille. This station represents a game survey over the measured terrain.",
+          "source": "https://nssdc.gsfc.nasa.gov/planetary/lunar/apollo15info.html"
+        },
+        {
+          "name": "Apennine transect",
+          "x": -86,
+          "z": -187,
+          "observation": "Apollo 15 explored the boundary between dark mare plains and the Apennine highlands. The terrain grid records regional shape; this beacon represents a simulated traverse waypoint.",
+          "source": "https://science.nasa.gov/photojournal/retracing-the-steps-of-apollo-15/"
+        }
+      ]
+    },
+    {
+      "id": "mars",
+      "latitude": 18.444800997425997,
+      "longitude": 77.45081305376694,
+      "heightFile": "mars_height",
+      "texture": "mars_site",
+      "mapSize": 151,
+      "spacing": 20,
+      "datumHeight": -2567.054,
+      "rasterWindow": "1199,2430,151,151",
+      "name": "Jezero Crater",
+      "body": "Mars",
+      "tag": "MARTIAN GEOLOGY",
+      "subtitle": "Survey crater floor near Octavia E. Butler Landing",
+      "gravity": 3.71,
+      "radius": 3389500,
+      "mu": 42828375816000,
+      "spin": 88642.7,
+      "pressure": 0.61,
+      "starDistance": 1.524,
+      "budget": 5600,
+      "orbitLow": 190,
+      "orbitHigh": 300,
+      "days": 258.9,
+      "fastDays": 215,
+      "lightTime": 1364,
+      "arrivalDV": 512,
+      "terminalDV": 190,
+      "landingLimit": 3.2,
+      "startingAlt": 545,
+      "startingVertical": -37,
+      "startingHorizontal": 21,
+      "color": "df956c",
+      "source": "https://astrogeology.usgs.gov/search/map/mars_2020_science_investigation_ctx_dem_mosaic",
+      "research": "https://ntrs.nasa.gov/citations/20230016428",
+      "credit": "NASA/JPL • MRO CTX / USGS stereo mosaic • 20 m source cells",
+      "description": "Land near the Perseverance site and investigate Jezero’s crater floor. Braking, dust and the longer Earth link change the engineering choices.",
+      "points": [
+        {
+          "name": "Crater-floor station",
+          "x": 118,
+          "z": -126,
+          "observation": "Perseverance studied crater-floor rocks near its landing site. Mastcam-Z and other instruments helped establish the volcanic history of this area. The beacon marks a simulated measurement station.",
+          "source": "https://ntrs.nasa.gov/citations/20230016428"
+        },
+        {
+          "name": "Jezero reference transect",
+          "x": -105,
+          "z": -212,
+          "observation": "Evidence from Perseverance supports an ancient lake and river delta. This second waypoint records local slope and texture. The delta itself is beyond this walkable tile.",
+          "source": "https://science.nasa.gov/mission/mars-2020-perseverance/"
+        }
+      ]
+    }
+  ],
+  "parts": [
+    {
+      "id": "aster",
+      "name": "Aster pressure hull",
+      "slot": 0,
+      "mass": 540,
+      "cost": 200,
+      "description": "Light two-bay aluminium pressure vessel.",
+      "draw": 135,
+      "limit": 5100
+    },
+    {
+      "id": "selene",
+      "name": "Selene expedition hull",
+      "slot": 0,
+      "mass": 810,
+      "cost": 305,
+      "description": "Four-seat vessel with more thermal and payload headroom.",
+      "draw": 166,
+      "limit": 8100
+    },
+    {
+      "id": "hermes",
+      "name": "Hermes service hull",
+      "slot": 0,
+      "mass": 1100,
+      "cost": 425,
+      "description": "Heavy bus rated for large propellant and payload.",
+      "draw": 206,
+      "limit": 11300
+    },
+    {
+      "id": "compact",
+      "name": "Kestrel tank",
+      "slot": 1,
+      "mass": 100,
+      "cost": 135,
+      "description": "Lower wet mass with a modest maneuver reserve.",
+      "fuel": 1380
+    },
+    {
+      "id": "stretched",
+      "name": "Cygnus tank",
+      "slot": 1,
+      "mass": 165,
+      "cost": 220,
+      "description": "Longer tank for capture and surface operations.",
+      "fuel": 2540
+    },
+    {
+      "id": "twin",
+      "name": "Hydra dual bladder",
+      "slot": 1,
+      "mass": 295,
+      "cost": 335,
+      "description": "High reserve, with a larger launcher and higher wet mass.",
+      "fuel": 3960
+    },
+    {
+      "id": "horizon",
+      "name": "Horizon vacuum engine",
+      "slot": 2,
+      "mass": 165,
+      "cost": 215,
+      "description": "High specific impulse, lower thrust margin near a Martian surface.",
+      "thrust": 21000,
+      "isp": 379,
+      "draw": 31
+    },
+    {
+      "id": "vector",
+      "name": "Vector lander engine",
+      "slot": 2,
+      "mass": 240,
+      "cost": 330,
+      "description": "Throttleable engine for powered touchdown.",
+      "thrust": 40700,
+      "isp": 352,
+      "draw": 52
+    },
+    {
+      "id": "atlas",
+      "name": "Atlas cluster",
+      "slot": 2,
+      "mass": 411,
+      "cost": 470,
+      "description": "Stronger descent authority at a fuel and thermal cost.",
+      "thrust": 68500,
+      "isp": 322,
+      "draw": 86
+    },
+    {
+      "id": "fold",
+      "name": "Foldout solar wings",
+      "slot": 3,
+      "mass": 98,
+      "cost": 155,
+      "description": "Light photovoltaic wings with no output in eclipse.",
+      "generation": 880
+    },
+    {
+      "id": "wide",
+      "name": "Wide solar truss",
+      "slot": 3,
+      "mass": 178,
+      "cost": 255,
+      "description": "More charging and instrument power, with greater launch mass.",
+      "generation": 1620
+    },
+    {
+      "id": "isotope",
+      "name": "Isotope power unit",
+      "slot": 3,
+      "mass": 221,
+      "cost": 367,
+      "description": "Continuous low output through night and dust.",
+      "generation": 525,
+      "steady": 1
+    },
+    {
+      "id": "cell",
+      "name": "Silver-ion bank",
+      "slot": 4,
+      "mass": 94,
+      "cost": 99,
+      "description": "Standard reserve for short outages.",
+      "wattHours": 2100
+    },
+    {
+      "id": "dual",
+      "name": "Dual battery banks",
+      "slot": 4,
+      "mass": 158,
+      "cost": 179,
+      "description": "Longer eclipse and emergency operation.",
+      "wattHours": 4200
+    },
+    {
+      "id": "ample",
+      "name": "Deep reserve banks",
+      "slot": 4,
+      "mass": 238,
+      "cost": 240,
+      "description": "High-capacity battery for sustained payload use.",
+      "wattHours": 6900
+    },
+    {
+      "id": "lidar",
+      "name": "Peregrine laser altimeter",
+      "slot": 5,
+      "mass": 74,
+      "cost": 139,
+      "description": "Accurate range and terrain slope estimates; slower sample packet.",
+      "draw": 148,
+      "science": 2,
+      "mb": 1.5
+    },
+    {
+      "id": "radar",
+      "name": "Atlas landing radar",
+      "slot": 5,
+      "mass": 126,
+      "cost": 206,
+      "description": "Longer terminal range and robust descent measurements.",
+      "draw": 256,
+      "science": 3,
+      "mb": 2.3
+    },
+    {
+      "id": "patch",
+      "name": "Directional patch array",
+      "slot": 6,
+      "mass": 61,
+      "cost": 80,
+      "description": "Low load but slow communications, especially at Mars.",
+      "draw": 119,
+      "rate": 0.19
+    },
+    {
+      "id": "dish",
+      "name": "Steered high-gain dish",
+      "slot": 6,
+      "mass": 121,
+      "cost": 203,
+      "description": "Faster Earth downlink but higher load and mass.",
+      "draw": 239,
+      "rate": 0.82
+    },
+    {
+      "id": "relay",
+      "name": "Orbital relay antenna",
+      "slot": 6,
+      "mass": 92,
+      "cost": 168,
+      "description": "Middle ground in downlink time, demand and cost.",
+      "draw": 165,
+      "rate": 0.42
+    },
+    {
+      "id": "lightlegs",
+      "name": "Scout landing gear",
+      "slot": 7,
+      "mass": 129,
+      "cost": 125,
+      "description": "Light feet rated for gentler terrain and touch-down loads.",
+      "limit": 8,
+      "gear": 1
+    },
+    {
+      "id": "shocklegs",
+      "name": "Damped landing struts",
+      "slot": 7,
+      "mass": 206,
+      "cost": 233,
+      "description": "Higher impact and measured-slope tolerance.",
+      "limit": 15,
+      "gear": 1.4
+    },
+    {
+      "id": "closed",
+      "name": "Closed-loop life support",
+      "slot": 8,
+      "mass": 183,
+      "cost": 259,
+      "description": "Larger consumable reserve for the Moon and long transfers.",
+      "draw": 188,
+      "oxygen": 260,
+      "days": 310
+    },
+    {
+      "id": "extended",
+      "name": "Dual-loop life support",
+      "slot": 8,
+      "mass": 259,
+      "cost": 378,
+      "description": "Redundant loop with higher endurance and suit reserves.",
+      "draw": 249,
+      "oxygen": 390,
+      "days": 540
+    },
+    {
+      "id": "ablative",
+      "name": "Blunt-body EDL shield",
+      "slot": 9,
+      "mass": 285,
+      "cost": 242,
+      "description": "Required at Mars. Represents thermal and aerodynamic entry equipment.",
+      "limit": 1
+    },
+    {
+      "id": "shield-plus",
+      "name": "Reinforced EDL shield",
+      "slot": 9,
+      "mass": 394,
+      "cost": 333,
+      "description": "Extra thermal margin during the modeled entry phase.",
+      "limit": 1.24
+    },
+    {
+      "id": "imager",
+      "name": "Field multispectral imager",
+      "slot": 10,
+      "mass": 62,
+      "cost": 131,
+      "description": "Low-power context and terrain measurements; compact packets.",
+      "draw": 129,
+      "science": 12,
+      "mb": 2
+    },
+    {
+      "id": "spectrometer",
+      "name": "Raman field package",
+      "slot": 10,
+      "mass": 112,
+      "cost": 209,
+      "description": "Additional simulated mineral signatures at higher power and data cost.",
+      "draw": 340,
+      "science": 19,
+      "mb": 4.2
+    },
+    {
+      "id": "geotech",
+      "name": "Geotechnical kit",
+      "slot": 10,
+      "mass": 128,
+      "cost": 218,
+      "description": "Slope, density proxy and contact measurements; moderate storage use.",
+      "draw": 214,
+      "science": 16,
+      "mb": 3.0
+    },
+    {
+      "id": "cache",
+      "name": "Compact data cache",
+      "slot": 11,
+      "mass": 32,
+      "cost": 47,
+      "description": "Stores 8 MB of processed science products.",
+      "limit": 8
+    },
+    {
+      "id": "vault",
+      "name": "Science recorder",
+      "slot": 11,
+      "mass": 64,
+      "cost": 110,
+      "description": "Stores 24 MB for high-volume payloads.",
+      "limit": 24
+    },
+    {
+      "id": "fieldkit",
+      "name": "Field maintenance kit",
+      "slot": 12,
+      "mass": 49,
+      "cost": 79,
+      "description": "Two replacement parts for onboard repairs.",
+      "limit": 2
+    },
+    {
+      "id": "repairbay",
+      "name": "Service locker",
+      "slot": 12,
+      "mass": 90,
+      "cost": 158,
+      "description": "Four replacement parts and extra diagnostic equipment.",
+      "limit": 4
+    },
+    {
+      "id": "jets",
+      "name": "Cold gas control pods",
+      "slot": 13,
+      "mass": 48,
+      "cost": 72,
+      "description": "Simple RCS, lower lateral acceleration in descent.",
+      "limit": 1.1
+    },
+    {
+      "id": "gimbals",
+      "name": "Gimballed RCS pods",
+      "slot": 13,
+      "mass": 93,
+      "cost": 146,
+      "description": "Faster lateral response, helpful under higher Martian gravity.",
+      "limit": 2.1
+    },
+    {
+      "id": "rover",
+      "name": "Electric EVA rover",
+      "slot": 14,
+      "mass": 148,
+      "cost": 191,
+      "description": "Faster traverses and reserve electrical draw.",
+      "draw": 56,
+      "limit": 1
+    }
+  ],
+  "vehicles": [
+    {
+      "name": "Aster Fieldcraft",
+      "description": "Light lunar expedition assembly",
+      "parts": [
+        "aster",
+        "stretched",
+        "vector",
+        "fold",
+        "cell",
+        "lidar",
+        "patch",
+        "lightlegs",
+        "closed",
+        null,
+        "imager",
+        "cache",
+        "fieldkit",
+        "jets",
+        "rover"
+      ],
+      "world": 0,
+      "photo": "heritage_eagle"
+    },
+    {
+      "name": "Selene Explorer",
+      "description": "Balanced crewed Mars assembly",
+      "parts": [
+        "selene",
+        "stretched",
+        "vector",
+        "wide",
+        "dual",
+        "radar",
+        "dish",
+        "shocklegs",
+        "extended",
+        "ablative",
+        "spectrometer",
+        "vault",
+        "fieldkit",
+        "gimbals",
+        null
+      ],
+      "world": 1,
+      "photo": "heritage_columbia"
+    },
+    {
+      "name": "Hermes Hauler",
+      "description": "High-margin payload bus with rover; requires the heavy launcher",
+      "parts": [
+        "hermes",
+        "twin",
+        "atlas",
+        "wide",
+        "ample",
+        "radar",
+        "relay",
+        "shocklegs",
+        "extended",
+        "shield-plus",
+        "geotech",
+        "vault",
+        "repairbay",
+        "gimbals",
+        "rover"
+      ],
+      "world": 1,
+      "photo": "heritage_columbia"
+    }
+  ],
+  "launchers": [
+    {
+      "name": "Peregrine medium",
+      "heritage": "Medium-lift simulation class",
+      "cost": 550,
+      "moon": 5300,
+      "mars": 0,
+      "highPenalty": 0.12,
+      "fastPenalty": 0.11
+    },
+    {
+      "name": "Meridian heavy",
+      "heritage": "Heavy-lift simulation class",
+      "cost": 720,
+      "moon": 7000,
+      "mars": 6400,
+      "highPenalty": 0.12,
+      "fastPenalty": 0.11
+    },
+    {
+      "name": "Argo super-heavy",
+      "heritage": "Super-heavy simulation class",
+      "cost": 880,
+      "moon": 10200,
+      "mars": 9300,
+      "highPenalty": 0.1,
+      "fastPenalty": 0.07
+    }
+  ]
+}

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <base href="../">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Build and fly a lunar survey spacecraft in Orbital Frontier.">
+  <title>Orbital Frontier — Tranquillity Survey</title>
+  <link rel="stylesheet" href="./flight.css">
+  <script type="module" src="./main.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <button class="brand" data-local="home" aria-label="Orbital Frontier main menu"><span class="orbit-mark" aria-hidden="true"></span><span>ORBITAL <strong>FRONTIER</strong><small>FLIGHT OPERATIONS</small></span></button>
+    <nav class="topnav" aria-label="Mission areas">
+      <button data-local="home" data-nav="home" aria-current="page">Mission</button>
+      <button data-local="hangar" data-nav="hangar" disabled>Hangar</button>
+      <button data-local="returnFlight" data-nav="flight" hidden>Cockpit</button>
+      <button data-local="archive">Atlas</button>
+    </nav>
+    <div class="header-right"><span class="link-dot"></span><span id="header-state">SOLO SESSION</span><button data-local="settings" class="settings" aria-label="Controls and settings">Controls</button></div>
+  </header>
+  <main>
+    <section id="home" class="home">
+      <div id="homeworld" class="world hero-world" aria-hidden="true"></div>
+      <div class="hero-shade"></div>
+      <div class="hero-info">
+        <p class="kicker"><i></i> LUNAR OPERATIONS <span>/</span> OF–01</p>
+        <h1>Orbital<br><em>Frontier.</em></h1>
+        <p class="hero-text">Engineer a spacecraft. Correct its orbit. Map the Moon and recommend a landing site.</p>
+        <div class="actions"><button data-local="hangar" id="enter" class="primary" disabled>Enter the hangar <span>↗</span></button><button data-local="brief" class="secondary">Read mission brief</button></div>
+        <div id="load-status" class="muted" role="status">Starting the flight computer…</div>
+      </div>
+      <div class="hero-coordinate" aria-hidden="true"><i></i> 0.67° N &nbsp; 23.47° E<br><span>MARE TRANQUILLITATIS</span></div>
+      <div class="home-bar">
+        <div class="home-mission"><span class="mission-light">01</span><div><span class="mono subtle">PLAYABLE MISSION</span><strong>Tranquillity Survey</strong></div></div>
+        <div class="home-meta"><span>DESTINATION</span><strong id="home-last-score">Moon · Near side</strong></div>
+        <div class="home-meta"><span>DATASET</span><strong>NASA LRO / LOLA</strong></div>
+        <button class="ghost" data-local="archive">Planetary atlas ↗</button>
+      </div>
+    </section>
+
+    <section id="hangar" class="workarea" hidden>
+      <div class="section-head"><div><div class="kicker"><i></i> SPACECRAFT DESIGN</div><h1>Assembly hangar</h1></div><div class="head-actions"><button class="secondary" data-local="brief">Mission brief</button><button class="primary" data-act="Deploy" id="deploy">Deploy into lunar orbit <span>↗</span></button></div></div>
+      <div class="hangar-grid">
+        <aside class="panel hangar-parts">
+          <div class="panel-title"><span>Workshop</span><span class="mono subtle">7 MOUNTS</span></div>
+          <div id="presets" class="presets" aria-label="Spacecraft presets"></div>
+          <div id="mounts" class="mounts" aria-label="Spacecraft mounts"></div>
+          <div class="panel-foot mono subtle">Select a mount to change hardware.</div>
+        </aside>
+        <section class="panel hangar-view">
+          <div id="hangarworld" class="world" aria-label="Interactive 3D assembly preview. Drag to rotate."></div>
+          <div class="view-label"><span class="mono subtle">ASSEMBLY PREVIEW</span><strong id="craft-label"></strong></div>
+          <div class="view-bottom"><span>DRAG TO ORBIT</span><button class="ghost" data-local="resetView">Reset view</button></div>
+        </section>
+        <aside class="panel hangar-detail">
+          <div class="panel-title"><span>Engineering</span><span id="build-state" class="badge"></span></div>
+          <div id="craft-stats" class="stats-grid"></div>
+          <div id="craft-center" class="build-com"></div>
+          <div id="build-issues" class="status-box" hidden></div>
+          <div id="inspector"></div>
+        </aside>
+      </div>
+    </section>
+
+    <section id="flight" class="workarea flight" hidden>
+      <div class="section-head flight-heading"><div><div class="kicker"><i></i> LIVE LUNAR OPERATIONS</div><h1>Tranquillity Survey</h1></div><div class="flight-tools"><span id="mission-time" class="clock mono">MET 00:00:00</span><div id="warps" class="segments" aria-label="Simulation time rate"></div></div></div>
+      <div class="flight-grid">
+        <aside class="panel objectives">
+          <div class="panel-title"><span>Mission objectives</span></div>
+          <ol id="objectives"></ol>
+          <div class="side-data">
+            <div class="mono subtle">SPACECRAFT STATE</div>
+            <div id="side-telemetry"></div>
+          </div>
+          <div class="panel-foot"><button class="ghost" data-local="brief">Mission brief ↗</button></div>
+        </aside>
+        <section class="panel navigation-view">
+          <div id="flightworld" class="world" aria-label="3D lunar orbit view. Drag to rotate and scroll to zoom."></div>
+          <div class="view-label"><span id="flight-frame-label" class="mono subtle">SELENOCENTRIC FRAME</span><strong id="flight-view-label">Orbital map</strong></div>
+          <div class="flight-mode segments"><button data-local="mapView" aria-pressed="true">Orbit</button><button data-local="chaseView" aria-pressed="false">Chase</button><button id="terrain-view" data-local="terrainView" aria-pressed="false" disabled title="Capture a scan of the current site to inspect its terrain">Terrain</button></div>
+          <div class="target-label mono" id="map-target"></div>
+          <div id="flight-alert" class="flight-alert mono" role="status"></div>
+          <div class="view-bottom legend"><span id="legend-a"><i></i> LIVE ORBIT</span><span id="legend-b"><i></i> BURN PREVIEW</span><span id="legend-c"><i></i> SURVEY TARGET</span><button class="ghost" data-local="resetView">Reset view</button></div>
+        </section>
+        <aside class="panel console">
+          <div class="console-tabs" role="group" aria-label="Cockpit stations">
+            <button data-station="nav" aria-pressed="true">Nav</button><button data-station="pilot">Flight</button><button data-station="eng">Power</button><button data-station="science">Lidar</button><button data-station="comms">Comms</button>
+          </div>
+          <div id="station"></div>
+        </aside>
+      </div>
+      <div class="panel mission-log"><span class="mono">EVENT LOG</span><div id="log-feed"></div><button class="ghost" data-local="log">Full log ↗</button></div>
+    </section>
+
+    <section id="report" class="workarea report" hidden>
+      <div class="section-head"><div><div class="kicker"><i></i> DEBRIEF</div><h1 id="report-title">Survey complete</h1></div><button class="secondary" data-local="home">Return to mission desk</button></div>
+      <div class="report-grid">
+        <article class="panel report-result" id="report-result"></article>
+        <article class="panel"><div class="panel-title"><span>Mission record</span></div><div id="report-log" class="report-log"></div></article>
+      </div>
+    </section>
+  </main>
+  <dialog id="dialog">
+    <div class="dialog-top"><h2 id="dialog-title"></h2><button class="ghost" data-local="close" aria-label="Close dialog">✕</button></div>
+    <div id="dialog-body"></div>
+  </dialog>
+  <script nomodule>document.getElementById('load-status').textContent = 'Open this mission in a current desktop browser.';</script>
+</body>
+</html>

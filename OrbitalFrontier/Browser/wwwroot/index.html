@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <title>Orbital Frontier — Expedition</title>
+  <link rel="stylesheet" href="./flight.css">
+  <link rel="stylesheet" href="./expedition.css">
+  <script type="module" src="./expedition.js"></script>
+</head>
+<body>
+<header class="topbar">
+  <button class="brand" data-local="desk"><span class="orbit-mark" aria-hidden="true"></span><span>ORBITAL <strong>FRONTIER</strong><small>EXPEDITION OPERATIONS</small></span></button>
+  <nav class="topnav" aria-label="Game screens">
+    <button data-local="desk" id="nav-desk" aria-current="page">Mission design</button>
+    <button data-local="build" id="nav-build">Shipyard</button>
+    <button data-local="maps" id="nav-maps">Atlas</button>
+  </nav>
+  <div class="header-right"><span class="link-dot"></span><span id="session-label">SOLO SESSION</span><button class="settings" data-local="help">Controls</button></div>
+</header>
+<main>
+  <section id="planner" class="planning">
+    <div id="plan-stage" class="plan-stage">
+      <div id="plan-world" class="world" aria-label="Interactive destination and spacecraft preview"></div>
+      <div class="exp-hero-copy">
+        <p class="kicker"><i></i> MISSION DESIGN</p>
+        <h1 id="hero-title">Design the<br><em>expedition.</em></h1>
+        <p id="hero-intro">Choose a destination, build a ship, and fly the mission from launch to fieldwork.</p>
+        <div id="hero-destinations" class="destinations" aria-label="Destination"></div>
+      </div>
+      <div id="preview-label" class="mono"></div>
+      <div id="preview-switch" class="segments" hidden><button data-local="shipPreview" data-n="exterior" aria-pressed="true">Exterior</button><button data-local="shipPreview" data-n="deck" aria-pressed="false">Deck plan</button></div>
+      <div class="preview-footer"><span id="preview-credit"></span><button class="ghost" data-local="resetCamera">Reset view</button></div>
+    </div>
+    <div id="load-status" role="status">Starting the flight computer…</div>
+    <div id="plan-desk" class="planning-grid" hidden>
+      <article class="panel">
+        <div class="panel-title"><span class="title-help">Flight plan<button type="button" class="help-mark" data-local="glossary" data-term="flightPlan" aria-label="What does Flight plan mean?" title="Learn about Flight plan">?</button></span><span class="mono subtle">EARTH DEPARTURE</span></div>
+        <div id="plan-options" class="card-body"></div>
+      </article>
+      <article class="panel">
+        <div class="panel-title"><span class="title-help">Mission resources<button type="button" class="help-mark" data-local="glossary" data-term="missionResources" aria-label="What are mission resources?" title="Learn about mission resources">?</button></span><span class="mono subtle">LIVE DESIGN</span></div>
+        <div id="design-resources"></div>
+      </article>
+      <article class="panel">
+        <div class="panel-title"><span class="title-help">Flight readiness<button type="button" class="help-mark" data-local="glossary" data-term="flightReadiness" aria-label="What does Flight readiness mean?" title="Learn about flight readiness">?</button></span><span class="badge" id="ready-badge"></span></div>
+        <div id="design-status" class="card-body"></div>
+      </article>
+    </div>
+    <div id="shipyard" class="shipyard-grid" hidden>
+      <article class="panel mounts-panel"><div class="panel-title"><span class="title-help">Ship assembly<button type="button" class="help-mark" data-local="glossary" data-term="shipAssembly" aria-label="What is ship assembly?" title="Learn about ship assembly">?</button></span><span class="mono subtle">15 MOUNTS</span></div><div id="ship-presets"></div><div id="ship-mounts"></div></article>
+      <article class="panel"><div class="panel-title"><span class="title-help">Component inspector<button type="button" class="help-mark" data-local="glossary" data-term="componentInspector" aria-label="What is the component inspector?" title="Learn about the component inspector">?</button></span><span id="rotation-readout" class="mono subtle"></span></div><div id="component-inspector" class="card-body"></div></article>
+      <article class="panel"><div class="panel-title"><span class="title-help">Mission resources<button type="button" class="help-mark" data-local="glossary" data-term="missionResources" aria-label="What are mission resources?" title="Learn about mission resources">?</button></span><span id="ship-ready" class="badge"></span></div><div id="ship-resources"></div><div id="assembly-actions" class="card-body"></div></article>
+    </div>
+  </section>
+
+  <section id="mission" class="mission-screen" hidden>
+    <div class="flight-strip">
+      <div><p class="kicker"><i></i> <span id="mission-phase"></span><button type="button" class="help-mark" data-local="glossary" data-term="flightPhase" aria-label="What does mission phase mean?" title="Learn about mission phases">?</button></p><h1 id="mission-title"></h1></div>
+      <div id="mission-telemetry" aria-label="Primary telemetry"></div>
+      <div class="segments" role="group" aria-label="Camera">
+        <button data-local="motionView" data-n="first" aria-pressed="true">First person</button>
+        <button data-local="motionView" data-n="chase" aria-pressed="false">Exterior</button>
+        <button data-local="motionView" data-n="map" aria-pressed="false">Map</button>
+      </div>
+    </div>
+    <div class="mission-grid">
+      <aside class="panel mission-objectives">
+        <div class="panel-title"><span class="title-help">Flight log<button type="button" class="help-mark" data-local="glossary" data-term="flightLog" aria-label="What is the flight log?" title="Learn about the flight log">?</button></span></div>
+        <ol id="phase-steps"></ol>
+        <div class="objective-body" id="progress-callout"></div>
+        <div class="objective-body" id="crew-vitals"></div>
+        <div id="next-station" class="objective-body"></div>
+        <div id="event-log" class="objective-body flight-log"></div>
+      </aside>
+      <div class="panel mission-stage">
+        <div id="flight-world" class="world" aria-label="First-person cabin and planetary environment"></div>
+        <div class="first-reticle" id="reticle" aria-hidden="true">+</div>
+        <div class="local-type" id="view-caption"></div>
+        <div class="world-controls" id="view-controls"></div>
+        <button class="interact-prompt secondary" id="interact" data-local="interact" hidden></button>
+        <div id="spatial-map" hidden><canvas id="map-canvas" aria-label="Map with personal position and mission waypoints" width="660" height="510"></canvas><div id="chart-legend"></div></div>
+        <div id="local-feedback" role="status"></div>
+      </div>
+      <aside class="panel stations">
+        <div class="panel-title"><span class="title-help"><span id="station-name">Crew stations</span><button type="button" class="help-mark" id="station-help" data-local="glossary" data-term="crewStations" aria-label="What are crew stations?" title="Learn about this station">?</button></span><button class="ghost" data-local="unseat" id="unseat" hidden>Close</button></div>
+        <div id="room-station" class="card-body"></div>
+      </aside>
+    </div>
+  </section>
+
+  <section id="debrief" class="workarea" hidden>
+    <div class="section-head"><div><p class="kicker"><i></i> MISSION DEBRIEF</p><h1 id="report-heading"></h1></div><button class="secondary" data-act="ReturnDesign">Return to design</button></div>
+    <div class="report-grid">
+      <article id="exp-report" class="panel report-result"></article>
+      <article class="panel"><div class="panel-title"><span class="title-help">Mission record<button type="button" class="help-mark" data-local="glossary" data-term="missionRecord" aria-label="What is the mission record?" title="Learn about the mission record">?</button></span></div><div id="exp-log" class="report-log"></div></article>
+    </div>
+  </section>
+</main>
+
+<dialog id="exp-modal"><div class="dialog-top"><h2 id="modal-title"></h2><button class="ghost" data-local="close">Close</button></div><div class="card-body" id="modal-content"></div></dialog>
+</body>
+</html>

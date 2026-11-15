@@ -1,0 +1,5 @@
+{
+  "name": "OrbitalFrontier.Runtime",
+  "rootNamespace": "OrbitalFrontier.Runtime",
+  "references": ["OrbitalFrontier.Core"]
+}

@@ -1,0 +1,9 @@
+# Orbital Frontier roadmap
+
+| Milestone | Implementation | Acceptance check |
+|---|---|---|
+| Windows and Unity Web qualification | Verify native import, three entry scenes, shaders and standalone builds. Exercise host and clients on two desktops and profile generation and rendering. | A four-player desktop crew completes the survey from launch through debrief, then a player reconnects during a science pass. The Unity Web solo mission runs from a static host. |
+| Precision lunar descent | Use the reconnaissance decision to spawn a descent mission over a small area with higher-resolution lunar DEM data, terrain collision, altitude and vertical/horizontal response. Add landing gear, thrust margin, landing envelope and a rover deploy state. | The pilot flies from orbit to an instrumented landing. Site slope, descent rate and lateral speed affect touchdown and rover deployment. |
+| Orbital logistics | Add maneuver vectors with normal components, multiburn planning, target intercept, rendezvous and docking sensors. Model assembly stages and wet/dry structural interfaces. | A vehicle performs timed plane and phasing changes, docks with low relative speed and can undock cleanly. |
+| Earth and interplanetary navigation | Add Earth launch staging, atmosphere and reference-frame handoff. Introduce ephemeris-backed Earth, Moon and Mars motion, patched-conic planning and reproducible transfer scenarios. | The player can compare predicted transfer cost and arrival with the executed flight, including recovery when planning or staging goes wrong. |
+| Exploration and long-running crews | Expand lighting, thermal and communications interactions, explore surface sites by rover/EVA, and add persistent engineering saves and a mission timeline. Plan relay or lobbies only after local crew controls are reliable. | A crew can resume a mission, recover from a system failure, collect and share surface data, and review performance afterward. |

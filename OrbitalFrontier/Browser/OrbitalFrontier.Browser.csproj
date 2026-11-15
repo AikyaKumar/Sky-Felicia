@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk.WebAssembly">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <IsTrimmable>false</IsTrimmable>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../Assets/OrbitalFrontier/Core/*.cs" Exclude="../Assets/OrbitalFrontier/Core/LanLink.cs" />
+    <Content Include="../Assets/OrbitalFrontier/Resources/Frontier/*" Link="wwwroot/media/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,12 @@
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]in/
+[Ll]ogs/
+UserSettings/
+Build/
+Builds/
+.vscode/
+.idea/
+*.csproj.user
+.DS_Store
