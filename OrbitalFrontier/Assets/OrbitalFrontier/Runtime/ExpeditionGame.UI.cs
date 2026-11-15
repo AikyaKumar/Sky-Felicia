@@ -19,6 +19,7 @@ namespace OrbitalFrontier.Runtime
             var previous=GUI.matrix;
             GUI.matrix=Matrix4x4.Scale(new Vector3(Scale,Scale,1));
             float w=Width,h=Height;
+            tutorialTarget=Rect.zero;
             bool old=GUI.enabled;
             GUI.enabled=old&&overlay==null&&!looking;
             if (View.phase >= 6) ui.Fill(new Rect(0,0,w,h),Bg);
@@ -35,7 +36,48 @@ namespace OrbitalFrontier.Runtime
             else Debrief(w,h);
             GUI.enabled=old;
             if(overlay!=null) Overlay(w,h);
+            else if(tutorialActive) TutorialOverlay(w,h);
             GUI.matrix=previous;
+        }
+
+        void TutorialOverlay(float w,float h)
+        {
+            if(tutorialTarget.width<=0||tutorialTarget.height<=0)return;
+            var target=new Rect(
+                Mathf.Clamp(tutorialTarget.x-5,0,w),
+                Mathf.Clamp(tutorialTarget.y-5,0,h),
+                Mathf.Clamp(tutorialTarget.width+10,0,w),
+                Mathf.Clamp(tutorialTarget.height+10,0,h));
+            var shade=new Color(.008f,.01f,.025f,.78f);
+            ui.Fill(new Rect(0,0,w,target.y),shade);
+            ui.Fill(new Rect(0,target.yMax,w,h-target.yMax),shade);
+            ui.Fill(new Rect(0,target.y,target.x,target.height),shade);
+            ui.Fill(new Rect(target.xMax,target.y,w-target.xMax,target.height),shade);
+            var edge=new Color(.54f,.86f,.77f);
+            ui.Fill(new Rect(target.x,target.y,target.width,2),edge);
+            ui.Fill(new Rect(target.x,target.yMax-2,target.width,2),edge);
+            ui.Fill(new Rect(target.x,target.y,2,target.height),edge);
+            ui.Fill(new Rect(target.xMax-2,target.y,2,target.height),edge);
+
+            var card=new Rect(target.center.x<w*.5f?w-358:18,target.center.y<h*.5f?h-164:70,340,146);
+            ui.Card(card);
+            ui.Text(new Rect(card.x+12,card.y+7,card.width-24,18),
+                "FIRST MISSION  ·  STEP "+(tutorialStep+1)+" OF 8",10,Mint,false,true);
+            string title,text;
+            switch(tutorialStep)
+            {
+                case 0:title="Choose a destination";text="Click the highlighted Moon or Mars button. Destination changes the terrain and mission constraints.";break;
+                case 1:title="Set a mission objective";text="Choose the work your crew will do. Each objective changes the tasks and science to bring home.";break;
+                case 2:title="Learn a resource";text="Click the highlighted ? next to wet mass. Read the explanation, then close it to continue.";break;
+                case 3:title="Open the shipyard";text="Click Shipyard to inspect the spacecraft and its mounting points.";break;
+                case 4:title="Inspect a mount";text="Click a highlighted mount to see its installed part. You can experiment without launching.";break;
+                case 5:title="Review the mission plan";text="Click Mission design to return to the flight plan and live readiness checks.";break;
+                case 6:title="Launch when ready";text="Click Launch expedition. If the design is on hold, resolve its highlighted ? checks first.";break;
+                default:title="Open flight guidance";text="Click Show flight guidance. The flight log and deck chart point you to the next station. Walk with WASD, then press E to use it.";break;
+            }
+            ui.Text(new Rect(card.x+12,card.y+29,card.width-24,31),title,19,Ink,true);
+            ui.Text(new Rect(card.x+12,card.y+61,card.width-24,55),text,13,Muted,false,false,TextAnchor.UpperLeft,true);
+            if(ui.Button(new Rect(card.x+12,card.y+116,115,24),"Skip tutorial",size:11))FinishTutorial();
         }
 
         void Header(float w)
@@ -45,8 +87,20 @@ namespace OrbitalFrontier.Runtime
             ui.Text(new Rect(20,6,240,27),"ORBITAL FRONTIER",21,Ink,true);
             ui.Text(new Rect(21,31,240,15),"EXPEDITION OPERATIONS",9,Accent,false,true);
             float x=w*.5f-188;
-            if(ui.Button(new Rect(x,14,106,29),"Mission design",selected:View.phase==0&&area==0)) GoDesign(0);
-            if(ui.Button(new Rect(x+112,14,89,29),"Shipyard",selected:View.phase==0&&area==1)) GoDesign(1);
+            var designButton=new Rect(x,14,106,29);
+            TutorialTarget(designButton,5);
+            if(ui.Button(designButton,"Mission design",selected:View.phase==0&&area==0))
+            {
+                GoDesign(0);
+                if(tutorialActive&&tutorialStep==5)AdvanceTutorial();
+            }
+            var shipyardButton=new Rect(x+112,14,89,29);
+            TutorialTarget(shipyardButton,3);
+            if(ui.Button(shipyardButton,"Shipyard",selected:View.phase==0&&area==1))
+            {
+                GoDesign(1);
+                if(tutorialActive&&tutorialStep==3)AdvanceTutorial();
+            }
             if(ui.Button(new Rect(x+207,14,63,29),"Atlas")) {overlay="atlas";atlas=View.design.world;}
             if(ui.Button(new Rect(x+276,14,72,29),"Controls")) overlay="controls";
             ui.Text(new Rect(w-238,13,220,31),Seats>1?"CREW "+(Seat+1)+" / "+Seats:"SOLO SESSION",10,Mint,false,true,TextAnchor.MiddleRight);
@@ -72,8 +126,13 @@ namespace OrbitalFrontier.Runtime
                 for(int i=0;i<catalog.worlds.Length;i++)
                 {
                     float buttonX=stage.x+23+i*115;
-                    if(ui.Button(new Rect(buttonX,stage.y+220,87,32),catalog.worlds[i].body,selected:i==View.design.world))
+                    var worldButton=new Rect(buttonX,stage.y+220,87,32);
+                    TutorialTarget(worldButton,0);
+                    if(ui.Button(worldButton,catalog.worlds[i].body,selected:i==View.design.world))
+                    {
                         Send(ExpeditionCommand.World,i);
+                        if(tutorialActive&&tutorialStep==0)AdvanceTutorial();
+                    }
                     ui.Help(new Rect(buttonX+90,stage.y+228,16,16),"world");
                 }
                 ui.Text(new Rect(stage.xMax-371,stage.y+11,355,23),Current.tag,10,Accent,false,true,TextAnchor.MiddleRight);
@@ -124,7 +183,15 @@ namespace OrbitalFrontier.Runtime
             if(!string.IsNullOrEmpty(key))ui.Help(new Rect(x+width-18,y,15,15),key);
             float each=(width-(values.Length-1)*4)/values.Length;
             for(int i=0;i<values.Length;i++)
-                if(ui.Button(new Rect(x+i*(each+4),y+20,each,29),values[i],selected:i==active,size:12)) Send(command,i);
+            {
+                var option=new Rect(x+i*(each+4),y+20,each,29);
+                if(label=="Objective"&&i==0)TutorialTarget(option,1);
+                if(ui.Button(option,values[i],selected:i==active,size:12))
+                {
+                    Send(command,i);
+                    if(label=="Objective"&&tutorialActive&&tutorialStep==1)AdvanceTutorial();
+                }
+            }
         }
 
         void DrawBudget(Rect r)
@@ -137,7 +204,11 @@ namespace OrbitalFrontier.Runtime
                 N(b.generation)+"/"+N(b.peak),N(b.battery),N(b.storage,"0.0"),N(b.bandwidth,"0.00"),N(b.lifeDays),N(b.travelDays,"0.00"),N(b.spares),N(b.orbitKm)};
             var u=new[]{"kg","cr","m/s","","W","Wh","MB","MB/s","d","d","","km"};
             for(int i=0;i<names.Length;i++)
-                ui.Metric(new Rect(x+(i%2)*(w+5),y+(i/2)*50,w,45),names[i],v[i],u[i]);
+            {
+                var metric=new Rect(x+(i%2)*(w+5),y+(i/2)*50,w,45);
+                if(i==0)TutorialTarget(new Rect(metric.xMax-21,metric.y+3,15,15),2);
+                ui.Metric(metric,names[i],v[i],u[i]);
+            }
         }
         void Readiness(Rect r,bool buttons)
         {
@@ -159,10 +230,17 @@ namespace OrbitalFrontier.Runtime
             if(b.ready)y+=49;
             if(buttons)
             {
-                if(ui.Button(new Rect(x,y,span,37),"Launch expedition",true,enabled:b.ready&&IsHost))Send(ExpeditionCommand.Launch);
+                var launchButton=new Rect(x,y,span,37);
+                TutorialTarget(launchButton,6);
+                if(ui.Button(launchButton,"Launch expedition",true,enabled:b.ready&&IsHost))
+                {
+                    if(tutorialActive&&tutorialStep==6)guiding=true;
+                    Send(ExpeditionCommand.Launch);
+                    if(tutorialActive&&tutorialStep==6)AdvanceTutorial();
+                }
                 if(ui.Button(new Rect(x,y+43,span*.52f-4,30),"Open shipyard")) area=1;
                 if(ui.Button(new Rect(x+span*.52f,y+43,span*.48f,30),"Crew LAN")) overlay="crew";
-                if(ui.Button(new Rect(x,y+78,span,28),"First-flight guide",size:12)) overlay="firstFlight";
+                if(ui.Button(new Rect(x,y+78,span,28),"First-flight guide",size:12)) StartTutorial();
                 y+=117;
             }
             foreach(string note in b.notes)
@@ -186,7 +264,12 @@ namespace OrbitalFrontier.Runtime
             for(int i=0;i<ExpeditionSlots.Names.Length;i++)
             {
                 var b=new Rect(x+(i%2)*(each+4),y+39+(i/2)*32,each-21,29);
-                if(ui.Button(b,"",selected:mount==i))mount=i;
+                TutorialTarget(b,4);
+                if(ui.Button(b,"",selected:mount==i))
+                {
+                    mount=i;
+                    if(tutorialActive&&tutorialStep==4)AdvanceTutorial();
+                }
                 ui.Text(new Rect(b.x+5,b.y+1,b.width-10,15),ExpeditionSlots.Names[i],11,Ink,true);
                 ui.Text(new Rect(b.x+5,b.y+15,b.width-10,12),catalog.Get(d.parts[i])?.name??"Empty mount",8,Muted,false,true);
                 ui.Help(new Rect(b.xMax+3,b.y+6,15,15),ExpeditionGlossary.KeyForSlot(i));

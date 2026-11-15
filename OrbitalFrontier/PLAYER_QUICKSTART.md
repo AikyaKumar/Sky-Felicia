@@ -2,6 +2,8 @@
 
 Open `Orbital_Frontier_Expedition.html` in desktop Chrome or Edge. In Unity, open `Assets/OrbitalFrontier/Scenes/Expedition.unity` and press Play.
 
+On the first launch, an interactive tutorial highlights the destination, objective, resource help, shipyard, and launch controls. Click each highlighted control to continue, or skip the tutorial and replay it from Mission Design at any time.
+
 1. Open **First-flight guide** from Mission Design and choose **Fly the guided Moon mission**. The guide loads a working ship and shows where to go next. To build your own ship, open **Shipyard**, click a part on the 3D ship, and try a different component in its mount. Check the launch requirements before committing.
 2. Walk to **Helm** and separate both stages when prompted. At **Navigation**, accelerate coast. If power fails, use **Engineering** to run diagnostics and replace the controller. Return to **Navigation** for orbital capture.
 3. At **Science**, measure the landing corridor. Return to **Helm** and begin descent. Guided mode starts with computer-controlled thrust. Expert gives you throttle, lateral thrusters and attitude dampers.

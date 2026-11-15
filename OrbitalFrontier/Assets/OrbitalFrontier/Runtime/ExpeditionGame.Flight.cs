@@ -84,12 +84,15 @@ namespace OrbitalFrontier.Runtime
             Vital(x,y,w,"OXYGEN",Me.oxygen);Vital(x,y+37,w,"HEALTH",Me.health);Vital(x,y+74,w,"SUIT POWER",Me.suit);
             y+=112;
             ui.Reading(x,y,w,"Cabin pressure",N(t.pressure,"0.0")+" kPa");y+=35;
-            if(ui.Button(new Rect(x,y,w,26),guiding?"Open deck chart":"Show flight guidance",size:11))
+            var guidanceButton=new Rect(x,y,w,26);
+            TutorialTarget(guidanceButton,7);
+            if(ui.Button(guidanceButton,guiding?"Open deck chart":"Show flight guidance",size:11))
             {
                 guiding=true;
                 mode=3;
                 mapKind=Me.outside?1:0;
                 UnlockCursor();
+                if(tutorialActive&&tutorialStep==7)FinishTutorial();
             }
             y+=32;
             for(int i=0;i<Math.Min(3,t.log?.Length??0);i++)
@@ -372,7 +375,7 @@ namespace OrbitalFrontier.Runtime
             ui.Card(r);
             string title=glossaryOpen?helpEntry.title:overlay=="atlas"?"Planetary atlas":overlay=="crew"?"Crew LAN":overlay=="reset"?"Return to design?":overlay=="firstFlight"?"First-flight guide":"Controls";
             ui.Title(r,title);
-            if(ui.Button(new Rect(r.xMax-66,r.y+8,54,28),"Close",size:12)){overlay=null;return;}
+            if(ui.Button(new Rect(r.xMax-66,r.y+8,54,28),"Close",size:12)){CloseOverlay();return;}
             float x=r.x+15,y=r.y+57,span=r.width-30;
             switch(overlay)
             {
@@ -408,21 +411,13 @@ namespace OrbitalFrontier.Runtime
                     break;
                 case "crew": CrewOverlay(x,y,span);break;
                 case "firstFlight":
-                    ui.Text(new Rect(x,y,span,261),
-                        "1   Helm — separate both spent stages.\n\n2   Navigation — accelerate coast. Return here for orbital capture.\n\n3   Engineering — diagnose and replace the failed controller.\n\n4   Science and Helm — measure the landing corridor and descend.\n\n5   Aft airlock — begin EVA and collect two records.\n\n6   Communications — return to the cabin and downlink.",
+                    ui.Text(new Rect(x,y,span,90),
+                        "The interactive tutorial highlights the controls on screen and waits for you to use each one. You can skip it at any time.",
                         16,Muted,false,false,TextAnchor.UpperLeft,true);
-                    if(ui.Button(new Rect(x,y+276,248,35),"Fly the guided Moon mission",true,enabled:IsHost))
+                    if(ui.Button(new Rect(x,y+105,248,35),"Start interactive tutorial",true))
                     {
-                        guiding=true;
-                        Send(ExpeditionCommand.Vehicle,0);
-                        Send(ExpeditionCommand.Objective,0);
-                        Send(ExpeditionCommand.Difficulty,0);
-                        Send(ExpeditionCommand.Launcher,0);
-                        Send(ExpeditionCommand.Transfer,0);
-                        Send(ExpeditionCommand.OrbitProfile,0);
-                        Send(ExpeditionCommand.Endurance,1);
                         overlay=null;
-                        Send(ExpeditionCommand.Launch);
+                        StartTutorial();
                     }
                     break;
                 case "reset":

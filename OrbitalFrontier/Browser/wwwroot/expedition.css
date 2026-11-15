@@ -17,3 +17,12 @@
 .readiness p{display:flex;align-items:center;justify-content:space-between;gap:7px}
 #chart-legend{pointer-events:auto;display:flex;align-items:center;justify-content:space-between;gap:8px}
 #chart-legend .help-mark{margin-left:auto}
+.tutorial-tour[hidden]{display:none}
+.tutorial-shade{position:fixed;z-index:1100;background:#070913d9;pointer-events:none}
+.tutorial-spotlight{position:fixed;z-index:1101;border:2px solid var(--mint);border-radius:5px;box-shadow:0 0 0 2px #a5ffe533;pointer-events:none}
+.tutorial-target{position:relative!important;z-index:1103!important}
+.tutorial-card{position:fixed;z-index:1102;width:min(390px,calc(100vw - 32px));padding:16px;border:1px solid #6f6a90;border-radius:5px;background:#141624;box-shadow:0 12px 40px #000b}
+.tutorial-card .kicker{margin:0 0 8px;color:var(--mint);font:10px var(--mono);letter-spacing:.08em}
+.tutorial-card h2{margin:0 0 8px;font-size:23px}
+.tutorial-card>p:not(.kicker){margin:0 0 12px;color:#d0cede;font-size:14px;line-height:1.45}
+.tutorial-card button{min-height:30px;font-size:12px}

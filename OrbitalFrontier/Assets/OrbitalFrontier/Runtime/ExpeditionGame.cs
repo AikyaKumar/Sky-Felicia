@@ -15,7 +15,9 @@ namespace OrbitalFrontier.Runtime
         FrontierConsole ui;
         int area, mount, station = -1, mode = 2, lastPhase = -1, atlas, mapKind, previousSeat;
         float yaw, pitch = -1, throttle = .31f, moveTimer;
-        bool looking, drag, wasOutside, guiding;
+        bool looking, drag, wasOutside, guiding, tutorialActive, tutorialWaitingForGlossary;
+        int tutorialStep;
+        Rect tutorialTarget;
         Vector2 pointerDown;
         Vector2 previousPosition, controlsScroll;
         Rect stage;
@@ -68,6 +70,10 @@ namespace OrbitalFrontier.Runtime
                 ui = new FrontierConsole();
                 ui.HelpRequested += OpenGlossary;
                 visual = new ExpeditionStage(catalog, grids, transform);
+                if (PlayerPrefs.GetInt("OrbitalFrontier.ExpeditionTutorialSeen", 0) == 0)
+                {
+                    StartTutorial();
+                }
             }
             catch (Exception e) { error = e.Message; Debug.LogException(e); }
         }
@@ -132,7 +138,7 @@ namespace OrbitalFrontier.Runtime
             if (Input.GetKeyDown(KeyCode.Escape))
             {
                 UnlockCursor();
-                if(overlay!=null)overlay=null;
+                if(overlay!=null)CloseOverlay();
                 else if(station>=0)station=-1;
             }
             bool flight=View.phase>0&&View.phase<6;
@@ -228,7 +234,38 @@ namespace OrbitalFrontier.Runtime
                 return;
             }
             glossaryTerm = key;
+            if(tutorialActive&&tutorialStep==2)tutorialWaitingForGlossary=true;
             overlay = "glossary";
+        }
+        void StartTutorial()
+        {
+            area=0;
+            tutorialStep=0;
+            tutorialActive=true;
+            tutorialWaitingForGlossary=false;
+            overlay=null;
+        }
+        void TutorialTarget(Rect rect,int step)
+        {
+            if(tutorialActive&&tutorialStep==step)tutorialTarget=rect;
+        }
+        void AdvanceTutorial()
+        {
+            tutorialWaitingForGlossary=false;
+            tutorialStep++;
+            if(tutorialStep>=8)FinishTutorial();
+        }
+        void FinishTutorial()
+        {
+            tutorialActive=false;
+            tutorialWaitingForGlossary=false;
+            PlayerPrefs.SetInt("OrbitalFrontier.ExpeditionTutorialSeen",1);
+            PlayerPrefs.Save();
+        }
+        void CloseOverlay()
+        {
+            overlay=null;
+            if(tutorialActive&&tutorialWaitingForGlossary)AdvanceTutorial();
         }
         void UnlockCursor()
         {

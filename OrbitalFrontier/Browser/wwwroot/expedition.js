@@ -82,6 +82,17 @@ let area='desk', chosen=0, preview='exterior', display='first', mapType='region'
 let worldRevision=-1, previousOutside=false, previousPhase=-1, localStatus='', localTimer=0, atlasIndex=0, lastStat=0;
 let phasePanel='',yaw=0,pitch=-1, manual={throttle:.31,x:0,z:0}, trim=12;
 let motion=null, dragging=null, pressLook=false, pressInspect=false, firstFlight=false, pinnedStation=-1;
+let tutorialActive=false, tutorialStep=0;
+let tutorialWaitingForModal=false,tutorialTarget=null;
+const tutorialSteps=[
+    {selector:'#hero-destinations .destination',event:'click',title:'Choose a destination',text:'Click the highlighted Moon or Mars button. The terrain preview and mission limits update for that world.'},
+    {selector:'#plan-options select[data-select="Objective"]',event:'change',title:'Set a mission objective',text:'Choose what your crew will do. Each objective changes the tasks and science you need to bring home.'},
+    {selector:'#design-resources .help-mark',event:'click',waitForModal:true,title:'Learn the mission resources',text:'Click the highlighted “?” to see how a resource is used. Close its explanation to continue.'},
+    {selector:'#nav-build',event:'click',title:'Open the shipyard',text:'Click Shipyard to inspect the spacecraft and its mounting points.'},
+    {selector:'#ship-mounts .mount-item',event:'click',title:'Inspect a spacecraft mount',text:'Click any highlighted mount to see its installed part and compatible hardware. You can experiment here without changing the mission.'},
+    {selector:'#nav-desk',event:'click',title:'Return to mission design',text:'Click Mission design to review the plan, resource budget, and readiness checks.'},
+    {selector:'#design-status [data-act="Launch"]',event:'click',title:'Launch when ready',text:'Click Launch expedition to begin. If the button is disabled, resolve the readiness holds first. The flight log will guide you to each station.'}
+];
 const keys=new Set();
 const dest=()=>catalog.worlds[state.design.world];
 const person=()=>state.crew[seat];
@@ -103,6 +114,7 @@ function command(act,n=0,a=0,b=0,c=0) {
     if(!api||!state)return;
     const index=commands.indexOf(act);
     if(index<=0)return;
+    if(act==='Launch'&&tutorialActive&&tutorialStep===tutorialSteps.length-1)firstFlight=true;
     if(joined) {
         if(socket?.readyState===WebSocket.OPEN) socket.send(JSON.stringify({command:index,n,a,b,c}));
         return;
@@ -217,7 +229,8 @@ function renderPlan(){
         html('design-resources',dataMetrics(b));
         html('design-status',readiness()+'<p class="flight-note">'+(b.ready?'Verify instruments, power and habitat before committing to launch.':'Resolve the design holds before launch.')+
             '</p><div class="plan-actions">'+button('Launch expedition','Launch',null,true,!b.ready||seat!==0)+
-            '<button class="secondary" data-local="firstFlight">First-flight guide</button><button class="secondary" data-local="build">Open shipyard</button><button class="secondary" data-local="crew">Crew LAN</button></div>'+
+            '<button class="secondary" data-local="firstFlight">First-flight guide</button>'+
+            '<button class="secondary" data-local="build">Open shipyard</button><button class="secondary" data-local="crew">Crew LAN</button></div>'+
             (joined&&seat!==0?'<p class="flight-note">Seat 1 launches when the team is ready.</p>':''));
     }else{
         const matches=catalog.parts.map((p,i)=>({p,i})).filter(a=>a.p.slot===chosen);
@@ -514,13 +527,103 @@ function requestLook(){
     if(!surface?.requestPointerLock)return;
     try{surface.requestPointerLock()?.catch(()=>notify('Drag the viewport to look.'));}catch{notify('Drag the viewport to look.');}
 }
-function firstFlightBrief(){
-    show('First-flight guide','<p class="flight-note">This guided flight loads the default Moon ship and adds directions to the next station. You still walk there and operate each control.</p>'+
-        '<ol class="guide-list"><li><b>Helm:</b> separate both spent stages.</li><li><b>Navigation:</b> accelerate coast, then capture orbit.</li>'+
-        '<li><b>Engineering:</b> diagnose and replace the failed charge controller.</li><li><b>Science, then Helm:</b> measure the site and fly terminal descent.</li>'+
-        '<li><b>Aft airlock:</b> begin EVA. Follow the map to A and B and collect both records.</li><li><b>Communications:</b> return to the cabin and send the data.</li></ol>'+
-        '<div class="station-actions"><button class="primary" data-local="guidedLaunch" '+(seat!==0?'disabled':'')+'>Fly the guided Moon mission <span>↗</span></button></div>');
+function showWelcomeGuide(){
+    try{
+        if(localStorage.getItem('orbitalFrontier.expeditionTutorialSeen')==='1')return;
+    }catch(error){console.warn('Could not read the interactive tutorial preference.',error);}
+    startTutorial();
 }
+function firstFlightBrief(){
+    startTutorial();
+}
+function startTutorial(){
+    if(state.phase!==0){notify('Start the interactive tutorial from Mission Design.');return;}
+    tutorialActive=true;
+    tutorialStep=0;
+    hide('tutorial-tour',false);
+    by('tutorial-tour').setAttribute('aria-hidden','false');
+    updateTutorial();
+}
+function finishTutorial(){
+    tutorialActive=false;
+    tutorialWaitingForModal=false;
+    if(tutorialTarget){tutorialTarget.classList.remove('tutorial-target');tutorialTarget=null;}
+    hide('tutorial-tour',true);
+    by('tutorial-tour').setAttribute('aria-hidden','true');
+    for(const id of ['tutorial-shade-top','tutorial-shade-bottom','tutorial-shade-left','tutorial-shade-right','tutorial-spotlight'])
+        by(id).style.cssText='';
+    try{localStorage.setItem('orbitalFrontier.expeditionTutorialSeen','1');}
+    catch(error){console.warn('Could not save the interactive tutorial preference.',error);}
+}
+function advanceTutorial(){
+    tutorialStep++;
+    if(tutorialStep>=tutorialSteps.length){finishTutorial();return;}
+    updateTutorial();
+}
+function updateTutorial(){
+    const step=tutorialSteps[tutorialStep];
+    const target=step&&document.querySelector(step.selector);
+    if(!target){
+        console.error('Interactive tutorial target is missing:',step?.selector);
+        finishTutorial();
+        return;
+    }
+    txt('tutorial-progress','FIRST MISSION · STEP '+(tutorialStep+1)+' OF '+tutorialSteps.length);
+    txt('tutorial-title',step.title);
+    txt('tutorial-copy',step.text+' Click the highlighted control to continue.');
+    if(tutorialTarget)tutorialTarget.classList.remove('tutorial-target');
+    tutorialTarget=target;
+    target.classList.add('tutorial-target');
+    target.scrollIntoView({block:'center',inline:'nearest',behavior:'smooth'});
+    requestAnimationFrame(positionTutorial);
+}
+function positionTutorial(){
+    if(!tutorialActive)return;
+    const step=tutorialSteps[tutorialStep],target=step&&document.querySelector(step.selector);
+    if(!target){finishTutorial();return;}
+    const rect=target.getBoundingClientRect();
+    const left=Math.max(0,rect.left-5),top=Math.max(0,rect.top-5);
+    const right=Math.min(innerWidth,rect.right+5),bottom=Math.min(innerHeight,rect.bottom+5);
+    const setBox=(id,x,y,width,height)=>{
+        const node=by(id);
+        node.style.left=x+'px';node.style.top=y+'px';
+        node.style.width=Math.max(0,width)+'px';node.style.height=Math.max(0,height)+'px';
+    };
+    setBox('tutorial-shade-top',0,0,innerWidth,top);
+    setBox('tutorial-shade-bottom',0,bottom,innerWidth,innerHeight-bottom);
+    setBox('tutorial-shade-left',0,top,left,bottom-top);
+    setBox('tutorial-shade-right',right,top,innerWidth-right,bottom-top);
+    setBox('tutorial-spotlight',left,top,right-left,bottom-top);
+    const card=by('tutorial-card'),cardRect=card.getBoundingClientRect();
+    const leftCard=rect.left+rect.width/2>innerWidth/2?16:Math.max(16,innerWidth-cardRect.width-16);
+    const topCard=rect.top+rect.height/2>innerHeight/2?16:Math.max(16,innerHeight-cardRect.height-16);
+    card.style.left=leftCard+'px';card.style.top=topCard+'px';
+}
+function tutorialAction(event){
+    if(!tutorialActive)return;
+    const step=tutorialSteps[tutorialStep];
+    if(!step||step.event!==event.type||!event.target.closest?.('.tutorial-target'))return;
+    if(step.waitForModal){tutorialWaitingForModal=true;hide('tutorial-tour',true);}
+    else advanceTutorial();
+}
+function guardTutorialInput(event){
+    if(!tutorialActive||event.target.closest?.('#tutorial-card'))return;
+    if(tutorialWaitingForModal&&event.target.closest?.('#exp-modal'))return;
+    const step=tutorialSteps[tutorialStep];
+    if(step&&event.target.closest?.(step.selector))return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+}
+document.addEventListener('click',guardTutorialInput,true);
+document.addEventListener('change',guardTutorialInput,true);
+by('exp-modal').addEventListener('close',()=>{
+    if(!tutorialActive||!tutorialWaitingForModal)return;
+    tutorialWaitingForModal=false;
+    hide('tutorial-tour',false);
+    advanceTutorial();
+});
+window.addEventListener('resize',positionTutorial);
+window.addEventListener('scroll',positionTutorial,true);
 function guidedLaunch(){
     if(seat!==0||state.phase!==0)return;
     firstFlight=true;area='desk';
@@ -578,6 +681,8 @@ document.addEventListener('click',e=>{
         case 'help':controls();break;
         case 'crew':crewModal();break;
         case 'firstFlight':firstFlightBrief();break;
+        case 'tutorial':startTutorial();break;
+        case 'skipTutorial':finishTutorial();break;
         case 'guidedLaunch':guidedLaunch();break;
         case 'toggleGuide':firstFlight=true;render(true);break;
         case 'deckGuide':setMode('map','deck');break;
@@ -607,6 +712,7 @@ document.addEventListener('click',e=>{
         }
     }
 });
+document.addEventListener('click',tutorialAction);
 document.addEventListener('change',e=>{
     const part=e.target.dataset.select;
     if(part&&+e.target.value>=0)command(part,+e.target.value);
@@ -616,6 +722,7 @@ document.addEventListener('change',e=>{
     }
     if(e.target.id==='trim-amount'){trim=Math.max(-35,Math.min(35,Number(e.target.value)||0));}
 });
+document.addEventListener('change',tutorialAction);
 document.addEventListener('input',e=>{
     if(e.target.id==='terminal-throttle')manual.throttle=+e.target.value/100;
     if(e.target.id==='trim-amount')trim=+e.target.value;
@@ -696,6 +803,7 @@ try{
     world=renderExpedition({plan:by('plan-world'),flight:by('flight-world')},file,catalog,ground);
     chart=createChart(by('map-canvas'),catalog,ground,file,stations);
     bindViewport();render(true);
+    showWelcomeGuide();
     let last=performance.now();
     setInterval(()=>{
         const now=performance.now();const dt=(now-last)/1000;last=now;
