@@ -22,6 +22,12 @@ These are design goals, not a claim that every feature is already implemented.
 
 This repository currently contains the project's baseline documentation. The implementation, technology stack, and local run instructions have not yet been established.
 
+## Demo
+
+Watch the Sky-Felicia gameplay demonstration:
+
+[▶ Watch the Sky-Felicia Demo](https://canva.link/9u2frqat6ooy8x8)
+
 ## Documentation
 
 - [Game Design Document](docs/GDD.md) — vision, proposed gameplay, requirements, and constraints.
